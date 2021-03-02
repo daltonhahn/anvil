@@ -17,13 +17,19 @@ static_resources:
           route_config:
             name: local_route
             virtual_hosts:
-            - name: anvil
+            - name: backend
               domains: ["*"]
               routes:
               - match:
-                  prefix: "/"
+                  prefix: "/anvil"
                 route:
+                  prefix_rewrite: "/"
                   cluster: anvil_service
+              - match:
+                  prefix: "/service"
+                route:
+                  cluster: webapp_service 
+
 
   clusters:
   - name: anvil_service
@@ -40,6 +46,20 @@ static_resources:
               socket_address:
                 address: 0.0.0.0
                 port_value: 8080
+  - name: webapp_service
+    connect_timeout: 30s
+    type: LOGICAL_DNS
+    # Comment out the following line to test on v6 networks
+    dns_lookup_family: V4_ONLY
+    load_assignment:
+      cluster_name: service_envoyproxy_io
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: 0.0.0.0
+                port_value: 443
 
 admin:
   access_log_path: /tmp/null
