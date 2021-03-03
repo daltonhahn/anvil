@@ -1,0 +1,9 @@
+node:
+        cluster: dev-cluster
+        id: test1
+
+dynamic_resources:
+        cds_config:
+                path: /root/anvil/envoy/config/cds.yaml
+        lds_config:
+                path: /root/anvil/envoy/config/lds.yaml
