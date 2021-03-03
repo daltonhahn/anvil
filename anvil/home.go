@@ -1,6 +1,7 @@
 package main
 
 import (
+	"time"
 	"fmt"
 	"os"
 	"os/exec"
@@ -158,6 +159,17 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	fmt.Fprint(w, "Welcome!\n")
 }
 
+func getCatalog(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	dt := time.Now()
+	fmt.Fprint(w, ("Retrieving Catalog at " + dt.String() + "\n"))
+}
+
+func getNodeServices(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	node_name := params.ByName("node")
+	dt := time.Now()
+	fmt.Fprint(w, ("Retrieving Services for Node: " + node_name + "\nCurrent Time: " + dt.String() + "\n"))
+}
+
 func makeIpTables() {
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-N", "PROXY_INIT_REDIRECT").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "PROXY_INIT_REDIRECT", "-p", "tcp", "-j",
@@ -199,6 +211,8 @@ func main() {
 
 	router := httprouter.New()
 	router.GET("/", Index)
+	router.GET("/catalog", getCatalog)
+	router.GET("/catalog/:node", getNodeServices)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 	cmd.Wait()
