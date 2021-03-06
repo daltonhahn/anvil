@@ -1,4 +1,4 @@
-module home
+module github.com/daltonhahn/anvil
 
 go 1.16
 
