@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"io/ioutil"
 	"strconv"
+	"github.com/daltonhahn/anvil/iptables"
 
 	"gopkg.in/yaml.v2"
 	"github.com/julienschmidt/httprouter"
@@ -170,6 +171,7 @@ func getNodeServices(w http.ResponseWriter, r *http.Request, params httprouter.P
 	fmt.Fprint(w, ("Retrieving Services for Node: " + node_name + "\nCurrent Time: " + dt.String() + "\n"))
 }
 
+/*
 func makeIpTables() {
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-N", "PROXY_INIT_REDIRECT").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "PROXY_INIT_REDIRECT", "-p", "tcp", "-j",
@@ -182,6 +184,7 @@ func makeIpTables() {
 		"127.0.0.1/32", "-j", "PROXY_INIT_REDIRECT").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "OUTPUT", "-j", "PROXY_INIT_OUTPUT").Output()
 }
+*/
 
 func readEnvoyConfig() (*EnvoyConfig, error) {
 	yamlFile, err := ioutil.ReadFile("/root/anvil/envoy/config/sample-svc.yaml")
@@ -207,7 +210,7 @@ func main() {
 	}
 	cmd.Start()
 
-	makeIpTables()
+	iptables.MakeIpTables()
 
 	router := httprouter.New()
 	router.GET("/", Index)
