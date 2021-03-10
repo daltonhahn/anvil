@@ -26,6 +26,17 @@ func CLI() {
 			anvil.AnvilInit()
 		})
 
+	commando.
+		Register("join").
+		SetDescription("This command is utilized to trigger a registration of nodes within Anvil.").
+		SetShortDescription("joins anvil service mesh nodes").
+		AddArgument("target node", "Anvil node to join", "").
+		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
+			for k,v := range args {
+				anvil.Join(v.Value)
+			}
+		})
+
 	// parse command-line arguments from the STDIN
 	commando.Parse(nil)
 }

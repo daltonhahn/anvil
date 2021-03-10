@@ -32,6 +32,11 @@ const listener_config = `resources:
             - "*"
             routes:
             - match:
+                prefix: "/anvil/"
+              route:
+                prefix_rewrite: "/"
+                cluster: anvil_service
+            - match:
                 prefix: "/anvil"
               route:
                 prefix_rewrite: "/"
