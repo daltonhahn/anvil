@@ -32,7 +32,7 @@ func CLI() {
 		SetShortDescription("joins anvil service mesh nodes").
 		AddArgument("target node", "Anvil node to join", "").
 		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
-			for k,v := range args {
+			for _,v := range args {
 				anvil.Join(v.Value)
 			}
 		})

@@ -43,6 +43,23 @@ const listener_config = `resources:
                 cluster: anvil_service
 `
 
+const gossip_config = `
+- "@type": type.googleapis.com/envoy.config.listener.v3.Listener
+  name: listener_1
+  reuse_port: true
+  address:
+      socket_address:
+        protocol: UDP
+        address: 0.0.0.0 
+        port_value: 81
+  listener_filters:
+    - name: envoy.filters.udp_listener.udp_proxy
+      typed_config:
+        '@type': type.googleapis.com/envoy.extensions.filters.udp.udp_proxy.v3.UdpProxyConfig
+        stat_prefix: service
+        cluster: service_udp
+`
+
 
 type Service struct {
 	Name	string
@@ -69,6 +86,21 @@ func writeAnvilCluster(f_cds *os.File) *os.File {
             socket_address:
               address: 0.0.0.0
               port_value: 8080
+
+- "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
+  name: anvil_gossip
+  connect_timeout: 0.25s
+  type: LOGICAL_DNS
+  dns_lookup_family: V4_ONLY
+  load_assignment:
+    cluster_name: anvil_gossip
+    endpoints:
+    - lb_endpoints:
+      - endpoint:
+          address:
+            socket_address:
+              address: 0.0.0.0
+              port_value: 8081
 
 `); err != nil {
 		log.Printf("Writing error %v", err)
@@ -127,13 +159,13 @@ func writeLDS(svc string, port int64, f_lds *os.File) *os.File {
 }
 
 func SetupEnvoy() {
-	f_lds, err := os.OpenFile("/root/anvil/envoy/config/lds.yaml", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	f_lds, err := os.OpenFile("/root/anvil/envoy/config/lds.yaml", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		log.Printf("Open file error %v", err)
 	}
 	defer f_lds.Close()
 
-	f_cds, err := os.OpenFile("/root/anvil/envoy/config/cds.yaml", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	f_cds, err := os.OpenFile("/root/anvil/envoy/config/cds.yaml", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		log.Printf("Open file error %v", err)
 	}
@@ -152,6 +184,9 @@ func SetupEnvoy() {
 		fmt.Printf("%s:%d\n", ele.Name, ele.Port)
 		f_cds = writeCDS(ele.Name, ele.Port, f_cds)
 		f_lds = writeLDS(ele.Name, ele.Port, f_lds)
+	}
+	if _, err := f_lds.WriteString(gossip_config); err != nil {
+		log.Printf("Writing error %v", err)
 	}
 }
 
