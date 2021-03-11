@@ -51,13 +51,13 @@ const gossip_config = `
       socket_address:
         protocol: UDP
         address: 0.0.0.0 
-        port_value: 81
+        port_value: 80
   listener_filters:
     - name: envoy.filters.udp_listener.udp_proxy
       typed_config:
         '@type': type.googleapis.com/envoy.extensions.filters.udp.udp_proxy.v3.UdpProxyConfig
-        stat_prefix: service
-        cluster: service_udp
+        stat_prefix: gossip
+        cluster: anvil_gossip
 `
 
 
@@ -100,7 +100,7 @@ func writeAnvilCluster(f_cds *os.File) *os.File {
           address:
             socket_address:
               address: 0.0.0.0
-              port_value: 8081
+              port_value: 8080
 
 `); err != nil {
 		log.Printf("Writing error %v", err)

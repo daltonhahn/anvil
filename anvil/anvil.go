@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"log"
+	"net"
 	"net/http"
 	"io/ioutil"
 	"bytes"
@@ -41,6 +42,25 @@ func Join(target string) {
 	//If target responds with 200 OK, add target to your own catalog
 }
 
+func sendResponse(conn *net.UDPConn, addr *net.UDPAddr) {
+    _,err := conn.WriteToUDP([]byte("From server: Hello I got your message "), addr)
+    if err != nil {
+        fmt.Printf("Couldn't send response %v", err)
+    }
+}
+
+func handleUDP(p []byte, ser *net.UDPConn) {
+	for {
+		_,remoteaddr,err := ser.ReadFromUDP(p)
+		fmt.Printf("Read a message from %v %s \n", remoteaddr, p)
+		if err !=  nil {
+			fmt.Printf("Some error  %v", err)
+			continue
+		}
+		sendResponse(ser, remoteaddr)
+	}
+}
+
 func AnvilInit() {
         envoy.SetupEnvoy()
         cmd := &exec.Cmd {
@@ -51,6 +71,7 @@ func AnvilInit() {
         }
         cmd.Start()
 
+	iptables.CleanTables()
         iptables.MakeIpTables()
 
         router := mux.NewRouter()
@@ -58,7 +79,22 @@ func AnvilInit() {
 	router.HandleFunc("/catalog/register", RegisterNode).Methods("POST")
 	router.HandleFunc("/", Index).Methods("GET")
 
+	p := make([]byte, 2048)
+
+	addr := net.UDPAddr{
+		Port: 8080,
+		IP: net.ParseIP("0.0.0.0"),
+	}
+	ser, err := net.ListenUDP("udp", &addr)
+	if err != nil {
+		fmt.Printf("Some error %v\n", err)
+		return
+	}
+
+	go handleUDP(p, ser)
+
         log.Fatal(http.ListenAndServe(":8080", router))
+
         cmd.Wait()
 }
 
