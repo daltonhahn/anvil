@@ -15,6 +15,7 @@ import (
 
 	"github.com/daltonhahn/anvil/envoy"
 	"github.com/daltonhahn/anvil/iptables"
+	"github.com/daltonhahn/anvil/anvil/gossip"
 )
 
 func Join(target string) {
@@ -40,25 +41,6 @@ func Join(target string) {
 
 	//Trigger HTTP request to target node /catalog/register endpoint
 	//If target responds with 200 OK, add target to your own catalog
-}
-
-func sendResponse(conn *net.UDPConn, addr *net.UDPAddr) {
-    _,err := conn.WriteToUDP([]byte("From server: Hello I got your message "), addr)
-    if err != nil {
-        fmt.Printf("Couldn't send response %v", err)
-    }
-}
-
-func handleUDP(p []byte, ser *net.UDPConn) {
-	for {
-		_,remoteaddr,err := ser.ReadFromUDP(p)
-		fmt.Printf("Read a message from %v %s \n", remoteaddr, p)
-		if err !=  nil {
-			fmt.Printf("Some error  %v", err)
-			continue
-		}
-		sendResponse(ser, remoteaddr)
-	}
 }
 
 func AnvilInit() {
@@ -91,7 +73,7 @@ func AnvilInit() {
 		return
 	}
 
-	go handleUDP(p, ser)
+	go gossip.HandleUDP(p, ser)
 
         log.Fatal(http.ListenAndServe(":8080", router))
 
