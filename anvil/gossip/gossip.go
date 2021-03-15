@@ -16,7 +16,7 @@ func sendResponse(conn *net.UDPConn, addr *net.UDPAddr) {
 	}
 }
 
-func sendHealthCheck(conn *net.UDPConn, addr *net.UDPAddr) {
+func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
 	// BEFORE SENDING A RESPONSE, ENCRYPT WITH KEY -- LATER
 
 	dt := time.Now()
@@ -36,7 +36,7 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 		// Parse content received (p) to determine health check vs. gossip
 		if string(p[:n]) == test {
 			fmt.Printf("Health check received from %v\n", remoteaddr)
-			sendHealthCheck(ser, remoteaddr)
+			sendHealthResp(ser, remoteaddr)
 		} else {
 			fmt.Printf("Gossip received from: %v -- %s \n", remoteaddr, p)
 			if err !=  nil {

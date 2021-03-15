@@ -1,7 +1,6 @@
 package envoy
 
 import (
-	"fmt"
 	"io/ioutil"
 	"gopkg.in/yaml.v2"
 	"os"
@@ -60,6 +59,7 @@ const gossip_config = `
         cluster: anvil_gossip
 `
 
+var S_list = new(EnvoyConfig)
 
 type Service struct {
 	Name	string
@@ -68,6 +68,14 @@ type Service struct {
 
 type EnvoyConfig struct {
 	Services	[]Service
+}
+
+func SetServiceList() (EnvoyConfig) {
+	S_list, err := readEnvoyConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return *S_list
 }
 
 func writeAnvilCluster(f_cds *os.File) *os.File {
@@ -172,16 +180,12 @@ func SetupEnvoy() {
 	defer f_cds.Close()
 
 	f_cds = writeAnvilCluster(f_cds)
-	c, err := readEnvoyConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
+	S_list := SetServiceList()
 
 	if _, err := f_lds.WriteString(listener_config); err != nil {
 		log.Printf("Writing error %v", err)
 	}
-	for _,ele := range c.Services {
-		fmt.Printf("%s:%d\n", ele.Name, ele.Port)
+	for _,ele := range S_list.Services {
 		f_cds = writeCDS(ele.Name, ele.Port, f_cds)
 		f_lds = writeLDS(ele.Name, ele.Port, f_lds)
 	}
@@ -195,11 +199,10 @@ func readEnvoyConfig() (*EnvoyConfig, error) {
 	if err != nil {
 		log.Printf("Read file error #%v", err)
 	}
-	c := &EnvoyConfig{}
-	err = yaml.Unmarshal(yamlFile, c)
+	err = yaml.Unmarshal(yamlFile, S_list)
 	if err != nil {
 		log.Fatalf("Unmarshal: %v", err)
 	}
 
-	return c, nil
+	return S_list, nil
 }
