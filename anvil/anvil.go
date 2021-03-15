@@ -72,6 +72,11 @@ func Join(target string) {
 		log.Fatalln("Unable to process response JSON")
 	}
 
+	// Hit your localhost endpoint for registering nodes
+	// Loop through the received server response (contains their entire catalog)
+	// Bundle each new node + list of services into a message and post to the endpoint
+	// Ignore responses because this is your local copy
+
 	var tempCatalog catalog.Catalog
 	for _, ele := range respMsg.Nodes {
 		tempCatalog.AddNode(ele)
@@ -81,7 +86,13 @@ func Join(target string) {
 			}
 		}
 		fmt.Println("Registering: ", ele.Name)
-		catalog.Register(ele.Name, tempCatalog.Services)
+		var localPost Message
+		localPost.NodeName = ele.Name
+		localPost.Services = tempCatalog.Services
+		postBody, _ = json.Marshal(localPost)
+		responseBody = bytes.NewBuffer(postBody)
+		// Marshal the struct into a postable message
+		http.Post("http://localhost/anvil/catalog/register", "application/json", responseBody)
 		tempCatalog = catalog.Catalog{}
 	}
 	fmt.Println("Done registering")
