@@ -1,7 +1,9 @@
 package catalog
 
 import (
+	"errors"
 	"fmt"
+	"net"
 
 	//"github.com/daltonhahn/anvil/envoy"
 )
@@ -76,4 +78,17 @@ func (catalog *Catalog) GetNodes() ([]Node) {
 }
 func (catalog *Catalog) GetServices() ([]Service) {
 	return AnvilCatalog.Services
+}
+
+func LookupDNS(svcName string) (string, error) {
+	for _, ele := range AnvilCatalog.Services {
+		if ele.Name == svcName {
+			addr, err := net.LookupIP(ele.Address)
+			if err != nil {
+				fmt.Println("Lookup failed")
+			}
+			return addr[0].String(),nil
+		}
+	}
+	return "",errors.New("Not Found")
 }
