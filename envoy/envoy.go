@@ -6,6 +6,8 @@ import (
 	"os"
 	"log"
 	"strconv"
+
+	"github.com/daltonhahn/anvil/catalog"
 )
 
 const listener_config = `resources:
@@ -61,13 +63,8 @@ const gossip_config = `
 
 var S_list = new(EnvoyConfig)
 
-type Service struct {
-	Name	string
-	Port	int64
-}
-
 type EnvoyConfig struct {
-	Services	[]Service
+	Services	[]catalog.Service
 }
 
 func SetServiceList() (EnvoyConfig) {

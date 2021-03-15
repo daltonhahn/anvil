@@ -3,7 +3,7 @@ package catalog
 import (
 	"fmt"
 
-	"github.com/daltonhahn/anvil/envoy"
+	//"github.com/daltonhahn/anvil/envoy"
 )
 
 var AnvilCatalog Catalog
@@ -34,9 +34,9 @@ func (catalog *Catalog) AddNode(newNode Node) []Node {
 	return catalog.Nodes
 }
 
-func Register(nodeName string, svcList envoy.EnvoyConfig) {
+func Register(nodeName string, svcList []Service) {
 	AnvilCatalog.Nodes = AnvilCatalog.AddNode(Node{Name: nodeName, Address: nodeName})
-	for _, ele := range svcList.Services {
+	for _, ele := range svcList {
 		AnvilCatalog.Services = AnvilCatalog.AddService(Service{ele.Name, nodeName, ele.Port})
 	}
 }

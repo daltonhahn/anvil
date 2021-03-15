@@ -9,7 +9,7 @@ import (
 	"net"
 	"net/http"
 	"io/ioutil"
-	//"bytes"
+	"bytes"
 	"encoding/json"
 	"github.com/gorilla/mux"
 
@@ -36,7 +36,6 @@ func CheckStatus() bool {
 
 func Join(target string) {
 	//Collect all of the current info you have from your local catalog
-	/*
 	resp, err := http.Get("http://localhost/anvil/catalog")
 	if err != nil {
 		log.Fatalln("Unable to get response")
@@ -49,7 +48,22 @@ func Join(target string) {
 	if err != nil {
 		log.Fatalln("Unable to decode JSON")
 	}
-	*/
+
+	postBody, _ := json.Marshal(receivedStuff)
+
+	responseBody := bytes.NewBuffer(postBody)
+	resp, err = http.Post("http://" + target + "/anvil/catalog/register", "application/json", responseBody)
+	if err != nil {
+		log.Fatalln("Unable to post content")
+	}
+	defer resp.Body.Close()
+
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln("Unable to read received content")
+	}
+	sb := string(body)
+	fmt.Println("GOT THIS BACK FROM POST ENDPOINT: ", sb)
 
 	//Take all of your content and POST it to the register endpoint of
 	//the target node
@@ -76,7 +90,7 @@ func AnvilInit() {
 		log.Fatalln("Unable to get hostname")
 	}
 	serviceMap := envoy.S_list
-	catalog.Register(hname, *serviceMap)
+	catalog.Register(hname, serviceMap.Services)
 
         router := mux.NewRouter()
 	router.HandleFunc("/catalog/nodes", GetNodeCatalog).Methods("GET")
@@ -120,35 +134,27 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprint(w, "Hit the register endpoint\n")
-	fmt.Println("Node: ", r.RemoteAddr, " attempting to register itself with this node\n")
-	fmt.Println("POST BODY RECEIVED: ", msg.NodeName, " and ", len(msg.Services))
 
 	//Replace me
-	serviceMap := envoy.S_list
-	catalog.Register(msg.NodeName, *serviceMap)
+	catalog.Register(msg.NodeName, msg.Services)
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Anvil Service Mesh Index\n")
 }
 func GetCatalog(w http.ResponseWriter, r *http.Request) {
-	//FIX ME
-
-	/*
 	anv_catalog := catalog.GetCatalog()
 	hname, _ := os.Hostname()
 	nodes := []catalog.Node(anv_catalog.GetNodes())
 	services := []catalog.Service(anv_catalog.GetServices())
-	newMsg := &Message{"NodeName": hname, "Nodes": nodes, "Services": services}
+	newMsg := &Message{hname, nodes, services}
 	var jsonData []byte
 	jsonData, err := json.Marshal(newMsg)
 	if err != nil {
 		log.Fatalln("Unable to marshal JSON")
 	}
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprint(w, jsonData)
-	fmt.Println(string(jsonData))
-	*/
+	fmt.Fprintf(w, string(jsonData))
 }
 func GetNodeCatalog(w http.ResponseWriter, r *http.Request) {
 	dt := time.Now()
