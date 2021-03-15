@@ -19,5 +19,4 @@ bin/*
 
 
 # Ignore for generated cds.yaml and lds.yaml files
-envoy/config/cds.yaml
-envoy/config/lds.yaml
+envoy/config/*

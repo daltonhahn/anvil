@@ -3,9 +3,3 @@ services:
         - 
                 name: webapp
                 port: 443 
-        -
-                name: db
-                port: 3306
-        -
-                name: log
-                port: 1111

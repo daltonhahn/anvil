@@ -35,7 +35,7 @@ func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
 	// BEFORE SENDING A RESPONSE, ENCRYPT WITH KEY -- LATER
 
 	dt := time.Now()
-	_,err := conn.WriteToUDP([]byte("OK " + dt.String() + "\n"), addr)
+	_,err := conn.WriteToUDP([]byte("OK " + dt.String()), addr)
 	if err != nil {
 		fmt.Printf("Couldn't send response %v", err)
 	}
@@ -54,7 +54,7 @@ func sendHealthProbe(target string) bool {
 		conn.Close()
 		return false
 	} else {
-		fmt.Printf("%s\n", p)
+		//fmt.Printf("%s\n", p)
 		conn.Close()
 		return true
 	}
@@ -85,7 +85,6 @@ func CheckHealth(conn *net.UDPConn) {
 			}
 		}
 		time.Sleep(10 * time.Second)
-		fmt.Println("Restarting loop")
 	}
 }
 
@@ -98,10 +97,8 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 
 		// Parse content received (p) to determine health check vs. gossip
 		if message == "health" {
-			fmt.Printf("Health check received from %v\n", remoteaddr)
 			sendHealthResp(ser, remoteaddr)
 		} else if (len(message) > 6 && message[:6] == "gossip") {
-			fmt.Printf("Gossip received from: %v -- %s \n", remoteaddr, p)
 			if err !=  nil {
 				fmt.Printf("Some error  %v", err)
 				continue
@@ -121,13 +118,6 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 	}
 }
 
-
-var records = map[string]string{
-	//Populate these with the services found in catalog
-	//Records are of the format <svc_name>.service -- IP address
-        "test.service": "192.168.0.2",
-}
-
 func serveDNS(u *net.UDPConn, clientAddr net.Addr, request *layers.DNS) {
 	replyMess := request
 	var dnsAnswer layers.DNSResourceRecord
@@ -145,7 +135,6 @@ func serveDNS(u *net.UDPConn, clientAddr net.Addr, request *layers.DNS) {
 	dnsAnswer.Type = layers.DNSTypeA
 	dnsAnswer.IP = a
 	dnsAnswer.Name = []byte(request.Questions[0].Name)
-	fmt.Println(request.Questions[0].Name)
 	dnsAnswer.Class = layers.DNSClassIN
 	replyMess.QR = true
 	replyMess.ANCount = 1

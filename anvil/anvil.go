@@ -63,19 +63,12 @@ func Join(target string) {
 	if err != nil {
 		log.Fatalln("Unable to read received content")
 	}
-	sb := string(body)
-	fmt.Println("GOT THIS BACK FROM POST ENDPOINT: ", sb)
 
 	var respMsg Message
 	err = json.Unmarshal(body, &respMsg)
 	if err != nil {
 		log.Fatalln("Unable to process response JSON")
 	}
-
-	// Hit your localhost endpoint for registering nodes
-	// Loop through the received server response (contains their entire catalog)
-	// Bundle each new node + list of services into a message and post to the endpoint
-	// Ignore responses because this is your local copy
 
 	var tempCatalog catalog.Catalog
 	for _, ele := range respMsg.Nodes {
@@ -85,7 +78,6 @@ func Join(target string) {
 				tempCatalog.AddService(svc)
 			}
 		}
-		fmt.Println("Registering: ", ele.Name)
 		var localPost Message
 		localPost.NodeName = ele.Name
 		localPost.Services = tempCatalog.Services
@@ -95,7 +87,6 @@ func Join(target string) {
 		http.Post("http://localhost/anvil/catalog/register", "application/json", responseBody)
 		tempCatalog = catalog.Catalog{}
 	}
-	fmt.Println("Done registering")
 }
 
 func AnvilInit() {
@@ -133,8 +124,7 @@ func AnvilInit() {
 	}
 	ser, err := net.ListenUDP("udp", &addr)
 	if err != nil {
-		fmt.Printf("Some error %v\n", err)
-		return
+		log.Fatalln("Some error %v\n", err)
 	}
 
 	go gossip.HandleUDP(p, ser)
