@@ -34,6 +34,7 @@ func CheckStatus() bool {
 	}
 }
 
+
 func Join(target string) {
 	//Collect all of the current info you have from your local catalog
 	resp, err := http.Get("http://localhost/anvil/catalog")
@@ -65,11 +66,25 @@ func Join(target string) {
 	sb := string(body)
 	fmt.Println("GOT THIS BACK FROM POST ENDPOINT: ", sb)
 
-	//Take all of your content and POST it to the register endpoint of
-	//the target node
+	var respMsg Message
+	err = json.Unmarshal(body, &respMsg)
+	if err != nil {
+		log.Fatalln("Unable to process response JSON")
+	}
 
-	//Trigger HTTP request to target node /catalog/register endpoint
-	//If target responds with 200 OK, add target to your own catalog
+	var tempCatalog catalog.Catalog
+	for _, ele := range respMsg.Nodes {
+		tempCatalog.AddNode(ele)
+		for _, svc := range respMsg.Services {
+			if (ele.Address == svc.Address) {
+				tempCatalog.AddService(svc)
+			}
+		}
+		fmt.Println("Registering: ", ele.Name)
+		catalog.Register(ele.Name, tempCatalog.Services)
+		tempCatalog = catalog.Catalog{}
+	}
+	fmt.Println("Done registering")
 }
 
 func AnvilInit() {
@@ -132,7 +147,30 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	fmt.Fprint(w, "Hit the register endpoint\n")
+	// Pull your local info from catalog
+	resp, err := http.Get("http://localhost/anvil/catalog")
+        if err != nil {
+                log.Fatalln("Unable to get response")
+        }
+
+        body, err := ioutil.ReadAll(resp.Body)
+        var receivedStuff Message
+
+        err = json.Unmarshal(body, &receivedStuff)
+        if err != nil {
+                log.Fatalln("Unable to decode JSON")
+        }
+	var jsonData []byte
+
+	//Pass your catalog contents back to joiner
+        jsonData, err = json.Marshal(receivedStuff)
+        if err != nil {
+                log.Fatalln("Unable to marshal JSON")
+        }
+        w.Header().Set("Content-Type", "application/json")
+        fmt.Fprintf(w, string(jsonData))
+
+	// Add newly joined node to your local registry
 	catalog.Register(msg.NodeName, msg.Services)
 }
 
