@@ -41,6 +41,17 @@ func Register(nodeName string, svcList []Service) {
 	}
 }
 
+func Deregister(nodeName string) {
+	fmt.Println("WORKING TO REMOVE ", nodeName, " FROM CATALOG")
+	//Select the node to be removed from the list of nodes
+
+	//Loop through all services and compare the stored address with the
+	//address of the node to be removed
+		//If match, remove that service as well
+		//Else, continue
+
+}
+
 func GetCatalog() *Catalog {
 	return &AnvilCatalog
 }

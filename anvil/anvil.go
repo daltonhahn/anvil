@@ -112,6 +112,7 @@ func AnvilInit() {
 	}
 
 	go gossip.HandleUDP(p, ser)
+	go gossip.CheckHealth(ser)
 
         log.Fatal(http.ListenAndServe(":8080", router))
 
@@ -125,8 +126,6 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-
-	// Unmarshal
 	var msg Message
 	err = json.Unmarshal(b, &msg)
 	if err != nil {
@@ -134,8 +133,6 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprint(w, "Hit the register endpoint\n")
-
-	//Replace me
 	catalog.Register(msg.NodeName, msg.Services)
 }
 
