@@ -156,6 +156,9 @@ func writeLDS(svc string, port int64, f_lds *os.File) *os.File {
 	if _, err := f_lds.WriteString("              route:\n"); err != nil {
 		log.Printf("Writing error %v", err)
 	}
+	if _, err := f_lds.WriteString("                prefix_rewrite: \"/\"\n"); err != nil {
+		log.Printf("Writing error %v", err)
+	}
 	if _, err := f_lds.WriteString("                cluster: " + svc + "_service\n"); err != nil {
 		log.Printf("Writing error %v", err)
 	}
