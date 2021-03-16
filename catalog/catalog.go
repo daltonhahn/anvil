@@ -36,22 +36,49 @@ func (catalog *Catalog) AddNode(newNode Node) []Node {
 	return catalog.Nodes
 }
 
+func (catalog *Catalog) RemoveNode(target string) []Node {
+	filteredNodes := catalog.Nodes[:0]
+	for _,node := range catalog.Nodes {
+		if node.Name != target {
+			filteredNodes = append(filteredNodes, node)
+		}
+	}
+	return filteredNodes
+}
+
+func (catalog *Catalog) RemoveService(targetName string, targetAddr string) []Service {
+	filteredServices := catalog.Services[:0]
+	for _,svc := range catalog.Services {
+		if svc.Name != targetName || svc.Address != targetAddr {
+			filteredServices = append(filteredServices, svc)
+		}
+	}
+	return filteredServices
+}
+
 func Register(nodeName string, svcList []Service) {
-	AnvilCatalog.Nodes = AnvilCatalog.AddNode(Node{Name: nodeName, Address: nodeName})
+	addr, err := net.LookupIP(nodeName)
+	if err != nil {
+		fmt.Println("Lookup failed")
+	}
+	AnvilCatalog.Nodes = AnvilCatalog.AddNode(Node{Name: nodeName, Address: addr[0].String()})
 	for _, ele := range svcList {
-		AnvilCatalog.Services = AnvilCatalog.AddService(Service{ele.Name, nodeName, ele.Port})
+		AnvilCatalog.Services = AnvilCatalog.AddService(Service{ele.Name, addr[0].String(), ele.Port})
 	}
 }
 
 func Deregister(nodeName string) {
-	fmt.Println("WORKING TO REMOVE ", nodeName, " FROM CATALOG")
-	//Select the node to be removed from the list of nodes
-
-	//Loop through all services and compare the stored address with the
-	//address of the node to be removed
-		//If match, remove that service as well
-		//Else, continue
-
+	for _, ele := range AnvilCatalog.Nodes {
+		if ele.Name == nodeName {
+			AnvilCatalog.Nodes = AnvilCatalog.RemoveNode(nodeName)
+			for _, svc := range AnvilCatalog.Services {
+				addr, _ := net.LookupIP(nodeName)
+				if svc.Address == addr[0].String() {
+					AnvilCatalog.Services = AnvilCatalog.RemoveService(svc.Name, svc.Address)
+				}
+			}
+		}
+	}
 }
 
 func GetCatalog() *Catalog {
@@ -69,7 +96,7 @@ func (catalog *Catalog) PrintServices() {
 	fmt.Println("\t---- Services within Anvil ----")
 	fmt.Println("Service Name\t\tAddress\t\tPort")
 	for _, ele := range AnvilCatalog.Services {
-		fmt.Println(ele.Name, "\t\t\t", ele.Address, "\t\t", ele.Port)
+		fmt.Println(ele.Name, "\t\t", ele.Address, "\t\t", ele.Port)
 	}
 }
 
