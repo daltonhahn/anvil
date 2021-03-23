@@ -167,6 +167,9 @@ func writeLDS(svc string, port int64, f_lds *os.File) *os.File {
 }
 
 func SetupEnvoy() {
+        CleanTables()
+        MakeIpTables()
+
 	f_lds, err := os.OpenFile("/root/anvil/envoy/config/lds.yaml", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		log.Printf("Open file error %v", err)

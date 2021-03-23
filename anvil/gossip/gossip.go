@@ -54,7 +54,6 @@ func sendHealthProbe(target string) bool {
 		conn.Close()
 		return false
 	} else {
-		//fmt.Printf("%s\n", p)
 		conn.Close()
 		return true
 	}

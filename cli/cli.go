@@ -24,8 +24,14 @@ func CLI() {
 		Register("start").
 		SetDescription("This command initializes and begins the Anvil service mesh processes.").
 		SetShortDescription("runs anvil service mesh").
+		AddFlag("server,s", "Registers this node as part of the Raft consensus protocol", commando.Bool, nil).
 		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
-			anvil.AnvilInit()
+			servFlag, _ := flags["server"].GetBool()
+			if servFlag == true {
+				anvil.AnvilInit("server")
+			} else {
+				anvil.AnvilInit("client")
+			}
 		})
 
 	commando.

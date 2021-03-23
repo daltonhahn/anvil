@@ -13,6 +13,7 @@ var AnvilCatalog Catalog
 type Node struct {
 	Name	string
 	Address	string
+	Type	string
 }
 
 type Service struct {
@@ -56,12 +57,12 @@ func (catalog *Catalog) RemoveService(targetName string, targetAddr string) []Se
 	return filteredServices
 }
 
-func Register(nodeName string, svcList []Service) {
+func Register(nodeName string, svcList []Service, nodeType string) {
 	addr, err := net.LookupIP(nodeName)
 	if err != nil {
 		fmt.Println("Lookup failed")
 	}
-	AnvilCatalog.Nodes = AnvilCatalog.AddNode(Node{Name: nodeName, Address: addr[0].String()})
+	AnvilCatalog.Nodes = AnvilCatalog.AddNode(Node{Name: nodeName, Address: addr[0].String(), Type: nodeType})
 	for _, ele := range svcList {
 		AnvilCatalog.Services = AnvilCatalog.AddService(Service{ele.Name, addr[0].String(), ele.Port})
 	}
