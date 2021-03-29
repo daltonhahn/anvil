@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/daltonhahn/anvil/raft"
+
 	//"github.com/daltonhahn/anvil/envoy"
 )
 
@@ -63,6 +65,10 @@ func Register(nodeName string, svcList []Service, nodeType string) {
 		fmt.Println("Lookup failed")
 	}
 	AnvilCatalog.Nodes = AnvilCatalog.AddNode(Node{Name: nodeName, Address: addr[0].String(), Type: nodeType})
+	if nodeType == "server" {
+		raft.CM.PeerIds = append(raft.CM.PeerIds, addr[0].String())
+		fmt.Println("Adding new peer")
+	}
 	for _, ele := range svcList {
 		AnvilCatalog.Services = AnvilCatalog.AddService(Service{ele.Name, addr[0].String(), ele.Port})
 	}

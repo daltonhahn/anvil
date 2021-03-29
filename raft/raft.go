@@ -8,6 +8,11 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"net/http"
+        "encoding/json"
+        "bytes"
+        "io/ioutil"
 )
 
 const DebugCM = 1
@@ -41,46 +46,34 @@ func (s CMState) String() string {
 	}
 }
 
-// ConsensusModule (CM) implements a single node of Raft consensus.
 type ConsensusModule struct {
-	// mu protects concurrent access to a CM.
 	mu sync.Mutex
-
-	// id is the server ID of this CM.
-	id int
-
-	// peerIds lists the IDs of our peers in the cluster.
-	peerIds []int
-
-	// server is the server containing this CM. It's used to issue RPC calls
-	// to peers.
-	//server *Server
-
-	// Persistent Raft state on all servers
+	id string
+	PeerIds []string
 	currentTerm int
-	votedFor    int
+	votedFor    string
 	log         []LogEntry
-
-	// Volatile Raft state on all servers
 	state              CMState
 	electionResetEvent time.Time
 }
 
+
+var CM ConsensusModule
+
 // NewConsensusModule creates a new CM with the given ID, list of peer IDs and
 // server. The ready channel signals the CM that all peers are connected and
 // it's safe to start its state machine.
-func NewConsensusModule(id int, peerIds []int, server *Server, ready <-chan interface{}) *ConsensusModule {
+func NewConsensusModule(id string, peerIds []string) *ConsensusModule {
 	cm := new(ConsensusModule)
 	cm.id = id
-	cm.peerIds = peerIds
-	cm.server = server
+	cm.PeerIds = peerIds
 	cm.state = Follower
-	cm.votedFor = -1
+	cm.votedFor = ""
 
 	go func() {
 		// The CM is quiescent until ready is signaled; then, it starts a countdown
 		// for leader election.
-		<-ready
+		//<-ready
 		cm.mu.Lock()
 		cm.electionResetEvent = time.Now()
 		cm.mu.Unlock()
@@ -90,16 +83,12 @@ func NewConsensusModule(id int, peerIds []int, server *Server, ready <-chan inte
 	return cm
 }
 
-// Report reports the state of this CM.
-func (cm *ConsensusModule) Report() (id int, term int, isLeader bool) {
+func (cm *ConsensusModule) Report() (id string, term int, isLeader bool) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 	return cm.id, cm.currentTerm, cm.state == Leader
 }
 
-// Stop stops this CM, cleaning up its state. This method returns quickly, but
-// it may take a bit of time (up to ~election timeout) for all goroutines to
-// exit.
 func (cm *ConsensusModule) Stop() {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
@@ -107,35 +96,33 @@ func (cm *ConsensusModule) Stop() {
 	cm.dlog("becomes Dead")
 }
 
-// dlog logs a debugging message is DebugCM > 0.
-func (cm *ConsensusModule) dlog(format string, args ...interface{}) {
+func (cm *ConsensusModule) dlog(format string) {
 	if DebugCM > 0 {
 		format = fmt.Sprintf("[%d] ", cm.id) + format
-		log.Printf(format, args...)
+		log.Printf(format)
 	}
 }
 
-// See figure 2 in the paper.
 type RequestVoteArgs struct {
-	Term         int
-	CandidateId  int
-	LastLogIndex int
-	LastLogTerm  int
+	Term         int `json:"term"`
+	CandidateId  string `json:"candidateid"`
+	LastLogIndex int `json:"lastlogindex"`
+	LastLogTerm  int `json:"lastlogterm"`
 }
 
 type RequestVoteReply struct {
-	Term        int
-	VoteGranted bool
+	Term        int `json:"term"`
+	VoteGranted bool `json:"votegranted"`
 }
 
-// RequestVote RPC.
-func (cm *ConsensusModule) RequestVote(args RequestVoteArgs, reply *RequestVoteReply) error {
+func (cm *ConsensusModule) RequestVote(args RequestVoteArgs) RequestVoteReply {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
+	reply := RequestVoteReply{}
 	if cm.state == Dead {
-		return nil
+		return RequestVoteReply{cm.currentTerm, false}
 	}
-	cm.dlog("RequestVote: %+v [currentTerm=%d, votedFor=%d]", args, cm.currentTerm, cm.votedFor)
+	cm.dlog(fmt.Sprintf("RequestVote: %+v [currentTerm=%d, votedFor=%d]", args, cm.currentTerm, cm.votedFor))
 
 	if args.Term > cm.currentTerm {
 		cm.dlog("... term out of date in RequestVote")
@@ -143,22 +130,25 @@ func (cm *ConsensusModule) RequestVote(args RequestVoteArgs, reply *RequestVoteR
 	}
 
 	if cm.currentTerm == args.Term &&
-		(cm.votedFor == -1 || cm.votedFor == args.CandidateId) {
+		(cm.votedFor == "" || cm.votedFor == args.CandidateId) {
+		reply.Term = cm.currentTerm
 		reply.VoteGranted = true
 		cm.votedFor = args.CandidateId
 		cm.electionResetEvent = time.Now()
 	} else {
+		reply.Term = cm.currentTerm
 		reply.VoteGranted = false
 	}
 	reply.Term = cm.currentTerm
-	cm.dlog("... RequestVote reply: %+v", reply)
-	return nil
+	cm.dlog(fmt.Sprintf("... RequestVote reply: %+v", reply))
+	return reply
 }
+/*
 
 // See figure 2 in the paper.
 type AppendEntriesArgs struct {
 	Term     int
-	LeaderId int
+	LeaderId string
 
 	PrevLogIndex int
 	PrevLogTerm  int
@@ -198,6 +188,7 @@ func (cm *ConsensusModule) AppendEntries(args AppendEntriesArgs, reply *AppendEn
 	return nil
 }
 
+*/
 // electionTimeout generates a pseudo-random election timeout duration.
 func (cm *ConsensusModule) electionTimeout() time.Duration {
 	// If RAFT_FORCE_MORE_REELECTION is set, stress-test by deliberately
@@ -221,7 +212,7 @@ func (cm *ConsensusModule) runElectionTimer() {
 	cm.mu.Lock()
 	termStarted := cm.currentTerm
 	cm.mu.Unlock()
-	cm.dlog("election timer started (%v), term=%d", timeoutDuration, termStarted)
+	cm.dlog(fmt.Sprintf("election timer started (%v), term=%d", timeoutDuration, termStarted))
 
 	// This loops until either:
 	// - we discover the election timer is no longer needed, or
@@ -235,13 +226,13 @@ func (cm *ConsensusModule) runElectionTimer() {
 
 		cm.mu.Lock()
 		if cm.state != Candidate && cm.state != Follower {
-			cm.dlog("in election timer state=%s, bailing out", cm.state)
+			cm.dlog(fmt.Sprintf("in election timer state=%s, bailing out", cm.state))
 			cm.mu.Unlock()
 			return
 		}
 
 		if termStarted != cm.currentTerm {
-			cm.dlog("in election timer term changed from %d to %d, bailing out", termStarted, cm.currentTerm)
+			cm.dlog(fmt.Sprintf("in election timer term changed from %d to %d, bailing out", termStarted, cm.currentTerm))
 			cm.mu.Unlock()
 			return
 		}
@@ -265,27 +256,36 @@ func (cm *ConsensusModule) startElection() {
 	savedCurrentTerm := cm.currentTerm
 	cm.electionResetEvent = time.Now()
 	cm.votedFor = cm.id
-	cm.dlog("becomes Candidate (currentTerm=%d); log=%v", savedCurrentTerm, cm.log)
+	cm.dlog(fmt.Sprintf("becomes Candidate (currentTerm=%d); log=%v", savedCurrentTerm, cm.log))
 
 	var votesReceived int32 = 1
 
 	// Send RequestVote RPCs to all other servers concurrently.
-	for _, peerId := range cm.peerIds {
-		go func(peerId int) {
+	for _, peerId := range cm.PeerIds {
+		go func(peerId string) {
+			//Debugging no peers
+			if peerId == "" {
+				cm.startLeader()
+				return
+			}
+
+
 			args := RequestVoteArgs{
 				Term:        savedCurrentTerm,
 				CandidateId: cm.id,
 			}
 			var reply RequestVoteReply
 
-			cm.dlog("sending RequestVote to %d: %+v", peerId, args)
-			if err := cm.server.Call(peerId, "ConsensusModule.RequestVote", args, &reply); err == nil {
+			cm.dlog(fmt.Sprintf("sending RequestVote to %d: %+v", peerId, args))
+
+			err, reply := SendVoteReq(peerId, args)
+			if err == nil {
 				cm.mu.Lock()
 				defer cm.mu.Unlock()
-				cm.dlog("received RequestVoteReply %+v", reply)
+				cm.dlog(fmt.Sprintf("received RequestVoteReply %+v", reply))
 
 				if cm.state != Candidate {
-					cm.dlog("while waiting for reply, state = %v", cm.state)
+					cm.dlog(fmt.Sprintf("while waiting for reply, state = %v", cm.state))
 					return
 				}
 
@@ -296,9 +296,9 @@ func (cm *ConsensusModule) startElection() {
 				} else if reply.Term == savedCurrentTerm {
 					if reply.VoteGranted {
 						votes := int(atomic.AddInt32(&votesReceived, 1))
-						if votes*2 > len(cm.peerIds)+1 {
+						if votes*2 > len(cm.PeerIds)+1 {
 							// Won the election!
-							cm.dlog("wins election with %d votes", votes)
+							cm.dlog(fmt.Sprintf("wins election with %d votes", votes))
 							cm.startLeader()
 							return
 						}
@@ -307,7 +307,6 @@ func (cm *ConsensusModule) startElection() {
 			}
 		}(peerId)
 	}
-
 	// Run another election timer, in case this election is not successful.
 	go cm.runElectionTimer()
 }
@@ -315,10 +314,10 @@ func (cm *ConsensusModule) startElection() {
 // becomeFollower makes cm a follower and resets its state.
 // Expects cm.mu to be locked.
 func (cm *ConsensusModule) becomeFollower(term int) {
-	cm.dlog("becomes Follower with term=%d; log=%v", term, cm.log)
+	cm.dlog(fmt.Sprintf("becomes Follower with term=%d; log=%v", term, cm.log))
 	cm.state = Follower
 	cm.currentTerm = term
-	cm.votedFor = -1
+	cm.votedFor = ""
 	cm.electionResetEvent = time.Now()
 
 	go cm.runElectionTimer()
@@ -328,8 +327,9 @@ func (cm *ConsensusModule) becomeFollower(term int) {
 // Expects cm.mu to be locked.
 func (cm *ConsensusModule) startLeader() {
 	cm.state = Leader
-	cm.dlog("becomes Leader; term=%d, log=%v", cm.currentTerm, cm.log)
+	cm.dlog(fmt.Sprintf("becomes Leader; term=%d, log=%v", cm.currentTerm, cm.log))
 
+	/*
 	go func() {
 		ticker := time.NewTicker(50 * time.Millisecond)
 		defer ticker.Stop()
@@ -347,8 +347,10 @@ func (cm *ConsensusModule) startLeader() {
 			cm.mu.Unlock()
 		}
 	}()
+	*/
 }
 
+/*
 // leaderSendHeartbeats sends a round of heartbeats to all peers, collects their
 // replies and adjusts cm's state.
 func (cm *ConsensusModule) leaderSendHeartbeats() {
@@ -356,15 +358,16 @@ func (cm *ConsensusModule) leaderSendHeartbeats() {
 	savedCurrentTerm := cm.currentTerm
 	cm.mu.Unlock()
 
-	for _, peerId := range cm.peerIds {
+	for _, peerId := range cm.PeerIds {
 		args := AppendEntriesArgs{
 			Term:     savedCurrentTerm,
 			LeaderId: cm.id,
 		}
-		go func(peerId int) {
+		go func(peerId string) {
 			cm.dlog("sending AppendEntries to %v: ni=%d, args=%+v", peerId, 0, args)
 			var reply AppendEntriesReply
-			if err := cm.server.Call(peerId, "ConsensusModule.AppendEntries", args, &reply); err == nil {
+			// REPLACE WITH API CALL INSTEAD OF RPC
+			//if err := cm.server.Call(peerId, "ConsensusModule.AppendEntries", args, &reply); err == nil {
 				cm.mu.Lock()
 				defer cm.mu.Unlock()
 				if reply.Term > savedCurrentTerm {
@@ -375,4 +378,27 @@ func (cm *ConsensusModule) leaderSendHeartbeats() {
 			}
 		}(peerId)
 	}
+}
+*/
+
+
+func SendVoteReq(target string, args RequestVoteArgs) (error, RequestVoteReply) {
+        reqBody, _ := json.Marshal(args)
+        postBody := bytes.NewBuffer(reqBody)
+        resp, err := http.Post("http://" + target + "/anvil/raft/requestvote", "application/json", postBody)
+        if err != nil {
+                log.Fatalln("Unable to post content")
+        }
+        defer resp.Body.Close()
+
+        b, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+                log.Fatalln("Unable to read received content")
+        }
+        var rv_reply RequestVoteReply
+        err = json.Unmarshal(b, &rv_reply)
+        if err != nil {
+                log.Fatalln("Unable to process response JSON")
+        }
+        return nil, rv_reply
 }

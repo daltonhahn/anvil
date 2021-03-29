@@ -6,13 +6,14 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"fmt"
 	"github.com/gorilla/mux"
 
 	"github.com/daltonhahn/anvil/envoy"
 	"github.com/daltonhahn/anvil/router"
 	"github.com/daltonhahn/anvil/anvil/gossip"
 	"github.com/daltonhahn/anvil/catalog"
-	//"github.com/daltonhahn/anvil/raft"
+	"github.com/daltonhahn/anvil/raft"
 )
 
 func AnvilInit(nodeType string) {
@@ -30,11 +31,10 @@ func AnvilInit(nodeType string) {
 		log.Fatalln("Unable to get hostname")
 	}
 	serviceMap := envoy.S_list
-	// Check CLI flag for "server"
 	catalog.Register(hname, serviceMap.Services, nodeType)
-	// Add instance of RAFT here
-	// Encompassing server structure with embedded ConsensusModule
-	// s.cm = NewCOnsensusModule(s.serverid, s.peerids, s, s.ready)
+
+	CM := raft.NewConsensusModule(hname, []string{""})
+	fmt.Println(CM)
 
         anv_router := mux.NewRouter()
 	registerRoutes(anv_router)
@@ -58,6 +58,8 @@ func registerUDP() {
 }
 
 func registerRoutes(anv_router *mux.Router) {
+	anv_router.HandleFunc("/raft/requestvote", router.RequestVote).Methods("POST")
+	anv_router.HandleFunc("/raft/appendentries", router.AppendEntries).Methods("POST")
 	anv_router.HandleFunc("/catalog/nodes", router.GetNodeCatalog).Methods("GET")
 	anv_router.HandleFunc("/catalog/services", router.GetServiceCatalog).Methods("GET")
 	anv_router.HandleFunc("/catalog/register", router.RegisterNode).Methods("POST")

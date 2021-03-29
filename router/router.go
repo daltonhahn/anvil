@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/daltonhahn/anvil/catalog"
+	"github.com/daltonhahn/anvil/raft"
 )
 
 type Message struct {
@@ -87,4 +88,35 @@ func GetServiceCatalog(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, ("Retrieving Anvil Services at " + dt.String() + "\n"))
 	anv_catalog := catalog.GetCatalog()
 	anv_catalog.PrintServices()
+}
+
+func RequestVote(w http.ResponseWriter, r *http.Request) {
+	b, err := ioutil.ReadAll(r.Body)
+        defer r.Body.Close()
+        if err != nil {
+                http.Error(w, err.Error(), 500)
+                return
+        }
+        var rv_args raft.RequestVoteArgs
+        err = json.Unmarshal(b, &rv_args)
+        if err != nil {
+                log.Fatalln(err)
+                return
+        }
+
+	fmt.Printf("\tREQUEST VOTE TERM: %+v\n", rv_args.Term)
+
+	reply := raft.CM.RequestVote(rv_args)
+	var jsonData []byte
+
+	jsonData, err = json.Marshal(reply)
+	if err != nil {
+		log.Fatalln("Unable to marshal JSON")
+	}
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, string(jsonData))
+}
+
+func AppendEntries(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Hit the appendentries endpoint")
 }
