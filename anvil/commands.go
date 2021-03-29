@@ -89,6 +89,7 @@ func Join(target string) {
 		var localPost router.Message
 		localPost.NodeName = ele.Name
 		localPost.Services = tempCatalog.Services
+		localPost.NodeType = ele.Type
 		postBody, _ = json.Marshal(localPost)
 		responseBody = bytes.NewBuffer(postBody)
 		// Marshal the struct into a postable message
