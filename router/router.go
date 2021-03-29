@@ -17,7 +17,7 @@ type Message struct {
         NodeName string `json:"nodename"`
         Nodes []catalog.Node `json:"nodes"`
         Services []catalog.Service `json:"services"`
-	//NodeType string `json:"nodetype"`
+	NodeType string `json:"nodetype"`
 }
 
 func RegisterNode(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +57,7 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintf(w, string(jsonData))
 
 	// Add newly joined node to your local registry
-	catalog.Register(msg.NodeName, msg.Services, "client")
+	catalog.Register(msg.NodeName, msg.Services, msg.NodeType)
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +68,8 @@ func GetCatalog(w http.ResponseWriter, r *http.Request) {
 	hname, _ := os.Hostname()
 	nodes := []catalog.Node(anv_catalog.GetNodes())
 	services := []catalog.Service(anv_catalog.GetServices())
-	newMsg := &Message{hname, nodes, services}
+	nodeType := anv_catalog.GetNodeType(hname)
+	newMsg := &Message{hname, nodes, services, nodeType}
 	var jsonData []byte
 	jsonData, err := json.Marshal(newMsg)
 	if err != nil {

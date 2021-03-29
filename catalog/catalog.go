@@ -92,12 +92,20 @@ func GetCatalog() *Catalog {
 	return &AnvilCatalog
 }
 
+func (catalog *Catalog) GetNodeType(nodeName string) (string) {
+	for _, ele := range AnvilCatalog.Nodes {
+		if ele.Name == nodeName {
+			return ele.Type
+		}
+	}
+	return ""
+}
+
 func (catalog *Catalog) PrintNodes() {
 	fmt.Println("\t---- Nodes within Anvil ----")
 	for _, ele := range AnvilCatalog.Nodes {
 		fmt.Println("\t",ele)
 	}
-
 }
 func (catalog *Catalog) PrintServices() {
 	fmt.Println("\t---- Services within Anvil ----")
