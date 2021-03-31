@@ -60,6 +60,16 @@ func (catalog *Catalog) RemoveService(targetName string, targetAddr string) []Se
 	return filteredServices
 }
 
+func RemovePeer(peerList []string, targetName string) []string {
+	filteredPeers := peerList[:0]
+	for _,peer := range peerList {
+		if peer != targetName {
+			filteredPeers = append(filteredPeers,peer)
+		}
+	}
+	return filteredPeers
+}
+
 func Register(nodeName string, svcList []Service, nodeType string) {
 	addr, err := net.LookupIP(nodeName)
 	if err != nil {
@@ -88,6 +98,11 @@ func Deregister(nodeName string) {
 			}
 		}
 	}
+	addr, err := net.LookupIP(nodeName)
+	if err != nil {
+		fmt.Println("Lookup failed")
+	}
+	raft.CM.PeerIds = RemovePeer(raft.CM.PeerIds, addr[0].String())
 }
 
 func GetCatalog() *Catalog {

@@ -8,6 +8,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"errors"
 
 	"net/http"
         "encoding/json"
@@ -392,18 +393,18 @@ func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntrie
         postBody := bytes.NewBuffer(reqBody)
         resp, err := http.Post("http://" + target + "/anvil/raft/appendentries", "application/json", postBody)
         if err != nil {
-                log.Fatalln("Unable to post content")
+		return errors.New("No HTTP response"), AppendEntriesReply{}
         }
         defer resp.Body.Close()
 
         b, err := ioutil.ReadAll(resp.Body)
         if err != nil {
-                log.Fatalln("Unable to read received content")
+		return errors.New("Bad read error"), AppendEntriesReply{}
         }
         var ae_reply AppendEntriesReply
         err = json.Unmarshal(b, &ae_reply)
         if err != nil {
-                log.Fatalln("Unable to process response JSON")
+		return errors.New("JSON Parse error"), AppendEntriesReply{}
         }
         return nil, ae_reply
 }
@@ -414,18 +415,18 @@ func SendVoteReq(target string, args RequestVoteArgs) (error, RequestVoteReply) 
         postBody := bytes.NewBuffer(reqBody)
         resp, err := http.Post("http://" + target + "/anvil/raft/requestvote", "application/json", postBody)
         if err != nil {
-                log.Fatalln("Unable to post content")
+		return errors.New("No HTTP response"), RequestVoteReply{}
         }
         defer resp.Body.Close()
 
         b, err := ioutil.ReadAll(resp.Body)
         if err != nil {
-                log.Fatalln("Unable to read received content")
+		return errors.New("Bad read error"), RequestVoteReply{}
         }
         var rv_reply RequestVoteReply
         err = json.Unmarshal(b, &rv_reply)
         if err != nil {
-                log.Fatalln("Unable to process response JSON")
+		return errors.New("JSON Parse error"), RequestVoteReply{}
         }
         return nil, rv_reply
 }
