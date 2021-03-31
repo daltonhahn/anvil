@@ -335,8 +335,12 @@ func startLeader() {
 	dlog(fmt.Sprintf("becomes Leader; term=%d, log=%v", CM.currentTerm, CM.log))
 
 	UpdateLeader(CM.id, CM.id)
-	for _, ele := range CM.PeerIds {
-		UpdateLeader(ele, CM.id)
+	if len(CM.PeerIds) == 0 {
+                dlog(fmt.Sprintf("No Peers in peer set, no one else to notify"))
+        } else {
+		for _, ele := range CM.PeerIds {
+			UpdateLeader(ele, CM.id)
+		}
 	}
 
 	go func() {

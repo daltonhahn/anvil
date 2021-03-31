@@ -157,4 +157,5 @@ func UpdateLeader(w http.ResponseWriter, r *http.Request) {
 	var newLead map[string]string
 	err = json.Unmarshal(b, &newLead)
 	catalog.UpdateNodeTypes(newLead["leader"])
+	fmt.Fprintf(w, "OK")
 }
