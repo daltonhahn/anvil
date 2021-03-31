@@ -31,13 +31,36 @@ type Catalog struct {
 }
 
 func (catalog *Catalog) AddService(newSvc Service) []Service {
+	for ind, ele := range catalog.Services {
+		if ele.Name == newSvc.Name && ele.Address == newSvc.Address {
+			 catalog.Services[ind] = newSvc
+			 return catalog.Services
+		 }
+	 }
 	catalog.Services = append(catalog.Services, newSvc)
 	return catalog.Services
 }
 
 func (catalog *Catalog) AddNode(newNode Node) []Node {
+	for ind, ele := range catalog.Nodes {
+		if ele.Name == newNode.Name {
+			catalog.Nodes[ind] = newNode
+			return catalog.Nodes
+		}
+	}
 	catalog.Nodes = append(catalog.Nodes, newNode)
 	return catalog.Nodes
+}
+
+func AddPeer(peerList []string, targetName string) []string {
+	for _, ele := range peerList {
+		if ele == targetName {
+			return peerList
+		}
+	}
+	fmt.Println("Adding new peer")
+	peerList = append(peerList, targetName)
+	return peerList
 }
 
 func (catalog *Catalog) RemoveNode(target string) []Node {
@@ -78,8 +101,7 @@ func Register(nodeName string, svcList []Service, nodeType string) {
 	AnvilCatalog.Nodes = AnvilCatalog.AddNode(Node{Name: nodeName, Address: addr[0].String(), Type: nodeType})
 	hname, err := os.Hostname()
 	if nodeType == "server" && nodeName != hname {
-		raft.CM.PeerIds = append(raft.CM.PeerIds, addr[0].String())
-		fmt.Println("Adding new peer")
+		raft.CM.PeerIds = AddPeer(raft.CM.PeerIds, addr[0].String())
 	}
 	for _, ele := range svcList {
 		AnvilCatalog.Services = AnvilCatalog.AddService(Service{ele.Name, addr[0].String(), ele.Port})
@@ -124,6 +146,7 @@ func (catalog *Catalog) PrintNodes() {
 		fmt.Println("\t",ele)
 	}
 }
+
 func (catalog *Catalog) PrintServices() {
 	fmt.Println("\t---- Services within Anvil ----")
 	fmt.Println("Service Name\t\tAddress\t\tPort")
@@ -135,6 +158,7 @@ func (catalog *Catalog) PrintServices() {
 func (catalog *Catalog) GetNodes() ([]Node) {
 	return AnvilCatalog.Nodes
 }
+
 func (catalog *Catalog) GetServices() ([]Service) {
 	return AnvilCatalog.Services
 }

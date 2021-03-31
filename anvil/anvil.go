@@ -33,8 +33,10 @@ func AnvilInit(nodeType string) {
 	serviceMap := envoy.S_list
 	catalog.Register(hname, serviceMap.Services, nodeType)
 
-	CM := raft.NewConsensusModule(hname, []string{""})
-	fmt.Println(CM)
+	if nodeType == "server" {
+		CM := raft.NewConsensusModule(hname, []string{""})
+		fmt.Println(CM)
+	}
 
         anv_router := mux.NewRouter()
 	registerRoutes(anv_router)
