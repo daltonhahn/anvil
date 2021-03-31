@@ -266,7 +266,6 @@ func startElection() {
 	var votesReceived int32 = 1
 
 	if len(CM.PeerIds) == 0 {
-		dlog(fmt.Sprintf("No Peers in peer set, assuming Leader"))
 		startLeader()
 		return
 	} else {
@@ -336,7 +335,6 @@ func startLeader() {
 
 	UpdateLeader(CM.id, CM.id)
 	if len(CM.PeerIds) == 0 {
-                dlog(fmt.Sprintf("No Peers in peer set, no one else to notify"))
         } else {
 		for _, ele := range CM.PeerIds {
 			UpdateLeader(ele, CM.id)
@@ -381,6 +379,7 @@ func leaderSendHeartbeats() {
 				if peerId == "" {
 					return
 				}
+				UpdateLeader(peerId, CM.id)
 
 				var reply AppendEntriesReply
 				err, reply := SendAppendEntry(peerId, args)
