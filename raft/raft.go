@@ -170,7 +170,6 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 	if CM.state == Dead {
 		return AppendEntriesReply{CM.currentTerm, false}
 	}
-	dlog(fmt.Sprintf("AppendEntries: %+v", args))
 
 	if args.Term > CM.currentTerm {
 		dlog("... term out of date in AppendEntries")
@@ -187,7 +186,6 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 	}
 
 	reply.Term = CM.currentTerm
-	dlog(fmt.Sprintf("AppendEntries reply: %+v", reply))
 	return reply
 }
 
@@ -373,7 +371,6 @@ func leaderSendHeartbeats() {
 					return
 				}
 
-				dlog(fmt.Sprintf("sending AppendEntries to %v: ni=%d, args=%+v", peerId, 0, args))
 				var reply AppendEntriesReply
 				err, reply := SendAppendEntry(peerId, args)
 				if err == nil {
