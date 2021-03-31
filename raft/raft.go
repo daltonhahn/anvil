@@ -194,13 +194,15 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 
 // electionTimeout generates a pseudo-random election timeout duration.
 func electionTimeout() time.Duration {
+	//TUNE ME FOR TESTING
+	duration := 2000
 	// If RAFT_FORCE_MORE_REELECTION is set, stress-test by deliberately
 	// generating a hard-coded number very often. This will create collisions
 	// between different servers and force more re-elections.
 	if len(os.Getenv("RAFT_FORCE_MORE_REELECTION")) > 0 && rand.Intn(3) == 0 {
-		return time.Duration(150) * time.Millisecond
+		return time.Duration(duration) * time.Millisecond
 	} else {
-		return time.Duration(150+rand.Intn(150)) * time.Millisecond
+		return time.Duration(duration+rand.Intn(150)) * time.Millisecond
 	}
 }
 
@@ -222,7 +224,7 @@ func runElectionTimer() {
 	// - the election timer expires and this CM becomes a candidate
 	// In a follower, this typically keeps running in the background for the
 	// duration of the CM's lifetime.
-	ticker := time.NewTicker(10 * time.Millisecond)
+	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	for {
 		<-ticker.C
@@ -263,52 +265,52 @@ func startElection() {
 
 	var votesReceived int32 = 1
 
-	// Send RequestVote RPCs to all other servers concurrently.
-	for _, peerId := range CM.PeerIds {
-		go func(peerId string) {
-			//Debugging no peers
-			if peerId == "" {
-				startLeader()
-				return
-			}
-			fmt.Println("Peer list not empty, requesting votes")
+	if len(CM.PeerIds) == 0 {
+		dlog(fmt.Sprintf("No Peers in peer set, assuming Leader"))
+		startLeader()
+		return
+	} else {
+		// Send RequestVote RPCs to all other servers concurrently.
+		for _, peerId := range CM.PeerIds {
+			go func(peerId string) {
 
-			args := RequestVoteArgs{
-				Term:        savedCurrentTerm,
-				CandidateId: CM.id,
-			}
-			var reply RequestVoteReply
-
-			dlog(fmt.Sprintf("sending RequestVote to %d: %+v", peerId, args))
-
-			err, reply := SendVoteReq(peerId, args)
-			if err == nil {
-				CM.mu.Lock()
-				defer CM.mu.Unlock()
-				dlog(fmt.Sprintf("received RequestVoteReply %+v", reply))
-
-				if CM.state != Candidate {
-					dlog(fmt.Sprintf("while waiting for reply, state = %v", CM.state))
-					return
+				args := RequestVoteArgs{
+					Term:        savedCurrentTerm,
+					CandidateId: CM.id,
 				}
+				var reply RequestVoteReply
 
-				if reply.Term > savedCurrentTerm {
-					dlog("term out of date in RequestVoteReply")
-					becomeFollower(reply.Term)
-					return
-				} else if reply.Term == savedCurrentTerm {
-					if reply.VoteGranted {
-						votes := int(atomic.AddInt32(&votesReceived, 1))
-						if votes*2 > len(CM.PeerIds)+1 {
-							// Won the election!
-							dlog(fmt.Sprintf("wins election with %d votes", votes))
-							startLeader()
-							return
+				dlog(fmt.Sprintf("sending RequestVote to %d: %+v", peerId, args))
+
+				err, reply := SendVoteReq(peerId, args)
+				if err == nil {
+					CM.mu.Lock()
+					defer CM.mu.Unlock()
+					dlog(fmt.Sprintf("received RequestVoteReply %+v", reply))
+
+					if CM.state != Candidate {
+						dlog(fmt.Sprintf("while waiting for reply, state = %v", CM.state))
+						return
+					}
+
+					if reply.Term > savedCurrentTerm {
+						dlog("term out of date in RequestVoteReply")
+						becomeFollower(reply.Term)
+						return
+					} else if reply.Term == savedCurrentTerm {
+						if reply.VoteGranted {
+							votes := int(atomic.AddInt32(&votesReceived, 1))
+							if votes*2 > len(CM.PeerIds)+1 {
+								// Won the election!
+								dlog(fmt.Sprintf("wins election with %d votes", votes))
+								startLeader()
+								return
+							}
 						}
 					}
 				}
-			}
-		}(peerId)
+			}(peerId)
+		}
 	}
 	// Run another election timer, in case this election is not successful.
 	go runElectionTimer()
@@ -358,32 +360,33 @@ func leaderSendHeartbeats() {
 	savedCurrentTerm := CM.currentTerm
 	CM.mu.Unlock()
 
-	for _, peerId := range CM.PeerIds {
-		args := AppendEntriesArgs{
-			Term:     savedCurrentTerm,
-			LeaderId: CM.id,
-		}
-		go func(peerId string) {
-			if peerId == "" {
-				fmt.Println("\t\tPeer list read as empty, returning")
-				return
+        if len(CM.PeerIds) == 0 {
+                return
+        } else {
+		for _, peerId := range CM.PeerIds {
+			args := AppendEntriesArgs{
+				Term:     savedCurrentTerm,
+				LeaderId: CM.id,
 			}
-
-			fmt.Println("Peer list not empty, sending log entries")
-
-			dlog(fmt.Sprintf("sending AppendEntries to %v: ni=%d, args=%+v", peerId, 0, args))
-			var reply AppendEntriesReply
-			err, reply := SendAppendEntry(peerId, args)
-			if err == nil {
-				CM.mu.Lock()
-				defer CM.mu.Unlock()
-				if reply.Term > savedCurrentTerm {
-					dlog("term out of date in heartbeat reply")
-					becomeFollower(reply.Term)
+			go func(peerId string) {
+				if peerId == "" {
 					return
 				}
-			}
-		}(peerId)
+
+				dlog(fmt.Sprintf("sending AppendEntries to %v: ni=%d, args=%+v", peerId, 0, args))
+				var reply AppendEntriesReply
+				err, reply := SendAppendEntry(peerId, args)
+				if err == nil {
+					CM.mu.Lock()
+					defer CM.mu.Unlock()
+					if reply.Term > savedCurrentTerm {
+						dlog("term out of date in heartbeat reply")
+						becomeFollower(reply.Term)
+						return
+					}
+				}
+			}(peerId)
+		}
 	}
 }
 

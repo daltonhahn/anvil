@@ -111,8 +111,6 @@ func RequestVote(w http.ResponseWriter, r *http.Request) {
                 return
         }
 
-	fmt.Printf("\tREQUEST VOTE TERM: %+v\n", rv_args.Term)
-
 	reply := raft.RequestVote(rv_args)
 	var jsonData []byte
 
@@ -137,8 +135,6 @@ func AppendEntries(w http.ResponseWriter, r *http.Request) {
                 log.Fatalln(err)
                 return
         }
-
-        fmt.Printf("\tAPPEND ENTRY TERM: %+v\n", ae_args.Term)
 
         reply := raft.AppendEntries(ae_args)
         var jsonData []byte
