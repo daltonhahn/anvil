@@ -110,7 +110,7 @@ func Register(nodeName string, svcList []Service, nodeType string) {
 	}
 	AnvilCatalog.Nodes = AnvilCatalog.AddNode(Node{Name: nodeName, Address: addr[0].String(), Type: nodeType})
 	hname, err := os.Hostname()
-	if nodeType == "server" && nodeName != hname {
+	if (nodeType == "server" || nodeType == "leadear") && nodeName != hname {
 		raft.CM.PeerIds = AddPeer(raft.CM.PeerIds, addr[0].String())
 	}
 	for _, ele := range svcList {
