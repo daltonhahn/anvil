@@ -75,7 +75,7 @@ func NewConsensusModule(id string, peerIds []string) *ConsensusModule {
 		CM.mu.Lock()
 		CM.electionResetEvent = time.Now()
 		CM.mu.Unlock()
-		runElectionTimer()
+		runElectionTimer(CM.id)
 	}()
 
 	return CM
@@ -211,12 +211,13 @@ func electionTimeout() time.Duration {
 // This function is blocking and should be launched in a separate goroutine;
 // it's designed to work for a single (one-shot) election timer, as it exits
 // whenever the CM state changes from follower/candidate or the term changes.
-func runElectionTimer() {
+func runElectionTimer(myid string) {
 	timeoutDuration := electionTimeout()
 	CM.mu.Lock()
 	termStarted := CM.currentTerm
 	CM.mu.Unlock()
 	dlog(fmt.Sprintf("election timer started (%v), term=%d", timeoutDuration, termStarted))
+	CM.id = myid
 
 	// This loops until either:
 	// - we discover the election timer is no longer needed, or
@@ -312,7 +313,7 @@ func startElection() {
 		}
 	}
 	// Run another election timer, in case this election is not successful.
-	go runElectionTimer()
+	go runElectionTimer(CM.id)
 }
 
 // becomeFollower makes cm a follower and resets its state.
@@ -324,7 +325,7 @@ func becomeFollower(term int) {
 	CM.votedFor = ""
 	CM.electionResetEvent = time.Now()
 
-	go runElectionTimer()
+	go runElectionTimer(CM.id)
 }
 
 // startLeader switches cm into a leader state and begins process of heartbeats.
@@ -332,6 +333,11 @@ func becomeFollower(term int) {
 func startLeader() {
 	CM.state = Leader
 	dlog(fmt.Sprintf("becomes Leader; term=%d, log=%v", CM.currentTerm, CM.log))
+
+	UpdateLeader(CM.id, CM.id)
+	for _, ele := range CM.PeerIds {
+		UpdateLeader(ele, CM.id)
+	}
 
 	go func() {
 		ticker := time.NewTicker(50 * time.Millisecond)
@@ -386,6 +392,21 @@ func leaderSendHeartbeats() {
 			}(peerId)
 		}
 	}
+}
+
+func UpdateLeader(target string, newLeader string) {
+	reqBody, _ := json.Marshal(map[string]string {
+		"leader": newLeader,
+	})
+
+	postBody := bytes.NewBuffer(reqBody)
+
+	resp, err := http.Post("http://" + target + "/anvil/raft/updateleader", "application/json", postBody)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	return
 }
 
 func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntriesReply) {

@@ -93,6 +93,16 @@ func RemovePeer(peerList []string, targetName string) []string {
 	return filteredPeers
 }
 
+func UpdateNodeTypes(newLeader string) {
+	for ind, ele := range AnvilCatalog.Nodes {
+		if ele.Name == newLeader {
+			AnvilCatalog.Nodes[ind].Type = "leader"
+		} else if ele.Name != newLeader && ele.Type != "client" {
+			AnvilCatalog.Nodes[ind].Type = "server"
+		}
+	}
+}
+
 func Register(nodeName string, svcList []Service, nodeType string) {
 	addr, err := net.LookupIP(nodeName)
 	if err != nil {

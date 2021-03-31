@@ -9,7 +9,6 @@ import (
 
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/router"
-//	"github.com/daltonhahn/anvil/raft"
 )
 
 func CheckStatus() bool {
@@ -20,28 +19,6 @@ func CheckStatus() bool {
 		return false
 	}
 }
-
-/*
-func SendVoteReq(string target, raft.RequestVoteArgs args) (error, raft.RequestVoteReply) {
-	postBody, _ := json.Marshal(args)
-	resp, err := http.Post("http://" + target + "/anvil/raft/requestvote", "application/json", postBody)
-	if err != nil {
-		log.Fatalln("Unable to post content")
-	}
-	defer resp.Body.Close()
-
-	b, err := ioutil.ReadAll(resp.Body)
-        if err != nil {
-		log.Fatalln("Unable to read received content")
-        }
-        var rv_reply raft.RequestVoteReply
-        err = json.Unmarshal(b, &rv_reply)
-        if err != nil {
-		log.Fatalln("Unable to process response JSON")
-        }
-	return nil, rv_reply
-}
-*/
 
 func Join(target string) {
 	//Collect all of the current info you have from your local catalog

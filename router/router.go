@@ -146,3 +146,15 @@ func AppendEntries(w http.ResponseWriter, r *http.Request) {
         w.Header().Set("Content-Type", "application/json")
         fmt.Fprintf(w, string(jsonData))
 }
+
+func UpdateLeader(w http.ResponseWriter, r *http.Request) {
+	b, err := ioutil.ReadAll(r.Body)
+        defer r.Body.Close()
+        if err != nil {
+                http.Error(w, err.Error(), 500)
+                return
+        }
+	var newLead map[string]string
+	err = json.Unmarshal(b, &newLead)
+	catalog.UpdateNodeTypes(newLead["leader"])
+}
