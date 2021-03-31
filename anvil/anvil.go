@@ -60,6 +60,7 @@ func registerUDP() {
 func registerRoutes(anv_router *mux.Router) {
 	anv_router.HandleFunc("/raft/requestvote", router.RequestVote).Methods("POST")
 	anv_router.HandleFunc("/raft/appendentries", router.AppendEntries).Methods("POST")
+	anv_router.HandleFunc("/raft/peers", router.RaftPeers).Methods("GET")
 	anv_router.HandleFunc("/catalog/nodes", router.GetNodeCatalog).Methods("GET")
 	anv_router.HandleFunc("/catalog/services", router.GetServiceCatalog).Methods("GET")
 	anv_router.HandleFunc("/catalog/register", router.RegisterNode).Methods("POST")

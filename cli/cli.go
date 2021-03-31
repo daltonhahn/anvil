@@ -85,6 +85,23 @@ func CLI() {
 			}
 		})
 
+	commando.
+		Register("peers").
+		SetDescription("This command is utilized to retrieve a list of raft peers within Anvil.").
+		SetShortDescription("lists raft peers of anvil service mesh node").
+		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
+			//Check if Anvil binary is running
+			res := anvil.CheckStatus()
+			if (res == true) {
+				_, err := http.Get("http://localhost/anvil/raft/peers")
+				if err != nil {
+					log.Fatalln(err)
+				}
+			} else {
+				log.Fatalln("Anvil binary is not currently running")
+			}
+		})
+
 	// parse command-line arguments from the STDIN
 	commando.Parse(nil)
 }

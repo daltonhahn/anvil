@@ -91,6 +91,12 @@ func GetServiceCatalog(w http.ResponseWriter, r *http.Request) {
 	anv_catalog.PrintServices()
 }
 
+func RaftPeers(w http.ResponseWriter, r *http.Request) {
+	dt := time.Now()
+	fmt.Fprint(w, ("Retrieving Raft Peers at " + dt.String() + "\n"))
+	raft.GetPeers()
+}
+
 func RequestVote(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
         defer r.Body.Close()
@@ -107,7 +113,7 @@ func RequestVote(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("\tREQUEST VOTE TERM: %+v\n", rv_args.Term)
 
-	reply := raft.CM.RequestVote(rv_args)
+	reply := raft.RequestVote(rv_args)
 	var jsonData []byte
 
 	jsonData, err = json.Marshal(reply)
@@ -119,7 +125,6 @@ func RequestVote(w http.ResponseWriter, r *http.Request) {
 }
 
 func AppendEntries(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Hit the appendentries endpoint")
         b, err := ioutil.ReadAll(r.Body)
         defer r.Body.Close()
         if err != nil {
@@ -133,9 +138,9 @@ func AppendEntries(w http.ResponseWriter, r *http.Request) {
                 return
         }
 
-        fmt.Printf("\tREQUEST VOTE TERM: %+v\n", ae_args.Term)
+        fmt.Printf("\tAPPEND ENTRY TERM: %+v\n", ae_args.Term)
 
-        reply := raft.CM.AppendEntries(ae_args)
+        reply := raft.AppendEntries(ae_args)
         var jsonData []byte
 
         jsonData, err = json.Marshal(reply)

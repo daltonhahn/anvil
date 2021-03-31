@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
 
 	"github.com/daltonhahn/anvil/raft"
 
@@ -65,7 +66,8 @@ func Register(nodeName string, svcList []Service, nodeType string) {
 		fmt.Println("Lookup failed")
 	}
 	AnvilCatalog.Nodes = AnvilCatalog.AddNode(Node{Name: nodeName, Address: addr[0].String(), Type: nodeType})
-	if nodeType == "server" {
+	hname, err := os.Hostname()
+	if nodeType == "server" && nodeName != hname {
 		raft.CM.PeerIds = append(raft.CM.PeerIds, addr[0].String())
 		fmt.Println("Adding new peer")
 	}
