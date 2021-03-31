@@ -143,7 +143,6 @@ func (cm *ConsensusModule) RequestVote(args RequestVoteArgs) RequestVoteReply {
 	cm.dlog(fmt.Sprintf("... RequestVote reply: %+v", reply))
 	return reply
 }
-/*
 
 // See figure 2 in the paper.
 type AppendEntriesArgs struct {
@@ -161,13 +160,14 @@ type AppendEntriesReply struct {
 	Success bool
 }
 
-func (cm *ConsensusModule) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply) error {
+func (cm *ConsensusModule) AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
+	reply := AppendEntriesReply{}
 	if cm.state == Dead {
-		return nil
+		return AppendEntriesReply{cm.currentTerm, false}
 	}
-	cm.dlog("AppendEntries: %+v", args)
+	cm.dlog(fmt.Sprintf("AppendEntries: %+v", args))
 
 	if args.Term > cm.currentTerm {
 		cm.dlog("... term out of date in AppendEntries")
@@ -184,11 +184,11 @@ func (cm *ConsensusModule) AppendEntries(args AppendEntriesArgs, reply *AppendEn
 	}
 
 	reply.Term = cm.currentTerm
-	cm.dlog("AppendEntries reply: %+v", *reply)
-	return nil
+	cm.dlog(fmt.Sprintf("AppendEntries reply: %+v", reply))
+	return reply
 }
 
-*/
+
 // electionTimeout generates a pseudo-random election timeout duration.
 func (cm *ConsensusModule) electionTimeout() time.Duration {
 	// If RAFT_FORCE_MORE_REELECTION is set, stress-test by deliberately
@@ -269,7 +269,6 @@ func (cm *ConsensusModule) startElection() {
 				return
 			}
 
-
 			args := RequestVoteArgs{
 				Term:        savedCurrentTerm,
 				CandidateId: cm.id,
@@ -329,7 +328,6 @@ func (cm *ConsensusModule) startLeader() {
 	cm.state = Leader
 	cm.dlog(fmt.Sprintf("becomes Leader; term=%d, log=%v", cm.currentTerm, cm.log))
 
-	/*
 	go func() {
 		ticker := time.NewTicker(50 * time.Millisecond)
 		defer ticker.Stop()
@@ -347,10 +345,8 @@ func (cm *ConsensusModule) startLeader() {
 			cm.mu.Unlock()
 		}
 	}()
-	*/
 }
 
-/*
 // leaderSendHeartbeats sends a round of heartbeats to all peers, collects their
 // replies and adjusts cm's state.
 func (cm *ConsensusModule) leaderSendHeartbeats() {
@@ -364,10 +360,13 @@ func (cm *ConsensusModule) leaderSendHeartbeats() {
 			LeaderId: cm.id,
 		}
 		go func(peerId string) {
-			cm.dlog("sending AppendEntries to %v: ni=%d, args=%+v", peerId, 0, args)
+			if peerId == "" {
+				return
+			}
+			cm.dlog(fmt.Sprintf("sending AppendEntries to %v: ni=%d, args=%+v", peerId, 0, args))
 			var reply AppendEntriesReply
-			// REPLACE WITH API CALL INSTEAD OF RPC
-			//if err := cm.server.Call(peerId, "ConsensusModule.AppendEntries", args, &reply); err == nil {
+			err, reply := SendAppendEntry(peerId, args)
+			if err == nil {
 				cm.mu.Lock()
 				defer cm.mu.Unlock()
 				if reply.Term > savedCurrentTerm {
@@ -379,7 +378,27 @@ func (cm *ConsensusModule) leaderSendHeartbeats() {
 		}(peerId)
 	}
 }
-*/
+
+func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntriesReply) {
+        reqBody, _ := json.Marshal(args)
+        postBody := bytes.NewBuffer(reqBody)
+        resp, err := http.Post("http://" + target + "/anvil/raft/appendentries", "application/json", postBody)
+        if err != nil {
+                log.Fatalln("Unable to post content")
+        }
+        defer resp.Body.Close()
+
+        b, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+                log.Fatalln("Unable to read received content")
+        }
+        var ae_reply AppendEntriesReply
+        err = json.Unmarshal(b, &ae_reply)
+        if err != nil {
+                log.Fatalln("Unable to process response JSON")
+        }
+        return nil, ae_reply
+}
 
 
 func SendVoteReq(target string, args RequestVoteArgs) (error, RequestVoteReply) {
@@ -402,3 +421,4 @@ func SendVoteReq(target string, args RequestVoteArgs) (error, RequestVoteReply) 
         }
         return nil, rv_reply
 }
+

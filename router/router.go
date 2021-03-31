@@ -120,4 +120,28 @@ func RequestVote(w http.ResponseWriter, r *http.Request) {
 
 func AppendEntries(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Hit the appendentries endpoint")
+        b, err := ioutil.ReadAll(r.Body)
+        defer r.Body.Close()
+        if err != nil {
+                http.Error(w, err.Error(), 500)
+                return
+        }
+        var ae_args raft.AppendEntriesArgs
+        err = json.Unmarshal(b, &ae_args)
+        if err != nil {
+                log.Fatalln(err)
+                return
+        }
+
+        fmt.Printf("\tREQUEST VOTE TERM: %+v\n", ae_args.Term)
+
+        reply := raft.CM.AppendEntries(ae_args)
+        var jsonData []byte
+
+        jsonData, err = json.Marshal(reply)
+        if err != nil {
+                log.Fatalln("Unable to marshal JSON")
+        }
+        w.Header().Set("Content-Type", "application/json")
+        fmt.Fprintf(w, string(jsonData))
 }
