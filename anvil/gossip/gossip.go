@@ -22,7 +22,6 @@ type Message struct {
 
 func sendResponse(conn *net.UDPConn, addr *net.UDPAddr) {
 	encMessage := security.EncData("Trashy Gossip\n")
-	fmt.Println("Sending Resp: ", encMessage)
 	_,err := conn.WriteToUDP([]byte(encMessage), addr)
 	if err != nil {
 		fmt.Printf("Couldn't send response %v", err)
@@ -32,7 +31,6 @@ func sendResponse(conn *net.UDPConn, addr *net.UDPAddr) {
 func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
 	dt := time.Now()
 	encMessage := security.EncData("OK " + dt.String())
-	fmt.Println("Sending HealthResp: ", encMessage)
 	_,err := conn.WriteToUDP([]byte(encMessage), addr)
 	if err != nil {
 		fmt.Printf("Couldn't send response %v", err)
@@ -47,7 +45,6 @@ func sendHealthProbe(target string) bool {
 		log.Fatalln("Unable to connect to target")
 	}
 	encMessage := security.EncData("health")
-	fmt.Println("Sending Probe: ", encMessage)
 	fmt.Fprintf(conn, string(encMessage))
 	_, err = bufio.NewReader(conn).Read(p)
 	if err != nil {
