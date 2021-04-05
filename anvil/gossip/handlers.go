@@ -18,12 +18,12 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 		message := string(p[:n])
 		fmt.Println("\t Received raw: ", message)
 		decMessage := security.DecData(message)
-		fmt.Println("\t\t Decoded: ", message)
+		fmt.Println("\t\t Decoded: ", string(decMessage))
 
 		// Parse content received (p) to determine health check vs. gossip
-		if decMessage == "health" {
+		if string(decMessage) == "health" {
 			sendHealthResp(ser, remoteaddr)
-		} else if (len(decMessage) > 6 && decMessage[:6] == "gossip") {
+		} else if (len(decMessage) > 6 && string(decMessage)[:6] == "gossip") {
 			if err !=  nil {
 				fmt.Printf("Some error  %v", err)
 				continue

@@ -48,7 +48,7 @@ func sendHealthProbe(target string) bool {
 	}
 	encMessage := security.EncData("health")
 	fmt.Println("Sending Probe: ", encMessage)
-	fmt.Fprintf(conn, encMessage)
+	fmt.Fprintf(conn, string(encMessage))
 	_, err = bufio.NewReader(conn).Read(p)
 	if err != nil {
 		conn.Close()

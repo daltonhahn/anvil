@@ -30,12 +30,12 @@ func readSecConfig() (*SecConfig, error) {
         return SecConf, nil
 }
 
-func EncData(mytext string) string {
+func EncData(plaintext string) []byte {
     SecConf, err := readSecConfig()
     if err != nil {
 	    log.Fatalln("Unable to read security configuration")
     }
-    text := []byte("My Super Secret Code Stuff")
+    text := []byte(plaintext)
     key := []byte(SecConf.Key)
 
     // generate a new aes cipher using our 32 byte long key
@@ -69,12 +69,12 @@ func EncData(mytext string) string {
     // additional data and appends the result to dst, returning the updated
     // slice. The nonce must be NonceSize() bytes long and unique for all
     // time, for a given key.
-    return string(gcm.Seal(nonce, nonce, text, nil))
+    return []byte(gcm.Seal(nonce, nonce, text, nil))
 }
 
-func DecData(encString string) string {
+func DecData(input_ciphertext string) []byte {
     key := []byte(SecConf.Key)
-    ciphertext := []byte(encString)
+    ciphertext := []byte(input_ciphertext)
     c, err := aes.NewCipher(key)
     if err != nil {
         fmt.Println(err)
@@ -95,5 +95,5 @@ func DecData(encString string) string {
     if err != nil {
         fmt.Println(err)
     }
-    return (string(plaintext))
+    return plaintext
 }
