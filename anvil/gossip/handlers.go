@@ -8,19 +8,22 @@ import (
 	layers "github.com/google/gopacket/layers"
 
 	"github.com/daltonhahn/anvil/catalog"
+	"github.com/daltonhahn/anvil/security"
 )
 
 func HandleUDP(p []byte, ser *net.UDPConn) {
-	// WHEN READING UDP MESSAGE FROM SOCKET, DECRYPT WITH KEY -- LATER
 	for {
 		n,remoteaddr,err := ser.ReadFromUDP(p)
 
 		message := string(p[:n])
+		fmt.Println("\t Received raw: ", message)
+		decMessage := security.DecData(message)
+		fmt.Println("\t\t Decoded: ", message)
 
 		// Parse content received (p) to determine health check vs. gossip
-		if message == "health" {
+		if decMessage == "health" {
 			sendHealthResp(ser, remoteaddr)
-		} else if (len(message) > 6 && message[:6] == "gossip") {
+		} else if (len(decMessage) > 6 && decMessage[:6] == "gossip") {
 			if err !=  nil {
 				fmt.Printf("Some error  %v", err)
 				continue
@@ -46,12 +49,10 @@ func serveDNS(u *net.UDPConn, clientAddr net.Addr, request *layers.DNS) {
 	dnsAnswer.Type = layers.DNSTypeA
 	var ip string
 	var err error
-	// REPLACE WITH ON-THE-FLY RECORD LOOKUP
 	ip,err = catalog.LookupDNS(string(request.Questions[0].Name[:strings.IndexByte(string(request.Questions[0].Name), '.')]))
 
 	if err != nil {
 		fmt.Println(err)
-		//Todo: Log no data present for the IP and handle:todo
 	}
 	a, _, _ := net.ParseCIDR(ip + "/24")
 	dnsAnswer.Type = layers.DNSTypeA

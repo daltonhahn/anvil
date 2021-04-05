@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"bufio"
 
+	"github.com/daltonhahn/anvil/security"
 	"github.com/daltonhahn/anvil/catalog"
 )
 
@@ -20,19 +21,19 @@ type Message struct {
 }
 
 func sendResponse(conn *net.UDPConn, addr *net.UDPAddr) {
-	// BEFORE SENDING A RESPONSE, ENCRYPT WITH KEY -- LATER
-
-	_,err := conn.WriteToUDP([]byte("TRASHY GOSSIP\n"), addr)
+	encMessage := security.EncData("Trashy Gossip\n")
+	fmt.Println("Sending Resp: ", encMessage)
+	_,err := conn.WriteToUDP([]byte(encMessage), addr)
 	if err != nil {
 		fmt.Printf("Couldn't send response %v", err)
 	}
 }
 
 func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
-	// BEFORE SENDING A RESPONSE, ENCRYPT WITH KEY -- LATER
-
 	dt := time.Now()
-	_,err := conn.WriteToUDP([]byte("OK " + dt.String()), addr)
+	encMessage := security.EncData("OK " + dt.String())
+	fmt.Println("Sending HealthResp: ", encMessage)
+	_,err := conn.WriteToUDP([]byte(encMessage), addr)
 	if err != nil {
 		fmt.Printf("Couldn't send response %v", err)
 	}
@@ -45,7 +46,9 @@ func sendHealthProbe(target string) bool {
 	if err != nil {
 		log.Fatalln("Unable to connect to target")
 	}
-	fmt.Fprintf(conn, "health")
+	encMessage := security.EncData("health")
+	fmt.Println("Sending Probe: ", encMessage)
+	fmt.Fprintf(conn, encMessage)
 	_, err = bufio.NewReader(conn).Read(p)
 	if err != nil {
 		conn.Close()
@@ -56,7 +59,7 @@ func sendHealthProbe(target string) bool {
 	}
 }
 
-func CheckHealth(conn *net.UDPConn) {
+func CheckHealth() {
 	time.Sleep(10 * time.Second)
 	for {
 		//Pull current catalog

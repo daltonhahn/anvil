@@ -17,6 +17,5 @@ bin/*
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-
 # Ignore for generated cds.yaml and lds.yaml files
 envoy/config/*
