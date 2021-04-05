@@ -42,6 +42,20 @@ const listener_config = `resources:
               route:
                 prefix_rewrite: "/"
                 cluster: anvil_service
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+	  require_client_certificate: true
+          common_tls_context:
+            validation_context:
+              trusted_ca:
+                filename: /root/anvil/config/certs/ca.crt
+            tls_certificates:
+            - certificate_chain:
+                filename: /root/anvil/config/certs/server1.crt
+              private_key:
+                filename: /root/anvil/config/certs/server1.key
 `
 
 const gossip_config = `
