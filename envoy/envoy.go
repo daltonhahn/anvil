@@ -16,7 +16,7 @@ const listener_config = `resources:
   address:
     socket_address:
       address: 0.0.0.0
-      port_value: 80
+      port_value: 443
   filter_chains:
   - filters:
       name: envoy.filters.network.http_connection_manager
@@ -43,7 +43,7 @@ const listener_config = `resources:
                 prefix_rewrite: "/"
                 cluster: anvil_service
 `
-const tls_config = 
+const tls_config =
 `    transport_socket:
       name: envoy.transport_sockets.tls
       typed_config:
@@ -68,7 +68,7 @@ const gossip_config = `
       socket_address:
         protocol: UDP
         address: 0.0.0.0 
-        port_value: 80
+        port_value: 443
   listener_filters:
     - name: envoy.filters.udp_listener.udp_proxy
       typed_config:

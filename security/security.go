@@ -4,37 +4,38 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"gopkg.in/yaml.v2"
+	"net/http"
 )
 
 var SecConf = new(SecConfig)
 
 type SecConfig struct {
-	Key	string
+	Key	string `yaml:"key,omitempty"`
+	CACert	string `yaml:"cacert,omitempty"`
+	TLSCert	string `yaml:"tlscert,omitempty"`
+	TLSKey	string `yaml:"tlskey,omitempty"`
 }
 
-func readSecConfig() (*SecConfig, error) {
+func ReadSecConfig() {
 	yamlFile, err := ioutil.ReadFile("/root/anvil/config/test_config.yaml")
         if err != nil {
                 log.Printf("Read file error #%v", err)
         }
-        err = yaml.Unmarshal(yamlFile, SecConf)
+        err = yaml.Unmarshal(yamlFile, &SecConf)
         if err != nil {
                 log.Fatalf("Unmarshal: %v", err)
         }
-
-        return SecConf, nil
 }
 
 func EncData(plaintext string) []byte {
-    SecConf, err := readSecConfig()
-    if err != nil {
-	    log.Fatalln("Unable to read security configuration")
-    }
     text := []byte(plaintext)
     key := []byte(SecConf.Key)
 
@@ -96,4 +97,66 @@ func DecData(input_ciphertext string) []byte {
         fmt.Println(err)
     }
     return plaintext
+}
+
+func TLSGetReq(target string, path string) (*http.Response,error) {
+	ReadSecConfig()
+	caCertPath := SecConf.CACert
+	caCert, err := ioutil.ReadFile(caCertPath)
+        if err != nil {
+                log.Printf("Read file error #%v", err)
+        }
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	cert,err := tls.LoadX509KeyPair(SecConf.TLSCert, SecConf.TLSKey)
+        if err != nil {
+                log.Printf("Read file error #%v", err)
+        }
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs:      caCertPool,
+				Certificates: []tls.Certificate{cert},
+			},
+		},
+	}
+
+	resp, err := client.Get("https://"+target+path)
+	if err != nil {
+		log.Println(err)
+		return &http.Response{}, errors.New("No HTTPS response")
+	}
+	return resp, nil
+}
+
+func TLSPostReq(target string, path string, options string, body io.Reader) (*http.Response, error) {
+	ReadSecConfig()
+        caCertPath := SecConf.CACert
+        caCert, err := ioutil.ReadFile(caCertPath)
+        if err != nil {
+                log.Printf("Read file error #%v", err)
+        }
+        caCertPool := x509.NewCertPool()
+        caCertPool.AppendCertsFromPEM(caCert)
+        cert,err := tls.LoadX509KeyPair(SecConf.TLSCert, SecConf.TLSKey)
+        if err != nil {
+                log.Printf("Read file error #%v", err)
+        }
+
+        client := &http.Client{
+                Transport: &http.Transport{
+                        TLSClientConfig: &tls.Config{
+                                RootCAs:      caCertPool,
+                                Certificates: []tls.Certificate{cert},
+                        },
+                },
+        }
+
+        resp, err := client.Post("https://"+target+path, options, body)
+        if err != nil {
+                log.Println(err)
+                return &http.Response{}, errors.New("No HTTPS response")
+        }
+        return resp, nil
 }

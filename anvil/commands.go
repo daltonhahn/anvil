@@ -6,14 +6,20 @@ import (
 	"bytes"
 	"log"
 	"io/ioutil"
+	"os"
 
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/router"
+	"github.com/daltonhahn/anvil/security"
 )
 
 func CheckStatus() bool {
-	resp, err := http.Get("http://localhost/anvil")
-	if resp != nil && err == nil {
+	hname, err := os.Hostname()
+        if err != nil {
+                log.Fatalln("Unable to get hostname")
+        }
+	_, err = security.TLSGetReq(hname, "/anvil")
+	if err == nil {
 		return true
 	} else {
 		return false
@@ -22,7 +28,11 @@ func CheckStatus() bool {
 
 func Join(target string) {
 	//Collect all of the current info you have from your local catalog
-	resp, err := http.Get("http://localhost/anvil/catalog")
+	hname, err := os.Hostname()
+        if err != nil {
+                log.Fatalln("Unable to get hostname")
+        }
+	resp, err := security.TLSGetReq(hname, "/anvil/catalog")
 	if err != nil {
 		log.Fatalln("Unable to get response")
 	}
@@ -38,7 +48,8 @@ func Join(target string) {
 	postBody, _ := json.Marshal(receivedStuff)
 
 	responseBody := bytes.NewBuffer(postBody)
-	resp, err = http.Post("http://" + target + "/anvil/catalog/register", "application/json", responseBody)
+	resp, err = security.TLSPostReq(target, "/anvil/catalog/register", "application/json", responseBody)
+	//resp, err = http.Post("https://" + target + "/anvil/catalog/register", "application/json", responseBody)
 	if err != nil {
 		log.Fatalln("Unable to post content")
 	}
@@ -70,7 +81,11 @@ func Join(target string) {
 		postBody, _ = json.Marshal(localPost)
 		responseBody = bytes.NewBuffer(postBody)
 		// Marshal the struct into a postable message
-		http.Post("http://localhost/anvil/catalog/register", "application/json", responseBody)
+		hname, err := os.Hostname()
+		if err != nil {
+			log.Fatalln("Unable to get hostname")
+		}
+		http.Post("https://"+hname+"/anvil/catalog/register", "application/json", responseBody)
 		tempCatalog = catalog.Catalog{}
 	}
 }

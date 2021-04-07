@@ -11,6 +11,7 @@ import (
 
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/raft"
+	"github.com/daltonhahn/anvil/security"
 )
 
 type Message struct {
@@ -34,7 +35,11 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Pull your local info from catalog
-	resp, err := http.Get("http://localhost/anvil/catalog")
+	hname, err := os.Hostname()
+        if err != nil {
+                log.Fatalln("Unable to get hostname")
+        }
+	resp, err := security.TLSGetReq(hname, "/anvil/catalog")
         if err != nil {
                 log.Fatalln("Unable to get response")
         }

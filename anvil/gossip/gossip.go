@@ -3,7 +3,8 @@ package gossip
 import (
 	"time"
 	"net"
-	"net/http"
+	"os"
+	//"net/http"
 	"fmt"
 	"log"
 	"encoding/json"
@@ -40,7 +41,7 @@ func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
 
 func sendHealthProbe(target string) bool {
 	p := make([]byte, 2048)
-	conn, err := net.Dial("udp", target+":80")
+	conn, err := net.Dial("udp", target+":443")
 	if err != nil {
 		log.Fatalln("Unable to connect to target")
 	}
@@ -60,15 +61,23 @@ func CheckHealth() {
 	time.Sleep(10 * time.Second)
 	for {
 		//Pull current catalog
-		resp, err := http.Get("http://localhost/anvil/catalog")
+		hname, err := os.Hostname()
+		if err != nil {
+			log.Fatalln("Unable to get hostname")
+		}
+		resp, err := security.TLSGetReq(hname, "/anvil/catalog")
 		if err != nil {
 			log.Fatalln("Unable to get response")
 		}
+		htmlData, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer resp.Body.Close()
 
-		body, err := ioutil.ReadAll(resp.Body)
 		var receivedStuff Message
 
-		err = json.Unmarshal(body, &receivedStuff)
+		err = json.Unmarshal(htmlData, &receivedStuff)
 		if err != nil {
 			log.Fatalln("Unable to decode JSON")
 		}

@@ -14,6 +14,7 @@ import (
 	"github.com/daltonhahn/anvil/anvil/gossip"
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/raft"
+	"github.com/daltonhahn/anvil/security"
 )
 
 func AnvilInit(nodeType string) {
@@ -25,6 +26,7 @@ func AnvilInit(nodeType string) {
                 Stderr: os.Stdout,
         }
         cmd.Start()
+	security.ReadSecConfig()
 
 	hname, err := os.Hostname()
 	if err != nil {

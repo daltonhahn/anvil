@@ -2,10 +2,12 @@ package cli
 
 import (
 	"log"
-	"net/http"
+	//"net/http"
 	"fmt"
+	"os"
 	"github.com/thatisuday/commando"
 	"github.com/daltonhahn/anvil/anvil"
+	"github.com/daltonhahn/anvil/security"
 )
 
 func CLI() {
@@ -59,7 +61,11 @@ func CLI() {
 			//Check if Anvil binary is running
 			res := anvil.CheckStatus()
 			if (res == true) {
-				_, err := http.Get("http://localhost/anvil/catalog/nodes")
+				hname, err := os.Hostname()
+				if err != nil {
+					log.Fatalln("Unable to get hostname")
+				}
+				_, err = security.TLSGetReq(hname, "/anvil/catalog/nodes")
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -76,7 +82,11 @@ func CLI() {
 			//Check if Anvil binary is running
 			res := anvil.CheckStatus()
 			if (res == true) {
-				_, err := http.Get("http://localhost/anvil/catalog/services")
+				hname, err := os.Hostname()
+				if err != nil {
+					log.Fatalln("Unable to get hostname")
+				}
+				_, err = security.TLSGetReq(hname, "/anvil/catalog/services")
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -93,7 +103,11 @@ func CLI() {
 			//Check if Anvil binary is running
 			res := anvil.CheckStatus()
 			if (res == true) {
-				_, err := http.Get("http://localhost/anvil/raft/peers")
+				hname, err := os.Hostname()
+				if err != nil {
+					log.Fatalln("Unable to get hostname")
+				}
+				_, err = security.TLSGetReq(hname, "/anvil/raft/peers")
 				if err != nil {
 					log.Fatalln(err)
 				}
