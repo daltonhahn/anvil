@@ -92,8 +92,9 @@ func DecData(input_ciphertext string) []byte {
     }
 
     nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
-    plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+    plaintext, err := gcm.Open(nonce, nonce, ciphertext, nil)
     if err != nil {
+	fmt.Println("CANT DECRYPT?")
         fmt.Println(err)
     }
     return plaintext
