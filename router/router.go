@@ -164,3 +164,7 @@ func UpdateLeader(w http.ResponseWriter, r *http.Request) {
 	catalog.UpdateNodeTypes(newLead["leader"])
 	fmt.Fprintf(w, "OK")
 }
+
+func CatchOutbound(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("YOYOYOYOYOYOYO")
+}

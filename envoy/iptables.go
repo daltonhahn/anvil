@@ -15,6 +15,7 @@ func MakeIpTables() {
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "PROXY_INIT_OUTPUT", "-o", "lo", "!", "-d",
 		"127.0.0.1/32", "-j", "PROXY_INIT_REDIRECT").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "OUTPUT", "-j", "PROXY_INIT_OUTPUT").Output()
+	exec.Command("/usr/sbin/route", "add", "-net", "0.0.0.0", "gw", "127.0.0.1", "dev", "lo").Output()
 }
 
 func CleanTables() {
@@ -24,4 +25,5 @@ func CleanTables() {
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-D", "OUTPUT", "2").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "--delete-chain", "PROXY_INIT_REDIRECT").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "--delete-chain", "PROXY_INIT_OUTPUT").Output()
+	exec.Command("/usr/sbin/route", "del", "-net", "0.0.0.0", "gw", "127.0.0.1", "dev", "lo").Output()
 }

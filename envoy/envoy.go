@@ -43,6 +43,15 @@ const listener_config = `resources:
                 prefix_rewrite: "/"
                 cluster: anvil_service
 `
+
+const catch_outbound =
+`            - match:
+                prefix: "*"
+              route:
+                prefix_rewrite: "/outbound"
+                cluster: anvil_service
+`
+
 const tls_config =
 `    transport_socket:
       name: envoy.transport_sockets.tls
@@ -207,6 +216,9 @@ func SetupEnvoy() {
 	for _,ele := range S_list.Services {
 		f_cds = writeCDS(ele.Name, ele.Port, f_cds)
 		f_lds = writeLDS(ele.Name, ele.Port, f_lds)
+	}
+	if _, err := f_lds.WriteString(catch_outbound); err != nil {
+		log.Printf("Writing error %v", err)
 	}
 	if _, err := f_lds.WriteString(tls_config); err != nil {
 		log.Printf("Writing error %v", err)

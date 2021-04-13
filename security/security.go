@@ -52,8 +52,8 @@ func EncData(plaintext string) []byte {
     if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
         fmt.Println(err)
     }
-    fmt.Println("\tENC NONCE: %x", nonce)
-    fmt.Println("ENC MSG: %x", gcm.Seal(nonce, nonce, text, nil))
+    //fmt.Println("\tENC NONCE: %x", nonce)
+    //fmt.Println("ENC MSG: %x", gcm.Seal(nonce, nonce, text, nil))
     return []byte(gcm.Seal(nonce, nonce, text, nil))
 }
 
@@ -77,8 +77,8 @@ func DecData(input_ciphertext string) []byte {
     }
 
     nonce, ciphertext := data[:nonceSize], data[nonceSize:]
-    fmt.Println("\tDEC NONCE: %x", nonce)
-    fmt.Println("DEC CIPHERTXT: %x", data)
+    //fmt.Println("\tDEC NONCE: %x", nonce)
+    //fmt.Println("DEC CIPHERTXT: %x", data)
     plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
     if err != nil {
         fmt.Println(err)
