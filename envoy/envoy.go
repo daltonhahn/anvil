@@ -46,7 +46,7 @@ const listener_config = `resources:
 
 const catch_outbound =
 `            - match:
-                prefix: "*"
+                prefix: "/"
               route:
                 prefix_rewrite: "/outbound"
                 cluster: anvil_service
