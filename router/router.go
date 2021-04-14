@@ -167,15 +167,23 @@ func UpdateLeader(w http.ResponseWriter, r *http.Request) {
 }
 
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.Host, " ", r.Method, " ", r.RequestURI)
-	/*resp,err := (*http.Response, errors.New("No Response"))
+	var resp *http.Response
+	var err error
 	if (r.Method == "POST") {
-		security.TLSPostReq(r.Host, )
-		TLSPostReq(target string, path string, options string, body io.Reader) (*http.Response, error) {
+		resp, err = security.TLSPostReq(r.Host, r.RequestURI, r.Header.Get("Content-Type"), r.Body)
+	} else {
+		resp, err = security.TLSGetReq(r.Host, r.RequestURI)
 	}
-	else {
-		security.TLSGetReq()
-		func TLSGetReq(target string, path string) (*http.Response,error) {
+	if err != nil {
+		fmt.Fprintf(w, "Bad Response")
 	}
-	*/
+	defer resp.Body.Close()
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Fprintf(w, "Bad Read")
+	}
+
+	fmt.Println(string(respBody))
+	//fmt.Fprintf(w, string(respBody))
+	fmt.Fprintf(w, "Rerouting -------\n")
 }
