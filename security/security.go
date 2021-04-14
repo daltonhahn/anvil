@@ -143,6 +143,8 @@ func TLSPostReq(target string, path string, options string, body io.Reader) (*ht
         resp, err := client.Post("https://"+target+path, options, body)
         if err != nil {
                 log.Println(err)
+		fmt.Println("Failing here")
+		fmt.Println(resp)
                 return &http.Response{}, errors.New("No HTTPS response")
         }
         return resp, nil

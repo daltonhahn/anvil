@@ -15,9 +15,11 @@ func MakeIpTables() {
 		"REDIRECT", "--to-port", "443").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "PREROUTING", "-j", "PROXY_INIT_REDIRECT").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-N", "PROXY_INIT_OUTPUT").Output()
-	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "OUTPUT", "-p", "tcp", "-o", "eth0", "!", "-d",
-		"127.0.0.1/32", "-j", "PROXY_INIT_REDIRECT_OUTBOUND").Output()
+	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "OUTPUT", "-p", "tcp", "-o", "eth0", "!", "--dport",
+		"443", "-j", "PROXY_INIT_REDIRECT_OUTBOUND").Output()
 }
+//	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "OUTPUT", "-p", "tcp", "-o", "eth0", "!", "-d",
+//		"127.0.0.1/32", "-j", "PROXY_INIT_REDIRECT_OUTBOUND").Output()
 
 func CleanTables() {
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-F", "PREROUTING").Output()
