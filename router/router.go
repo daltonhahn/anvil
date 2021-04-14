@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	//"errors"
 
 	"github.com/daltonhahn/anvil/catalog"
@@ -169,10 +170,11 @@ func UpdateLeader(w http.ResponseWriter, r *http.Request) {
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	var resp *http.Response
 	var err error
+
 	if (r.Method == "POST") {
-		resp, err = security.TLSPostReq(r.Host, r.RequestURI, r.Header.Get("Content-Type"), r.Body)
+		resp, err = security.TLSPostReq(r.Host, r.RequestURI[strings.Index(r.RequestURI,"/outbound")+9:], r.Header.Get("Content-Type"), r.Body)
 	} else {
-		resp, err = security.TLSGetReq(r.Host, r.RequestURI)
+		resp, err = security.TLSGetReq(r.Host, r.RequestURI[strings.Index(r.RequestURI,"/outbound")+9:])
 	}
 	if err != nil {
 		fmt.Fprintf(w, "Bad Response")
