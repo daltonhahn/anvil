@@ -70,6 +70,6 @@ func registerRoutes(anv_router *mux.Router) {
 	anv_router.HandleFunc("/catalog/services", router.GetServiceCatalog).Methods("GET")
 	anv_router.HandleFunc("/catalog/register", router.RegisterNode).Methods("POST")
 	anv_router.HandleFunc("/catalog", router.GetCatalog).Methods("GET")
-	anv_router.HandleFunc("/outbound", router.CatchOutbound).Methods("GET")
+	anv_router.HandleFunc("/outbound/{query}", router.CatchOutbound).Methods("GET","POST")
 	anv_router.HandleFunc("/", router.Index).Methods("GET")
 }

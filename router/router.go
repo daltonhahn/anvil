@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	//"errors"
 
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/raft"
@@ -166,5 +167,15 @@ func UpdateLeader(w http.ResponseWriter, r *http.Request) {
 }
 
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("YOYOYOYOYOYOYO")
+	fmt.Println(r.Host, " ", r.Method, " ", r.RequestURI)
+	/*resp,err := (*http.Response, errors.New("No Response"))
+	if (r.Method == "POST") {
+		security.TLSPostReq(r.Host, )
+		TLSPostReq(target string, path string, options string, body io.Reader) (*http.Response, error) {
+	}
+	else {
+		security.TLSGetReq()
+		func TLSGetReq(target string, path string) (*http.Response,error) {
+	}
+	*/
 }

@@ -46,9 +46,15 @@ const listener_config = `resources:
 
 const catch_outbound =
 `            - match:
-                prefix: "/"
+                safe_regex:
+                  google_re2: {}
+                  regex: "^(.*)$"
               route:
-                prefix_rewrite: "/outbound"
+                regex_rewrite:
+                  pattern:
+                    google_re2: {}
+                    regex: "^(.*)$"
+                  substitution: "/outbound\\1"
                 cluster: anvil_service
 `
 
@@ -57,7 +63,7 @@ const tls_config =
       name: envoy.transport_sockets.tls
       typed_config:
         "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
-        require_client_certificate: true
+        require_client_certificate: false
         common_tls_context:
           validation_context:
             trusted_ca:
