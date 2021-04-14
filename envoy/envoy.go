@@ -45,7 +45,30 @@ const listener_config = `resources:
 `
 
 const catch_outbound =
-`            - match:
+`
+- "@type": type.googleapis.com/envoy.config.listener.v3.Listener
+  name: listener_out
+  reuse_port: true
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 444
+  filter_chains:
+  - filters:
+      name: envoy.filters.network.http_connection_manager
+      typed_config:
+        "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+        stat_prefix: ingress_http
+        http_filters:
+        - name: envoy.filters.http.router
+        route_config:
+          name: outbound_route
+          virtual_hosts:
+          - name: backend
+            domains:
+            - "*"
+            routes:
+            - match:
                 safe_regex:
                   google_re2: {}
                   regex: "^(.*)$"
@@ -57,6 +80,7 @@ const catch_outbound =
                   substitution: "/outbound\\1"
                 cluster: anvil_service
 `
+
 
 const tls_config =
 `    transport_socket:
@@ -223,13 +247,13 @@ func SetupEnvoy() {
 		f_cds = writeCDS(ele.Name, ele.Port, f_cds)
 		f_lds = writeLDS(ele.Name, ele.Port, f_lds)
 	}
-	if _, err := f_lds.WriteString(catch_outbound); err != nil {
-		log.Printf("Writing error %v", err)
-	}
 	if _, err := f_lds.WriteString(tls_config); err != nil {
 		log.Printf("Writing error %v", err)
 	}
 	if _, err := f_lds.WriteString(gossip_config); err != nil {
+		log.Printf("Writing error %v", err)
+	}
+	if _, err := f_lds.WriteString(catch_outbound); err != nil {
 		log.Printf("Writing error %v", err)
 	}
 }
