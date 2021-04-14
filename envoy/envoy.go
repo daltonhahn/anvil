@@ -48,13 +48,15 @@ const catch_outbound =
 `
 - "@type": type.googleapis.com/envoy.config.listener.v3.Listener
   name: listener_out
-  reuse_port: true
   address:
     socket_address:
       address: 0.0.0.0
       port_value: 444
   filter_chains:
   - filters:
+      name: envoy.filters.listener.original_dst
+      typed_config:
+        "@type": type.googleapis.com/envoy.extensions.filters.listener.original_dst.v3.OriginalDst
       name: envoy.filters.network.http_connection_manager
       typed_config:
         "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
@@ -79,8 +81,12 @@ const catch_outbound =
                     regex: "^(.*)$"
                   substitution: "/outbound\\1"
                 cluster: anvil_service
+              request_headers_to_add:
+                - header:
+                    key: "x-envoy-original-dst-host"
+                    value: "%DOWNSTREAM_LOCAL_ADDRESS%"
+                  append: true
 `
-
 
 const tls_config =
 `    transport_socket:

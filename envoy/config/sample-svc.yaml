@@ -2,4 +2,4 @@
 services:
         - 
                 name: webapp
-                port: 443 
+                port: 8888
