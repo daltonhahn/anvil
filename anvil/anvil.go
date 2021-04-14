@@ -32,6 +32,7 @@ func AnvilInit(nodeType string) {
 	if err != nil {
 		log.Fatalln("Unable to get hostname")
 	}
+	envoy.SetHosts(hname)
 	serviceMap := envoy.S_list
 	catalog.Register(hname, serviceMap.Services, nodeType)
 
