@@ -3,13 +3,11 @@ package gossip
 import (
 	"time"
 	"net"
-	//"net/http"
 	"fmt"
 	"log"
 	"encoding/json"
 	"io/ioutil"
 	"os"
-	//"bufio"
 
 	"github.com/daltonhahn/anvil/security"
 	"github.com/daltonhahn/anvil/catalog"
@@ -30,7 +28,6 @@ func sendResponse(conn *net.UDPConn, addr *net.UDPAddr) {
 }
 
 func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
-	fmt.Println("Sending probe response")
 	dt := time.Now()
 	encMessage := security.EncData("OK " + dt.String())
 	_,err := conn.WriteToUDP([]byte(encMessage), addr)
@@ -41,8 +38,6 @@ func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
 }
 
 func sendHealthProbe(target string) bool {
-	//p := make([]byte, 2048)
-	fmt.Println("Sending probe to: ", (target+":443"))
 	_, err := net.ResolveUDPAddr("udp4", target+":443")
 	if err != nil {
 		log.Fatalln("Invalid IP address")
