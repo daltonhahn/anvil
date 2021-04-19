@@ -3,13 +3,13 @@ package gossip
 import (
 	"time"
 	"net"
-	"os"
 	//"net/http"
 	"fmt"
 	"log"
 	"encoding/json"
 	"io/ioutil"
-	"bufio"
+	"os"
+	//"bufio"
 
 	"github.com/daltonhahn/anvil/security"
 	"github.com/daltonhahn/anvil/catalog"
@@ -23,15 +23,16 @@ type Message struct {
 
 func sendResponse(conn *net.UDPConn, addr *net.UDPAddr) {
 	encMessage := security.EncData("Trashy Gossip\n")
-	_,err := conn.WriteToUDP([]byte(encMessage),addr)
+	_,err := conn.WriteToUDP([]byte(encMessage), addr)
 	if err != nil {
 		fmt.Printf("Couldn't send response %v", err)
 	}
 }
 
 func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
+	fmt.Println("Sending probe response")
 	dt := time.Now()
-	encMessage := security.EncData("Health Check -- OK -- " + dt.String())
+	encMessage := security.EncData("OK " + dt.String())
 	_,err := conn.WriteToUDP([]byte(encMessage), addr)
 	if err != nil {
 		fmt.Printf("Couldn't send response %v", err)
@@ -40,15 +41,18 @@ func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
 }
 
 func sendHealthProbe(target string) bool {
-	dt := time.Now()
-	p := make([]byte, 2048)
+	//p := make([]byte, 2048)
+	fmt.Println("Sending probe to: ", (target+":443"))
+	_, err := net.ResolveUDPAddr("udp4", target+":443")
+	if err != nil {
+		log.Fatalln("Invalid IP address")
+	}
 	conn, err := net.Dial("udp", target+":443")
 	if err != nil {
 		log.Fatalln("Unable to connect to target")
 	}
-	encMessage := []byte(security.EncData("Health Check -- REQ -- " + dt.String()))
-	fmt.Fprintf(conn, string(encMessage))
-	_, err = bufio.NewReader(conn).Read(p)
+	encMessage := security.EncData("health")
+	_, err = conn.Write([]byte(encMessage))
 	if err != nil {
 		conn.Close()
 		return false
@@ -70,24 +74,21 @@ func CheckHealth() {
 		if err != nil {
 			log.Fatalln("Unable to get response")
 		}
-		htmlData, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println(err)
-		}
-		defer resp.Body.Close()
 
+		body, err := ioutil.ReadAll(resp.Body)
 		var receivedStuff Message
 
-		err = json.Unmarshal(htmlData, &receivedStuff)
+		err = json.Unmarshal(body, &receivedStuff)
 		if err != nil {
 			log.Fatalln("Unable to decode JSON")
 		}
 
 		for _, ele := range receivedStuff.Nodes {
-			status := sendHealthProbe(ele.Name)
-
-			if (status != true) {
-				catalog.Deregister(ele.Name)
+			if (ele.Name != hname) {
+				status := sendHealthProbe(ele.Name)
+				if (status != true) {
+					catalog.Deregister(ele.Name)
+				}
 			}
 		}
 		time.Sleep(10 * time.Second)
