@@ -51,7 +51,7 @@ func sendHealthProbe(target string) bool {
 	if err != nil {
 		log.Fatalln("Unable to connect to target")
 	}
-	encMessage := security.EncData("health")
+	encMessage := security.EncData(("Health Check -- REQ -- " + target))
 	_, err = conn.Write([]byte(encMessage))
 	if err != nil {
 		conn.Close()
