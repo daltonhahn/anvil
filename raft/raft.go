@@ -404,7 +404,7 @@ func UpdateLeader(target string, newLeader string) {
 
 	postBody := bytes.NewBuffer(reqBody)
 
-	resp, err := http.Post("http://" + target + "/anvil/raft/updateleader", "application/json", postBody)
+	resp, err := http.Post("http://" + target + ":443/anvil/raft/updateleader", "application/json", postBody)
 	if err != nil {
 		return
 	}
@@ -415,7 +415,7 @@ func UpdateLeader(target string, newLeader string) {
 func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntriesReply) {
         reqBody, _ := json.Marshal(args)
         postBody := bytes.NewBuffer(reqBody)
-        resp, err := http.Post("http://" + target + "/anvil/raft/appendentries", "application/json", postBody)
+	resp, err := http.Post("http://" + target + ":443/anvil/raft/appendentries", "application/json", postBody)
         if err != nil {
 		return errors.New("No HTTP response"), AppendEntriesReply{}
         }
@@ -437,7 +437,7 @@ func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntrie
 func SendVoteReq(target string, args RequestVoteArgs) (error, RequestVoteReply) {
         reqBody, _ := json.Marshal(args)
         postBody := bytes.NewBuffer(reqBody)
-        resp, err := http.Post("http://" + target + "/anvil/raft/requestvote", "application/json", postBody)
+	resp, err := http.Post("http://" + target + ":443/anvil/raft/requestvote", "application/json", postBody)
         if err != nil {
 		return errors.New("No HTTP response"), RequestVoteReply{}
         }

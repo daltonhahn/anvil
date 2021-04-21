@@ -10,7 +10,7 @@ import (
 
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/router"
-	"github.com/daltonhahn/anvil/security"
+	//"github.com/daltonhahn/anvil/security"
 )
 
 func CheckStatus() bool {
@@ -18,7 +18,8 @@ func CheckStatus() bool {
         if err != nil {
                 log.Fatalln("Unable to get hostname")
         }
-	_, err = security.TLSGetReq(hname, "/anvil")
+	//_, err = security.TLSGetReq(hname, "/anvil")
+	_, err = http.Get("http://" + hname + ":443/anvil")
 	if err == nil {
 		return true
 	} else {
@@ -32,7 +33,8 @@ func Join(target string) {
         if err != nil {
                 log.Fatalln("Unable to get hostname")
         }
-	resp, err := security.TLSGetReq(hname, "/anvil/catalog")
+	//resp, err := security.TLSGetReq(hname, "/anvil/catalog")
+	resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
 	if err != nil {
 		log.Fatalln("Unable to get response")
 	}
@@ -48,8 +50,8 @@ func Join(target string) {
 	postBody, _ := json.Marshal(receivedStuff)
 
 	responseBody := bytes.NewBuffer(postBody)
-	resp, err = security.TLSPostReq(target, "/anvil/catalog/register", "application/json", responseBody)
-	//resp, err = http.Post("https://" + target + "/anvil/catalog/register", "application/json", responseBody)
+	//resp, err = security.TLSPostReq(target, "/anvil/catalog/register", "application/json", responseBody)
+	resp, err = http.Post("http://" + target + ":443/anvil/catalog/register", "application/json", responseBody)
 	if err != nil {
 		log.Fatalln("Unable to post content")
 	}
@@ -85,7 +87,7 @@ func Join(target string) {
 		if err != nil {
 			log.Fatalln("Unable to get hostname")
 		}
-		http.Post("https://"+hname+"/anvil/catalog/register", "application/json", responseBody)
+		http.Post("http://"+hname+":443/anvil/catalog/register", "application/json", responseBody)
 		tempCatalog = catalog.Catalog{}
 	}
 }

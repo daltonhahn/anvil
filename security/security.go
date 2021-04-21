@@ -4,15 +4,15 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"crypto/tls"
-	"crypto/x509"
-	"errors"
+	//"crypto/tls"
+	//"crypto/x509"
+	//"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"gopkg.in/yaml.v2"
-	"net/http"
+	//"net/http"
 )
 
 var SecConf = new(SecConfig)
@@ -86,6 +86,7 @@ func DecData(input_ciphertext string) []byte {
     return plaintext
 }
 
+/*
 func TLSGetReq(target string, path string) (*http.Response,error) {
 	ReadSecConfig()
 	caCertPath := SecConf.CACert
@@ -147,3 +148,4 @@ func TLSPostReq(target string, path string, options string, body io.Reader) (*ht
         }
         return resp, nil
 }
+*/

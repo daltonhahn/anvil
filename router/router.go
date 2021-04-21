@@ -8,12 +8,12 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
+	//"strings"
 	//"errors"
 
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/raft"
-	"github.com/daltonhahn/anvil/security"
+	//"github.com/daltonhahn/anvil/security"
 )
 
 type Message struct {
@@ -41,7 +41,8 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
         if err != nil {
                 log.Fatalln("Unable to get hostname")
         }
-	resp, err := security.TLSGetReq(hname, "/anvil/catalog")
+	resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
+	//resp, err := security.TLSGetReq(hname, "/anvil/catalog")
         if err != nil {
                 log.Fatalln("Unable to get response")
         }
@@ -167,6 +168,7 @@ func UpdateLeader(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "OK")
 }
 
+/*
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	var resp *http.Response
 	var err error
@@ -192,3 +194,4 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	//fmt.Fprintf(w, string(respBody))
 	fmt.Fprintf(w, "Rerouting -------\n")
 }
+*/
