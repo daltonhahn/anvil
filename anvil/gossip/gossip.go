@@ -18,6 +18,7 @@ import (
 
 type Message struct {
         NodeName string `json:"nodename"`
+	Iteration int64 `json:"iteration"`
         Nodes []catalog.Node `json:"nodes"`
         Services []catalog.Service `json:"services"`
 }
@@ -140,7 +141,6 @@ func PropagateCatalog() {
 		if err != nil {
 			log.Fatalln("Unable to decode JSON")
 		}
-		// Generate random number between 0 and length of catalog's nodes
 		target := rand.Intn(len(receivedStuff.Nodes))
 		if(receivedStuff.Nodes[target].Name != hname) {
 			fmt.Printf("Trying to gossip with target: %s\n", receivedStuff.Nodes[target].Name)

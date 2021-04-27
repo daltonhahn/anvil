@@ -11,6 +11,7 @@ import (
 	//"strings"
 	//"errors"
 
+	"github.com/gorilla/mux"
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/raft"
 	//"github.com/daltonhahn/anvil/security"
@@ -18,6 +19,14 @@ import (
 
 type Message struct {
         NodeName string `json:"nodename"`
+        Nodes []catalog.Node `json:"nodes"`
+        Services []catalog.Service `json:"services"`
+	NodeType string `json:"nodetype"`
+}
+
+type G_Message struct {
+        NodeName string `json:"nodename"`
+        Iteration int64 `json:"iteration"`
         Nodes []catalog.Node `json:"nodes"`
         Services []catalog.Service `json:"services"`
 	NodeType string `json:"nodetype"`
@@ -74,10 +83,11 @@ func Index(w http.ResponseWriter, r *http.Request) {
 func GetCatalog(w http.ResponseWriter, r *http.Request) {
 	anv_catalog := catalog.GetCatalog()
 	hname, _ := os.Hostname()
+	iteration := anv_catalog.GetIter()
 	nodes := []catalog.Node(anv_catalog.GetNodes())
 	services := []catalog.Service(anv_catalog.GetServices())
 	nodeType := anv_catalog.GetNodeType(hname)
-	newMsg := &Message{hname, nodes, services, nodeType}
+	newMsg := &G_Message{hname, iteration, nodes, services, nodeType}
 	var jsonData []byte
 	jsonData, err := json.Marshal(newMsg)
 	if err != nil {
@@ -166,6 +176,19 @@ func UpdateLeader(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(b, &newLead)
 	catalog.UpdateNodeTypes(newLead["leader"])
 	fmt.Fprintf(w, "OK")
+}
+
+func GetIterCatalog(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Getting iter")
+	target := mux.Vars(r)["node"]
+	anv_catalog := catalog.GetCatalog()
+	val := anv_catalog.GetNodeIter(target)
+	fmt.Fprintf(w, string(val))
+}
+
+func UpdateIter(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Updating iter")
+	//target := mux.Vars(r)["node"]
 }
 
 /*

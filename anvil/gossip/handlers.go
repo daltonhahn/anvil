@@ -26,8 +26,11 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 				continue
 			}
 			fmt.Println("RECEIVED: ", string(decMessage))
-			// Parse the catalog contents and make updates to your own catalog
-			//sendResponse(ser, remoteaddr)
+			//Lookup senders iteration in your catalog
+			//If gossip message is newer than yours, pass for updates to your catalog and update their recorded iter
+			//Else, ignore
+
+
 		} else {
 			//Check if this is a valid DNS file
 			packet := gopacket.NewPacket(p, layers.LayerTypeDNS, gopacket.Default)
