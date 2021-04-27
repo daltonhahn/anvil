@@ -49,12 +49,21 @@ func sendHealthProbe(target string) bool {
 	}
 	encMessage := security.EncData(("Health Check -- REQ -- " + target))
 	_, err = conn.Write([]byte(encMessage))
-	if err != nil {
-		conn.Close()
-		return false
-	} else {
-		conn.Close()
-		return true
+	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
+	buf := make([]byte, 1024)
+	for {
+		_,err = conn.Read(buf)
+		if err != nil {
+			if e, ok := err.(net.Error); !ok || !e.Timeout() {
+				conn.Close()
+				return false
+			}
+			conn.Close()
+			return false
+		} else {
+			conn.Close()
+			return true
+		}
 	}
 }
 
