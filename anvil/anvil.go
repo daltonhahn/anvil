@@ -60,6 +60,7 @@ func registerUDP() {
 	}
 	go gossip.HandleUDP(p, ser)
 	go gossip.CheckHealth()
+	go gossip.PropagateCatalog()
 }
 
 func registerRoutes(anv_router *mux.Router) {

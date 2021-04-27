@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"os"
 	"net/http"
+	"math/rand"
+//	"strings"
 
 	"github.com/daltonhahn/anvil/security"
 	"github.com/daltonhahn/anvil/catalog"
@@ -20,17 +22,25 @@ type Message struct {
         Services []catalog.Service `json:"services"`
 }
 
-func sendResponse(conn *net.UDPConn, addr *net.UDPAddr) {
-	encMessage := security.EncData("Trashy Gossip\n")
-	_,err := conn.WriteToUDP([]byte(encMessage), addr)
+func sendCatalogSync(target string, catalogCopy []byte) {
+	_, err := net.ResolveUDPAddr("udp4", target+":443")
+        if err != nil {
+                log.Fatalln("Invalid IP address")
+        }
+        conn, err := net.Dial("udp", target+":443")
+        if err != nil {
+                log.Fatalln("Unable to connect to target")
+        }
+	encMessage := security.EncData(("gossip -- " + string(catalogCopy)))
+	_,err = conn.Write([]byte(encMessage))
 	if err != nil {
 		fmt.Printf("Couldn't send response %v", err)
 	}
 }
 
 func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
-	dt := time.Now()
-	encMessage := security.EncData("OK " + dt.String())
+	dt := time.Now().UTC()
+	encMessage := security.EncData("OK -- " + dt.String())
 	_,err := conn.WriteToUDP([]byte(encMessage), addr)
 	if err != nil {
 		fmt.Printf("Couldn't send response %v", err)
@@ -52,7 +62,8 @@ func sendHealthProbe(target string) bool {
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
 	buf := make([]byte, 1024)
 	for {
-		_,err = conn.Read(buf)
+		//n,err := conn.Read(buf)
+		_,err := conn.Read(buf)
 		if err != nil {
 			if e, ok := err.(net.Error); !ok || !e.Timeout() {
 				conn.Close()
@@ -61,6 +72,15 @@ func sendHealthProbe(target string) bool {
 			conn.Close()
 			return false
 		} else {
+			// Process response
+			/*
+			resp := string(security.DecData(string(buf[:n])))
+			if strings.Contains(resp, "OK") {
+				fmt.Println("valid health resp")
+				fmt.Println("THEIR: ", resp[3:])
+				fmt.Println("MY DT: ", time.Now().UTC())
+			}
+			*/
 			conn.Close()
 			return true
 		}
@@ -96,6 +116,41 @@ func CheckHealth() {
 					catalog.Deregister(ele.Name)
 				}
 			}
+		}
+		time.Sleep(10 * time.Second)
+	}
+}
+
+func PropagateCatalog() {
+	time.Sleep(10 * time.Second)
+	for {
+		//Pull current catalog
+		hname, err := os.Hostname()
+		if err != nil {
+			log.Fatalln("Unable to get hostname")
+		}
+		//resp, err := security.TLSGetReq(hname, "/anvil/catalog")
+		resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
+		if err != nil {
+			log.Fatalln("Unable to get response")
+		}
+		body, err := ioutil.ReadAll(resp.Body)
+		var receivedStuff Message
+		err = json.Unmarshal(body, &receivedStuff)
+		if err != nil {
+			log.Fatalln("Unable to decode JSON")
+		}
+		// Generate random number between 0 and length of catalog's nodes
+		target := rand.Intn(len(receivedStuff.Nodes))
+		if(receivedStuff.Nodes[target].Name != hname) {
+			fmt.Printf("Trying to gossip with target: %s\n", receivedStuff.Nodes[target].Name)
+			var jsonData []byte
+			//Pass your catalog contents back to joiner
+			jsonData, err = json.Marshal(receivedStuff)
+			if err != nil {
+				log.Fatalln("Unable to marshal JSON")
+			}
+			sendCatalogSync(receivedStuff.Nodes[target].Name, jsonData)
 		}
 		time.Sleep(10 * time.Second)
 	}

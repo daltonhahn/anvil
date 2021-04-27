@@ -25,7 +25,9 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 				fmt.Printf("Some error  %v", err)
 				continue
 			}
-			sendResponse(ser, remoteaddr)
+			fmt.Println("RECEIVED: ", string(decMessage))
+			// Parse the catalog contents and make updates to your own catalog
+			//sendResponse(ser, remoteaddr)
 		} else {
 			//Check if this is a valid DNS file
 			packet := gopacket.NewPacket(p, layers.LayerTypeDNS, gopacket.Default)
