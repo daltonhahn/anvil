@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	//"strings"
 	//"errors"
 
@@ -39,7 +40,7 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	var msg Message
+	var msg G_Message
 	err = json.Unmarshal(b, &msg)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -57,7 +58,7 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
         }
 
         body, err := ioutil.ReadAll(resp.Body)
-        var receivedStuff Message
+        var receivedStuff G_Message
 
         err = json.Unmarshal(body, &receivedStuff)
         if err != nil {
@@ -179,16 +180,25 @@ func UpdateLeader(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetIterCatalog(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Getting iter")
 	target := mux.Vars(r)["node"]
 	anv_catalog := catalog.GetCatalog()
 	val := anv_catalog.GetNodeIter(target)
-	fmt.Fprintf(w, string(val))
+	fmt.Fprintf(w, strconv.FormatInt(val,10))
 }
 
 func UpdateIter(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Updating iter")
-	//target := mux.Vars(r)["node"]
+	target := mux.Vars(r)["node"]
+        b, err := ioutil.ReadAll(r.Body)
+        defer r.Body.Close()
+        if err != nil {
+                http.Error(w, err.Error(), 500)
+                return
+        }
+        var newIter G_Message
+        err = json.Unmarshal(b, &newIter)
+	anv_catalog := catalog.GetCatalog()
+        anv_catalog.UpdateIter(target, newIter.Iteration)
+        fmt.Fprintf(w, "OK")
 }
 
 /*

@@ -19,6 +19,7 @@ import (
 type Message struct {
         NodeName string `json:"nodename"`
 	Iteration int64 `json:"iteration"`
+	NodeType string `json:"nodetype"`
         Nodes []catalog.Node `json:"nodes"`
         Services []catalog.Service `json:"services"`
 }

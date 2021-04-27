@@ -4,6 +4,13 @@ import (
 	"net"
 	"fmt"
 	"strings"
+	"log"
+	"net/http"
+	"os"
+	"io/ioutil"
+	"strconv"
+	"bytes"
+	"encoding/json"
 	"github.com/google/gopacket"
 	layers "github.com/google/gopacket/layers"
 
@@ -25,12 +32,46 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 				fmt.Printf("Some error  %v", err)
 				continue
 			}
-			fmt.Println("RECEIVED: ", string(decMessage))
-			//Lookup senders iteration in your catalog
-			//If gossip message is newer than yours, pass for updates to your catalog and update their recorded iter
-			//Else, ignore
 
-
+			var receivedStuff Message
+			err = json.Unmarshal(decMessage[10:], &receivedStuff)
+			if err != nil {
+				log.Fatalln("Unable to decode JSON")
+			}
+			hname, _ := os.Hostname()
+			resp, _ := http.Get("http://" + hname + ":443/anvil/catalog/iter/" + receivedStuff.NodeName)
+			bodyBytes, _ := ioutil.ReadAll(resp.Body)
+			catalogIterVal, _ := strconv.ParseInt(string(bodyBytes), 10, 64)
+			if receivedStuff.Iteration > catalogIterVal {
+				fmt.Println("NEED TO UPDATE ITER")
+				var tempCatalog catalog.Catalog
+				for _, ele := range receivedStuff.Nodes {
+					tempCatalog.AddNode(ele)
+					for _, svc := range receivedStuff.Services {
+						if (ele.Address == svc.Address) {
+							tempCatalog.AddService(svc)
+						}
+					}
+					var localPost Message
+					localPost.NodeName = ele.Name
+					localPost.Services = tempCatalog.Services
+					localPost.NodeType = ele.Type
+					postBody, _ := json.Marshal(localPost)
+					responseBody := bytes.NewBuffer(postBody)
+					// Marshal the struct into a postable message
+					hname, err := os.Hostname()
+					if err != nil {
+						log.Fatalln("Unable to get hostname")
+					}
+					fmt.Println("Sending content to register API")
+					http.Post("http://"+hname+":443/anvil/catalog/register", "application/json", responseBody)
+					tempCatalog = catalog.Catalog{}
+				}
+				temp, _ := json.Marshal(receivedStuff)
+				iterBody := bytes.NewBuffer(temp)
+				http.Post("http://"+hname+":443/anvil/catalog/iterupdate/" + receivedStuff.NodeName, "application/json", iterBody)
+				//Update receivedStuff.NodeName's Iter value in your catalog
+			}
 		} else {
 			//Check if this is a valid DNS file
 			packet := gopacket.NewPacket(p, layers.LayerTypeDNS, gopacket.Default)

@@ -33,9 +33,11 @@ type Catalog struct {
 }
 
 func (catalog *Catalog) UpdateIter(targetNode string, update int64) {
-	//Lookup the target node
-
-	//Adjust the iteration number for that node in your catalog
+        for ind,ele := range AnvilCatalog.Nodes {
+                if ele.Name == targetNode {
+                        AnvilCatalog.Nodes[ind].Iteration = update
+                }
+        }
 }
 
 func (catalog *Catalog) AddService(newSvc Service) []Service {
