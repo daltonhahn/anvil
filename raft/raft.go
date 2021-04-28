@@ -16,6 +16,12 @@ import (
         "io/ioutil"
 )
 
+type CommitEntry struct {
+	Command interface{}
+	Index int
+	Term int
+}
+
 const DebugCM = 1
 
 type LogEntry struct {
@@ -51,19 +57,22 @@ type ConsensusModule struct {
 	mu sync.Mutex
 	id string
 	PeerIds []string
+	commitChan chan<- CommitEntry
+	newCommitReadyChan chan struct{}
 	currentTerm int
 	votedFor    string
 	log         []LogEntry
+	commitIndex	int
+	lastApplied	int
 	state              CMState
 	electionResetEvent time.Time
+	nextIndex	map[int]int
+	matchIndex	map[int]int
 }
 
 
 var CM ConsensusModule
 
-// NewConsensusModule creates a new CM with the given ID, list of peer IDs and
-// server. The ready channel signals the CM that all peers are connected and
-// it's safe to start its state machine.
 func NewConsensusModule(id string, peerIds []string) *ConsensusModule {
 	CM := new(ConsensusModule)
 	CM.id = id
@@ -107,6 +116,22 @@ func dlog(format string) {
 	}
 }
 
+
+//Pass this function any data type and it will return a boolean of whether it was appended to the log
+func (cm *ConsensusModule) Submit(command interface{}) bool {
+	CM.mu.Lock()
+	defer CM.mu.Unlock()
+
+	dlog(fmt.Sprintf("Submit received by %v: %v", CM.state, command))
+	if CM.state == Leader {
+		CM.log = append(CM.log, LogEntry{Command: command, Term: CM.currentTerm})
+		dlog(fmt.Sprintf("... log=%v", cm.log))
+		return true
+	}
+	return false
+}
+
+
 type RequestVoteArgs struct {
 	Term         int `json:"term"`
 	CandidateId  string `json:"candidateid"`
@@ -126,7 +151,8 @@ func RequestVote(args RequestVoteArgs) RequestVoteReply {
 	if CM.state == Dead {
 		return RequestVoteReply{CM.currentTerm, false}
 	}
-	dlog(fmt.Sprintf("RequestVote: %+v [currentTerm=%d, votedFor=%d]", args, CM.currentTerm, CM.votedFor))
+	lastLogIndex, lastLogTerm := lastLogIndexAndTerm()
+	dlog(fmt.Sprintf("RequestVote: %+v [currentTerm=%d, votedFor=%d log index/term=(%d, %d)]", args, CM.currentTerm, CM.votedFor, lastLogIndex, lastLogTerm))
 
 	if args.Term > CM.currentTerm {
 		dlog("... term out of date in RequestVote")
@@ -134,7 +160,9 @@ func RequestVote(args RequestVoteArgs) RequestVoteReply {
 	}
 
 	if CM.currentTerm == args.Term &&
-		(CM.votedFor == "" || CM.votedFor == args.CandidateId) {
+		(CM.votedFor == "" || CM.votedFor == args.CandidateId) &&
+		(args.LastLogTerm > lastLogTerm ||
+		  (args.LastLogTerm == lastLogTerm && args.LastLogIndex >= lastLogIndex)) {
 		reply.Term = CM.currentTerm
 		reply.VoteGranted = true
 		CM.votedFor = args.CandidateId
@@ -148,7 +176,6 @@ func RequestVote(args RequestVoteArgs) RequestVoteReply {
 	return reply
 }
 
-// See figure 2 in the paper.
 type AppendEntriesArgs struct {
 	Term     int
 	LeaderId string
@@ -183,21 +210,55 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 			becomeFollower(args.Term)
 		}
 		CM.electionResetEvent = time.Now()
+		// Does our log contain an entry at PrevLogIndex whose term matches
+		// PrevLogTerm? Note that in the extreme case of PrevLogIndex=-1 this is
+		// vacuously true.
+		if args.PrevLogIndex == -1 || (args.PrevLogIndex < len(CM.log) && args.PrevLogTerm == CM.log[args.PrevLogIndex].Term) {
+			reply.Success = true
+
+			// Find an insertion point - where there's a term mismatch between
+			// the existing log starting at PrevLogIndex+1 and the new entries sent
+			// in the RPC.
+			logInsertIndex := args.PrevLogIndex + 1
+			newEntriesIndex := 0
+
+			for {
+				if logInsertIndex >= len(CM.log) || newEntriesIndex >= len(args.Entries) {
+					break
+				}
+				if CM.log[logInsertIndex].Term != args.Entries[newEntriesIndex].Term {
+					break
+				}
+				logInsertIndex++
+				newEntriesIndex++
+			}
+			// At the end of this loop:
+			// - logInsertIndex points at the end of the log, or an index where the
+			//   term mismatches with an entry from the leader
+			// - newEntriesIndex points at the end of Entries, or an index where the
+			//   term mismatches with the corresponding log entry
+			if newEntriesIndex < len(args.Entries) {
+				dlog(fmt.Sprintf("... inserting entries %v from index %d", args.Entries[newEntriesIndex:], logInsertIndex))
+				CM.log = append(CM.log[:logInsertIndex], args.Entries[newEntriesIndex:]...)
+				dlog(fmt.Sprintf("... log is now: %v", CM.log))
+			}
+
+			// Set commit index.
+			if args.LeaderCommit > CM.commitIndex {
+				CM.commitIndex = intMin(args.LeaderCommit, len(CM.log)-1)
+				dlog(fmt.Sprintf("... setting commitIndex=%d", CM.commitIndex))
+				CM.newCommitReadyChan <- struct{}{}
+			}
+		}
 		reply.Success = true
 	}
-
 	reply.Term = CM.currentTerm
 	return reply
 }
 
 
-// electionTimeout generates a pseudo-random election timeout duration.
 func electionTimeout() time.Duration {
-	//TUNE ME FOR TESTING
 	duration := 2000
-	// If RAFT_FORCE_MORE_REELECTION is set, stress-test by deliberately
-	// generating a hard-coded number very often. This will create collisions
-	// between different servers and force more re-elections.
 	if len(os.Getenv("RAFT_FORCE_MORE_REELECTION")) > 0 && rand.Intn(3) == 0 {
 		return time.Duration(duration) * time.Millisecond
 	} else {
@@ -205,12 +266,6 @@ func electionTimeout() time.Duration {
 	}
 }
 
-// runElectionTimer implements an election timer. It should be launched whenever
-// we want to start a timer towards becoming a candidate in a new election.
-//
-// This function is blocking and should be launched in a separate goroutine;
-// it's designed to work for a single (one-shot) election timer, as it exits
-// whenever the CM state changes from follower/candidate or the term changes.
 func runElectionTimer(myid string) {
 	timeoutDuration := electionTimeout()
 	CM.mu.Lock()
@@ -219,11 +274,6 @@ func runElectionTimer(myid string) {
 	dlog(fmt.Sprintf("election timer started (%v), term=%d", timeoutDuration, termStarted))
 	CM.id = myid
 
-	// This loops until either:
-	// - we discover the election timer is no longer needed, or
-	// - the election timer expires and this CM becomes a candidate
-	// In a follower, this typically keeps running in the background for the
-	// duration of the CM's lifetime.
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	for {
@@ -242,8 +292,6 @@ func runElectionTimer(myid string) {
 			return
 		}
 
-		// Start an election if we haven't heard from a leader or haven't voted for
-		// someone for the duration of the timeout.
 		if elapsed := time.Since(CM.electionResetEvent); elapsed >= timeoutDuration {
 			startElection()
 			CM.mu.Unlock()
@@ -253,8 +301,6 @@ func runElectionTimer(myid string) {
 	}
 }
 
-// startElection starts a new election with this CM as a candidate.
-// Expects cm.mu to be locked.
 func startElection() {
 	CM.state = Candidate
 	CM.currentTerm += 1
@@ -269,16 +315,19 @@ func startElection() {
 		startLeader()
 		return
 	} else {
-		// Send RequestVote RPCs to all other servers concurrently.
 		for _, peerId := range CM.PeerIds {
 			go func(peerId string) {
+				CM.mu.Lock()
+				savedLastLogIndex, savedLastLogTerm := lastLogIndexAndTerm()
+				CM.mu.Unlock()
 
 				args := RequestVoteArgs{
-					Term:        savedCurrentTerm,
-					CandidateId: CM.id,
+					Term:         savedCurrentTerm,
+					CandidateId:  CM.id,
+					LastLogIndex: savedLastLogIndex,
+					LastLogTerm:  savedLastLogTerm,
 				}
 				var reply RequestVoteReply
-
 				dlog(fmt.Sprintf("sending RequestVote to %d: %+v", peerId, args))
 
 				err, reply := SendVoteReq(peerId, args)
@@ -300,7 +349,6 @@ func startElection() {
 						if reply.VoteGranted {
 							votes := int(atomic.AddInt32(&votesReceived, 1))
 							if votes*2 > len(CM.PeerIds)+1 {
-								// Won the election!
 								dlog(fmt.Sprintf("wins election with %d votes", votes))
 								startLeader()
 								return
@@ -311,12 +359,9 @@ func startElection() {
 			}(peerId)
 		}
 	}
-	// Run another election timer, in case this election is not successful.
 	go runElectionTimer(CM.id)
 }
 
-// becomeFollower makes cm a follower and resets its state.
-// Expects cm.mu to be locked.
 func becomeFollower(term int) {
 	dlog(fmt.Sprintf("becomes Follower with term=%d; log=%v", term, CM.log))
 	CM.state = Follower
@@ -327,8 +372,6 @@ func becomeFollower(term int) {
 	go runElectionTimer(CM.id)
 }
 
-// startLeader switches cm into a leader state and begins process of heartbeats.
-// Expects cm.mu to be locked.
 func startLeader() {
 	CM.state = Leader
 	dlog(fmt.Sprintf("becomes Leader; term=%d, log=%v", CM.currentTerm, CM.log))
@@ -345,7 +388,6 @@ func startLeader() {
 		ticker := time.NewTicker(50 * time.Millisecond)
 		defer ticker.Stop()
 
-		// Send periodic heartbeats, as long as still leader.
 		for {
 			leaderSendHeartbeats()
 			<-ticker.C
@@ -360,8 +402,6 @@ func startLeader() {
 	}()
 }
 
-// leaderSendHeartbeats sends a round of heartbeats to all peers, collects their
-// replies and adjusts cm's state.
 func leaderSendHeartbeats() {
 	CM.mu.Lock()
 	savedCurrentTerm := CM.currentTerm
@@ -370,31 +410,98 @@ func leaderSendHeartbeats() {
         if len(CM.PeerIds) == 0 {
                 return
         } else {
-		for _, peerId := range CM.PeerIds {
-			args := AppendEntriesArgs{
-				Term:     savedCurrentTerm,
-				LeaderId: CM.id,
-			}
-			go func(peerId string) {
-				if peerId == "" {
-					return
-				}
-				UpdateLeader(peerId, CM.id)
 
+		  for ind, peerId := range CM.PeerIds {
+			go func(peerId string) {
+				CM.mu.Lock()
+				ni := CM.nextIndex[ind]
+				prevLogIndex := ni - 1
+				prevLogTerm := -1
+				if prevLogIndex >= 0 {
+					prevLogTerm = CM.log[prevLogIndex].Term
+				}
+				entries := CM.log[ni:]
+
+				args := AppendEntriesArgs{
+					Term:         savedCurrentTerm,
+					LeaderId:     CM.id,
+					PrevLogIndex: prevLogIndex,
+					PrevLogTerm:  prevLogTerm,
+					Entries:      entries,
+					LeaderCommit: CM.commitIndex,
+				}
+				CM.mu.Unlock()
+				dlog(fmt.Sprintf("sending AppendEntries to %v: ni=%d, args=%+v", peerId, ni, args))
 				var reply AppendEntriesReply
 				err, reply := SendAppendEntry(peerId, args)
 				if err == nil {
+				//if err := cm.server.Call(peerId, "ConsensusModule.AppendEntries", args, &reply); err == nil {
 					CM.mu.Lock()
 					defer CM.mu.Unlock()
 					if reply.Term > savedCurrentTerm {
-						dlog("term out of date in heartbeat reply")
+						dlog(fmt.Sprintf("term out of date in heartbeat reply"))
 						becomeFollower(reply.Term)
 						return
+					}
+				}
+
+				if CM.state == Leader && savedCurrentTerm == reply.Term {
+					if reply.Success {
+						CM.nextIndex[ind] = ni + len(entries)
+						CM.matchIndex[ind] = CM.nextIndex[ind] - 1
+						dlog(fmt.Sprintf("AppendEntries reply from %d success: nextIndex := %v, matchIndex := %v", peerId, CM.nextIndex, CM.matchIndex))
+
+						savedCommitIndex := CM.commitIndex
+						for i := CM.commitIndex + 1; i < len(CM.log); i++ {
+							if CM.log[i].Term == CM.currentTerm {
+								matchCount := 1
+								for ind, _ := range CM.PeerIds {
+									if CM.matchIndex[ind] >= i {
+										matchCount++
+									}
+								}
+								if matchCount*2 > len(CM.PeerIds)+1 {
+									CM.commitIndex = i
+								}
+							}
+						}
+						if CM.commitIndex != savedCommitIndex {
+							dlog(fmt.Sprintf("leader sets commitIndex := %d", CM.commitIndex))
+							CM.newCommitReadyChan <- struct{}{}
+						}
+					} else {
+						CM.nextIndex[ind] = ni - 1
+						dlog(fmt.Sprintf("AppendEntries reply from %d !success: nextIndex := %d", peerId, ni-1))
 					}
 				}
 			}(peerId)
 		}
 	}
+}
+
+func commitChanSender() {
+	for range CM.newCommitReadyChan {
+		// Find which entries we have to apply.
+		CM.mu.Lock()
+		savedTerm := CM.currentTerm
+		savedLastApplied := CM.lastApplied
+		var entries []LogEntry
+		if CM.commitIndex > CM.lastApplied {
+			entries = CM.log[CM.lastApplied+1 : CM.commitIndex+1]
+			CM.lastApplied = CM.commitIndex
+		}
+		CM.mu.Unlock()
+		dlog(fmt.Sprintf("commitChanSender entries=%v, savedLastApplied=%d", entries, savedLastApplied))
+
+		for i, entry := range entries {
+			CM.commitChan <- CommitEntry {
+			Command: entry.Command,
+			Index:   savedLastApplied + i + 1,
+			Term:    savedTerm,
+			}
+		}
+	}
+	dlog(fmt.Sprintf("commitChanSender done"))
 }
 
 func UpdateLeader(target string, newLeader string) {
@@ -455,3 +562,17 @@ func SendVoteReq(target string, args RequestVoteArgs) (error, RequestVoteReply) 
         return nil, rv_reply
 }
 
+func intMin(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+func lastLogIndexAndTerm() (int, int) {
+	if len(CM.log) > 0 {
+		lastIndex := len(CM.log) - 1
+		return lastIndex, CM.log[lastIndex].Term
+	} else {
+		return -1, -1
+	}
+}
