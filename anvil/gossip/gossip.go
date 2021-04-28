@@ -144,7 +144,6 @@ func PropagateCatalog() {
 		}
 		target := rand.Intn(len(receivedStuff.Nodes))
 		if(receivedStuff.Nodes[target].Name != hname) {
-			fmt.Printf("Trying to gossip with target: %s\n", receivedStuff.Nodes[target].Name)
 			var jsonData []byte
 			//Pass your catalog contents back to joiner
 			jsonData, err = json.Marshal(receivedStuff)
