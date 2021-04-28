@@ -68,7 +68,6 @@ func AddPeer(peerList []string, targetName string) []string {
 			return peerList
 		}
 	}
-	fmt.Println("Adding new peer")
 	peerList = append(peerList, targetName)
 	return peerList
 }
