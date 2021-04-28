@@ -118,14 +118,14 @@ func dlog(format string) {
 
 
 //Pass this function any data type and it will return a boolean of whether it was appended to the log
-func (cm *ConsensusModule) Submit(command interface{}) bool {
+func Submit(command interface{}) bool {
 	CM.mu.Lock()
 	defer CM.mu.Unlock()
 
 	dlog(fmt.Sprintf("Submit received by %v: %v", CM.state, command))
 	if CM.state == Leader {
 		CM.log = append(CM.log, LogEntry{Command: command, Term: CM.currentTerm})
-		dlog(fmt.Sprintf("... log=%v", cm.log))
+		dlog(fmt.Sprintf("... log=%v", CM.log))
 		return true
 	}
 	return false

@@ -119,6 +119,23 @@ func CLI() {
 			}
 		})
 
+	commando.
+		Register("acl").
+		SetDescription("This command is utilized to push an ACL object into the raft log of Anvil.").
+		SetShortDescription("add an ACL object to the service mesh's raft log").
+		AddArgument("acl command", "Anvil ACL command to execute", "").
+		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
+                        //Check if Anvil binary is running
+                        res := anvil.CheckStatus()
+                        if (res == true) {
+                                for _,v := range args {
+                                        anvil.Submit(v.Value)
+                                }
+                        } else {
+                                log.Fatalln("Anvil binary is not currently running")
+                        }
+                })
+
 	// parse command-line arguments from the STDIN
 	commando.Parse(nil)
 }

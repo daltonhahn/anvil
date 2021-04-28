@@ -179,6 +179,19 @@ func UpdateLeader(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "OK")
 }
 
+func PushACL(w http.ResponseWriter, r *http.Request) {
+	b, err := ioutil.ReadAll(r.Body)
+        defer r.Body.Close()
+        if err != nil {
+                http.Error(w, err.Error(), 500)
+                return
+        }
+	var test map[string]string
+	err = json.Unmarshal(b, &test)
+	raft.Submit(test["command"])
+	fmt.Fprintf(w, "OK")
+}
+
 func GetIterCatalog(w http.ResponseWriter, r *http.Request) {
 	target := mux.Vars(r)["node"]
 	anv_catalog := catalog.GetCatalog()
