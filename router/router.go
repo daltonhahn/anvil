@@ -186,10 +186,31 @@ func PushACL(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, err.Error(), 500)
                 return
         }
-	var test map[string]string
-	err = json.Unmarshal(b, &test)
-	raft.Submit(test["command"])
-	fmt.Fprintf(w, "OK")
+	var comm map[string]string
+	err = json.Unmarshal(b, &comm)
+	raft.Submit(comm["command"])
+}
+
+func GetACL(w http.ResponseWriter, r *http.Request) {
+        dt := time.Now()
+        fmt.Fprint(w, ("Retrieving ACL Log at " + dt.String() + "\n"))
+        raft.GetLog()
+}
+
+func TokenLookup(w http.ResponseWriter, r *http.Request) {
+        dt := time.Now()
+	b, err := ioutil.ReadAll(r.Body)
+        defer r.Body.Close()
+        if err != nil {
+                http.Error(w, err.Error(), 500)
+                return
+        }
+	var token_meta map[string]string
+	err = json.Unmarshal(b, &token_meta)
+	fmt.Fprint(w, ("Retrieving ACL Token data for: " + token_meta["id"] + " at " + dt.String() + "\n"))
+	//result := raft.TokenLookup(token_meta["id"], token_meta["svc"], token_meta["requester"], token_meta["time"])
+	result := raft.TokenLookup("test")
+	fmt.Fprintf(w, strconv.FormatBool(result))
 }
 
 func GetIterCatalog(w http.ResponseWriter, r *http.Request) {

@@ -69,6 +69,8 @@ func registerRoutes(anv_router *mux.Router) {
 	anv_router.HandleFunc("/raft/peers", router.RaftPeers).Methods("GET")
 	anv_router.HandleFunc("/raft/updateleader", router.UpdateLeader).Methods("POST")
 	anv_router.HandleFunc("/raft/pushACL", router.PushACL).Methods("POST")
+	anv_router.HandleFunc("/raft/getACL", router.GetACL).Methods("GET")
+	anv_router.HandleFunc("/raft/acl", router.TokenLookup).Methods("POST")
 	anv_router.HandleFunc("/catalog/nodes", router.GetNodeCatalog).Methods("GET")
 	anv_router.HandleFunc("/catalog/iter/{node}", router.GetIterCatalog).Methods("GET")
 	anv_router.HandleFunc("/catalog/iterupdate/{node}", router.UpdateIter).Methods("POST")

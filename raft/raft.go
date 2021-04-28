@@ -79,6 +79,9 @@ func NewConsensusModule(id string, peerIds []string) *ConsensusModule {
 	CM.PeerIds = peerIds
 	CM.state = Follower
 	CM.votedFor = ""
+	CM.nextIndex = make(map[int]int)
+	CM.matchIndex = make(map[int]int)
+	CM.commitIndex = 0
 
 	go func() {
 		CM.mu.Lock()
@@ -95,6 +98,25 @@ func GetPeers() {
 		fmt.Println(ele)
 	}
 }
+
+func GetLog() {
+	for _, ele := range CM.log {
+		fmt.Println(ele.Command)
+	}
+}
+
+func TokenLookup(id string) bool {
+	/*
+	for _, _ := range CM.log {
+		if ele.ID = id {
+
+		}
+	}
+	*/
+	fmt.Println(id)
+	return true
+}
+
 
 func Report() (id string, term int, isLeader bool) {
 	CM.mu.Lock()
@@ -406,6 +428,7 @@ func leaderSendHeartbeats() {
 	CM.mu.Lock()
 	savedCurrentTerm := CM.currentTerm
 	CM.mu.Unlock()
+	var ni int
 
         if len(CM.PeerIds) == 0 {
                 return
@@ -413,8 +436,15 @@ func leaderSendHeartbeats() {
 
 		  for ind, peerId := range CM.PeerIds {
 			go func(peerId string) {
+				if peerId == "" {
+					return
+				}
 				CM.mu.Lock()
-				ni := CM.nextIndex[ind]
+				if CM.nextIndex[ind] == 0 {
+					ni = 0
+				} else {
+					ni = CM.nextIndex[ind]
+				}
 				prevLogIndex := ni - 1
 				prevLogTerm := -1
 				if prevLogIndex >= 0 {
@@ -438,7 +468,7 @@ func leaderSendHeartbeats() {
 				//if err := cm.server.Call(peerId, "ConsensusModule.AppendEntries", args, &reply); err == nil {
 					CM.mu.Lock()
 					defer CM.mu.Unlock()
-					if reply.Term > savedCurrentTerm {
+					if (reply.Term > savedCurrentTerm || reply.Term == 0 || savedCurrentTerm == 0) {
 						dlog(fmt.Sprintf("term out of date in heartbeat reply"))
 						becomeFollower(reply.Term)
 						return
@@ -447,7 +477,12 @@ func leaderSendHeartbeats() {
 
 				if CM.state == Leader && savedCurrentTerm == reply.Term {
 					if reply.Success {
-						CM.nextIndex[ind] = ni + len(entries)
+						//length of entries is nil
+						if entries == nil {
+							CM.nextIndex[ind] = ni
+						} else {
+							CM.nextIndex[ind] = ni + len(entries)
+						}
 						CM.matchIndex[ind] = CM.nextIndex[ind] - 1
 						dlog(fmt.Sprintf("AppendEntries reply from %d success: nextIndex := %v, matchIndex := %v", peerId, CM.nextIndex, CM.matchIndex))
 
