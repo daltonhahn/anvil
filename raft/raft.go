@@ -296,7 +296,7 @@ func runElectionTimer(myid string) {
 	dlog(fmt.Sprintf("election timer started (%v), term=%d", timeoutDuration, termStarted))
 	CM.id = myid
 
-	ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(1000 * time.Millisecond)
 	defer ticker.Stop()
 	for {
 		<-ticker.C
@@ -409,7 +409,7 @@ func startLeader() {
 	}
 
 	go func() {
-		ticker := time.NewTicker(50 * time.Millisecond)
+		ticker := time.NewTicker(500 * time.Millisecond)
 		defer ticker.Stop()
 
 		for {
@@ -481,12 +481,7 @@ func leaderSendHeartbeats() {
 
 				if CM.state == Leader && savedCurrentTerm == reply.Term {
 					if reply.Success {
-						//length of entries is nil
-						if entries == nil {
-							CM.nextIndex[ind] = ni
-						} else {
-							CM.nextIndex[ind] = ni + len(entries)
-						}
+						CM.nextIndex[ind] = ni + len(entries)
 						CM.matchIndex[ind] = CM.nextIndex[ind] - 1
 						dlog(fmt.Sprintf("AppendEntries reply from %d success: nextIndex := %v, matchIndex := %v", peerId, CM.nextIndex, CM.matchIndex))
 
