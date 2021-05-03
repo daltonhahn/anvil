@@ -401,8 +401,10 @@ func startLeader() {
 	UpdateLeader(CM.id, CM.id)
 	if len(CM.PeerIds) == 0 {
         } else {
-		for _, ele := range CM.PeerIds {
+		for ind, ele := range CM.PeerIds {
 			UpdateLeader(ele, CM.id)
+			CM.nextIndex[ind] = len(CM.log)
+			CM.matchIndex[ind] = -1
 		}
 	}
 
@@ -428,6 +430,12 @@ func leaderSendHeartbeats() {
 	CM.mu.Lock()
 	savedCurrentTerm := CM.currentTerm
 	CM.mu.Unlock()
+	if CM.nextIndex == nil {
+		CM.nextIndex = make(map[int]int)
+	}
+	if CM.matchIndex == nil {
+		CM.matchIndex = make(map[int]int)
+	}
 	var ni int
 
         if len(CM.PeerIds) == 0 {
@@ -440,11 +448,7 @@ func leaderSendHeartbeats() {
 					return
 				}
 				CM.mu.Lock()
-				if CM.nextIndex[ind] == 0 {
-					ni = 0
-				} else {
-					ni = CM.nextIndex[ind]
-				}
+				ni = CM.nextIndex[ind]
 				prevLogIndex := ni - 1
 				prevLogTerm := -1
 				if prevLogIndex >= 0 {
