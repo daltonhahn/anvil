@@ -409,7 +409,7 @@ func startLeader() {
 	}
 
 	go func() {
-		ticker := time.NewTicker(500 * time.Millisecond)
+		ticker := time.NewTicker(300 * time.Millisecond)
 		defer ticker.Stop()
 
 		for {
