@@ -465,7 +465,6 @@ func leaderSendHeartbeats() {
 					LeaderCommit: CM.commitIndex,
 				}
 				CM.mu.Unlock()
-				dlog(fmt.Sprintf("sending AppendEntries to %v: ni=%d, args=%+v", peerId, ni, args))
 				var reply AppendEntriesReply
 				err, reply := SendAppendEntry(peerId, args)
 				if err == nil {
@@ -483,7 +482,6 @@ func leaderSendHeartbeats() {
 					if reply.Success {
 						CM.nextIndex[ind] = ni + len(entries)
 						CM.matchIndex[ind] = CM.nextIndex[ind] - 1
-						dlog(fmt.Sprintf("AppendEntries reply from %d success: nextIndex := %v, matchIndex := %v", peerId, CM.nextIndex, CM.matchIndex))
 
 						savedCommitIndex := CM.commitIndex
 						for i := CM.commitIndex + 1; i < len(CM.log); i++ {
