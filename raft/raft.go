@@ -57,8 +57,6 @@ type ConsensusModule struct {
 	mu sync.Mutex
 	id string
 	PeerIds []string
-	commitChan chan<- CommitEntry
-	newCommitReadyChan chan struct{}
 	currentTerm int
 	votedFor    string
 	log         []LogEntry
@@ -81,7 +79,8 @@ func NewConsensusModule(id string, peerIds []string) *ConsensusModule {
 	CM.votedFor = ""
 	CM.nextIndex = make(map[int]int)
 	CM.matchIndex = make(map[int]int)
-	CM.commitIndex = 0
+	CM.commitIndex = -1
+	CM.lastApplied = -1
 
 	go func() {
 		CM.mu.Lock()
@@ -246,9 +245,11 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 
 			for {
 				if logInsertIndex >= len(CM.log) || newEntriesIndex >= len(args.Entries) {
+					fmt.Println("Found reason to break from log increment")
 					break
 				}
 				if CM.log[logInsertIndex].Term != args.Entries[newEntriesIndex].Term {
+					fmt.Println("Found reason to break from log increment 2")
 					break
 				}
 				logInsertIndex++
@@ -269,7 +270,6 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 			if args.LeaderCommit > CM.commitIndex {
 				CM.commitIndex = intMin(args.LeaderCommit, len(CM.log)-1)
 				dlog(fmt.Sprintf("... setting commitIndex=%d", CM.commitIndex))
-				CM.newCommitReadyChan <- struct{}{}
 			}
 		}
 		reply.Success = true
@@ -441,7 +441,6 @@ func leaderSendHeartbeats() {
         if len(CM.PeerIds) == 0 {
                 return
         } else {
-
 		  for ind, peerId := range CM.PeerIds {
 			go func(peerId string) {
 				if peerId == "" {
@@ -468,7 +467,6 @@ func leaderSendHeartbeats() {
 				var reply AppendEntriesReply
 				err, reply := SendAppendEntry(peerId, args)
 				if err == nil {
-				//if err := cm.server.Call(peerId, "ConsensusModule.AppendEntries", args, &reply); err == nil {
 					CM.mu.Lock()
 					defer CM.mu.Unlock()
 					if (reply.Term > savedCurrentTerm || reply.Term == 0 || savedCurrentTerm == 0) {
@@ -499,7 +497,6 @@ func leaderSendHeartbeats() {
 						}
 						if CM.commitIndex != savedCommitIndex {
 							dlog(fmt.Sprintf("leader sets commitIndex := %d", CM.commitIndex))
-							CM.newCommitReadyChan <- struct{}{}
 						}
 					} else {
 						CM.nextIndex[ind] = ni - 1
@@ -509,31 +506,6 @@ func leaderSendHeartbeats() {
 			}(peerId)
 		}
 	}
-}
-
-func commitChanSender() {
-	for range CM.newCommitReadyChan {
-		// Find which entries we have to apply.
-		CM.mu.Lock()
-		savedTerm := CM.currentTerm
-		savedLastApplied := CM.lastApplied
-		var entries []LogEntry
-		if CM.commitIndex > CM.lastApplied {
-			entries = CM.log[CM.lastApplied+1 : CM.commitIndex+1]
-			CM.lastApplied = CM.commitIndex
-		}
-		CM.mu.Unlock()
-		dlog(fmt.Sprintf("commitChanSender entries=%v, savedLastApplied=%d", entries, savedLastApplied))
-
-		for i, entry := range entries {
-			CM.commitChan <- CommitEntry {
-			Command: entry.Command,
-			Index:   savedLastApplied + i + 1,
-			Term:    savedTerm,
-			}
-		}
-	}
-	dlog(fmt.Sprintf("commitChanSender done"))
 }
 
 func UpdateLeader(target string, newLeader string) {
