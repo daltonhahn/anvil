@@ -15,13 +15,15 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/raft"
+	"github.com/daltonhahn/anvil/service"
+	"github.com/daltonhahn/anvil/acl"
 	//"github.com/daltonhahn/anvil/security"
 )
 
 type Message struct {
         NodeName string `json:"nodename"`
         Nodes []catalog.Node `json:"nodes"`
-        Services []catalog.Service `json:"services"`
+        Services []service.Service `json:"services"`
 	NodeType string `json:"nodetype"`
 }
 
@@ -29,7 +31,7 @@ type G_Message struct {
         NodeName string `json:"nodename"`
         Iteration int64 `json:"iteration"`
         Nodes []catalog.Node `json:"nodes"`
-        Services []catalog.Service `json:"services"`
+        Services []service.Service `json:"services"`
 	NodeType string `json:"nodetype"`
 }
 
@@ -86,7 +88,7 @@ func GetCatalog(w http.ResponseWriter, r *http.Request) {
 	hname, _ := os.Hostname()
 	iteration := anv_catalog.GetIter()
 	nodes := []catalog.Node(anv_catalog.GetNodes())
-	services := []catalog.Service(anv_catalog.GetServices())
+	services := []service.Service(anv_catalog.GetServices())
 	nodeType := anv_catalog.GetNodeType(hname)
 	newMsg := &G_Message{hname, iteration, nodes, services, nodeType}
 	var jsonData []byte
@@ -186,9 +188,9 @@ func PushACL(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, err.Error(), 500)
                 return
         }
-	var comm map[string]string
-	err = json.Unmarshal(b, &comm)
-	raft.Submit(comm["command"])
+	var aclObj acl.ACLEntry
+	err = json.Unmarshal(b, &aclObj)
+	raft.Submit(aclObj)
 }
 
 func GetACL(w http.ResponseWriter, r *http.Request) {

@@ -7,8 +7,7 @@ import (
 	"os"
 
 	"github.com/daltonhahn/anvil/raft"
-
-	//"github.com/daltonhahn/anvil/envoy"
+	"github.com/daltonhahn/anvil/service"
 )
 
 var AnvilCatalog Catalog
@@ -19,17 +18,18 @@ type Node struct {
 	Type	string
 	Iteration int64
 }
-
+/*
 type Service struct {
 	Name	string
 	Address	string
 	Port	int64
 }
+*/
 
 type Catalog struct {
 	Iteration	int64
 	Nodes		[]Node
-	Services	[]Service
+	Services	[]service.Service
 }
 
 func (catalog *Catalog) UpdateIter(targetNode string, update int64) {
@@ -40,7 +40,7 @@ func (catalog *Catalog) UpdateIter(targetNode string, update int64) {
         }
 }
 
-func (catalog *Catalog) AddService(newSvc Service) []Service {
+func (catalog *Catalog) AddService(newSvc service.Service) []service.Service {
 	for ind, ele := range catalog.Services {
 		if ele.Name == newSvc.Name && ele.Address == newSvc.Address {
 			 catalog.Services[ind] = newSvc
@@ -82,7 +82,7 @@ func (catalog *Catalog) RemoveNode(target string) []Node {
 	return filteredNodes
 }
 
-func (catalog *Catalog) RemoveService(targetName string, targetAddr string) []Service {
+func (catalog *Catalog) RemoveService(targetName string, targetAddr string) []service.Service {
 	filteredServices := catalog.Services[:0]
 	for _,svc := range catalog.Services {
 		if svc.Name != targetName || svc.Address != targetAddr {
@@ -113,7 +113,7 @@ func UpdateNodeTypes(newLeader string) {
 	AnvilCatalog.Iteration++
 }
 
-func Register(nodeName string, svcList []Service, nodeType string) {
+func Register(nodeName string, svcList []service.Service, nodeType string) {
 	addr, err := net.LookupIP(nodeName)
 	if err != nil {
 		fmt.Println("Lookup failed")
@@ -124,7 +124,7 @@ func Register(nodeName string, svcList []Service, nodeType string) {
 		raft.CM.PeerIds = AddPeer(raft.CM.PeerIds, addr[0].String())
 	}
 	for _, ele := range svcList {
-		AnvilCatalog.Services = AnvilCatalog.AddService(Service{ele.Name, addr[0].String(), ele.Port})
+		AnvilCatalog.Services = AnvilCatalog.AddService(service.Service{ele.Name, addr[0].String(), ele.Port})
 	}
 	if AnvilCatalog.Iteration == 0 {
 		AnvilCatalog.Iteration = 1
@@ -197,7 +197,7 @@ func (catalog *Catalog) GetIter() (int64) {
 	return AnvilCatalog.Iteration
 }
 
-func (catalog *Catalog) GetServices() ([]Service) {
+func (catalog *Catalog) GetServices() ([]service.Service) {
 	return AnvilCatalog.Services
 }
 

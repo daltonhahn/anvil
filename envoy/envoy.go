@@ -7,7 +7,7 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/daltonhahn/anvil/catalog"
+	"github.com/daltonhahn/anvil/service"
 )
 
 const listener_config = `resources:
@@ -127,7 +127,7 @@ const gossip_config = `
 var S_list = new(EnvoyConfig)
 
 type EnvoyConfig struct {
-	Services	[]catalog.Service
+	Services	[]service.Service
 }
 
 func SetServiceList() (EnvoyConfig) {

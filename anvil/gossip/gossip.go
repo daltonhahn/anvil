@@ -14,6 +14,7 @@ import (
 
 	"github.com/daltonhahn/anvil/security"
 	"github.com/daltonhahn/anvil/catalog"
+	"github.com/daltonhahn/anvil/service"
 )
 
 type Message struct {
@@ -21,7 +22,7 @@ type Message struct {
 	Iteration int64 `json:"iteration"`
 	NodeType string `json:"nodetype"`
         Nodes []catalog.Node `json:"nodes"`
-        Services []catalog.Service `json:"services"`
+        Services []service.Service `json:"services"`
 }
 
 func sendCatalogSync(target string, catalogCopy []byte) {

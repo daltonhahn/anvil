@@ -13,7 +13,17 @@ import (
 	"log"
 	"gopkg.in/yaml.v2"
 	//"net/http"
+
+	"github.com/daltonhahn/anvil/service"
 )
+
+type ACLEntry struct {
+	TokenName	string	`yaml:"name,omitempty"`
+	SecretValue	string
+	CreationTime	string
+	ExpirationTime	string
+	ServiceList	[]service.Service
+}
 
 var SecConf = new(SecConfig)
 

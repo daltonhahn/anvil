@@ -15,18 +15,14 @@ import (
         "encoding/json"
         "bytes"
         "io/ioutil"
-)
 
-type CommitEntry struct {
-	Command interface{}
-	Index int
-	Term int
-}
+	"github.com/daltonhahn/anvil/acl"
+)
 
 const DebugCM = 1
 
 type LogEntry struct {
-	Command interface{}
+	ACLObj	acl.ACLEntry
 	Term    int
 }
 
@@ -101,7 +97,7 @@ func GetPeers() {
 
 func GetLog() {
 	for _, ele := range CM.log {
-		fmt.Println(ele.Command)
+		fmt.Println(ele.ACLObj.TokenName)
 	}
 }
 
@@ -140,13 +136,13 @@ func dlog(format string) {
 
 
 //Pass this function any data type and it will return a boolean of whether it was appended to the log
-func Submit(command interface{}) bool {
+func Submit(command acl.ACLEntry) bool {
 	CM.mu.Lock()
 	defer CM.mu.Unlock()
 
 	dlog(fmt.Sprintf("Submit received by %v: %v", CM.state, command))
 	if CM.state == Leader {
-		CM.log = append(CM.log, LogEntry{Command: command, Term: CM.currentTerm})
+		CM.log = append(CM.log, LogEntry{ACLObj: command, Term: CM.currentTerm})
 		dlog(fmt.Sprintf("... log=%v", CM.log))
 		return true
 	}
@@ -201,7 +197,6 @@ func RequestVote(args RequestVoteArgs) RequestVoteReply {
 type AppendEntriesArgs struct {
 	Term     int
 	LeaderId string
-
 	PrevLogIndex int
 	PrevLogTerm  int
 	Entries      []LogEntry
@@ -238,7 +233,6 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 		// If your log has fewer entries than the Leader, then you need to update your log
 		if args.PrevLogIndex > len(CM.log) {
 			_, backlogEntries := BacklogRequest(args.LeaderId)
-			fmt.Printf("BACKENTRIES: %v\n", backlogEntries)
 			//Figure out a way to add these into your log and update the relevant values
 			dlog(fmt.Sprintf("Fast forwarding backlog"))
                         CM.log = append(CM.log[:CM.commitIndex], backlogEntries...)
