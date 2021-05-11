@@ -237,11 +237,15 @@ func UpdateIter(w http.ResponseWriter, r *http.Request) {
 
 func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 	strIndex := mux.Vars(r)["index"]
-	fmt.Println("Got backlog request for index: ", strIndex)
 	index, _ := strconv.ParseInt(strIndex, 10, 64)
 	entries := raft.PullBacklogEntries(index)
-	//Add some logic to put list of log entries in JSON object to give back
-	fmt.Println("Missing log entries: ", entries)
+	var jsonData []byte
+	jsonData, err := json.Marshal(entries)
+        if err != nil {
+                log.Fatalln("Unable to marshal JSON")
+        }
+	w.Header().Set("Content-Type", "application/json")
+        fmt.Fprintf(w, string(jsonData))
 }
 
 /*

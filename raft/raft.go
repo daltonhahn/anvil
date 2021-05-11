@@ -237,13 +237,11 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 		// vacuously true.
 		// If your log has fewer entries than the Leader, then you need to update your log
 		if args.PrevLogIndex > len(CM.log) {
-			fmt.Println("My log is behind Leader log")
-			fmt.Printf("\tMy Commit Index: %v; Leader Commit Index: %v\n", CM.commitIndex, args.LeaderCommit)
 			_, backlogEntries := BacklogRequest(args.LeaderId)
 			fmt.Printf("BACKENTRIES: %v\n", backlogEntries)
+			//Figure out a way to add these into your log and update the relevant values
 		}
 		if args.PrevLogIndex == -1 || (args.PrevLogIndex < len(CM.log) && args.PrevLogTerm == CM.log[args.PrevLogIndex].Term) {
-			fmt.Println("log drift, adjusting")
 			reply.Success = true
 
 			// Find an insertion point - where there's a term mismatch between
@@ -461,7 +459,6 @@ func leaderSendHeartbeats() {
 					prevLogTerm = CM.log[prevLogIndex].Term
 				}
 				entries := CM.log[ni:]
-				//fmt.Printf("%v\n", entries)
 
 				args := AppendEntriesArgs{
 					Term:         savedCurrentTerm,
@@ -553,13 +550,10 @@ func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntrie
 }
 
 func BacklogRequest(leader string) (error, []LogEntry) {
-	fmt.Println("Trying to catch up log")
-	fmt.Println("Contacting: " + leader + " with commit num: " + strconv.Itoa(CM.commitIndex))
 	resp, err := http.Get("http://" + leader + ":443/anvil/raft/backlog/" + strconv.Itoa(CM.commitIndex))
         if err != nil {
 		return errors.New("No HTTP response"), []LogEntry{}
         }
-	fmt.Printf("%v\n", resp)
 
         body, err := ioutil.ReadAll(resp.Body)
         if err != nil {
@@ -575,9 +569,7 @@ func BacklogRequest(leader string) (error, []LogEntry) {
 }
 
 func PullBacklogEntries(index int64) []LogEntry {
-	fmt.Println("Backlog starting at: ", index)
 	backlog := CM.log[index:]
-	fmt.Printf("BACKLOG: %v\n", backlog)
 	return backlog
 }
 
