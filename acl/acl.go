@@ -8,7 +8,9 @@ import (
         //"crypto/tls"
         //"crypto/x509"
         //"errors"
+	*/
         "fmt"
+	/*
         "io"
         "io/ioutil"
         "log"
@@ -23,4 +25,9 @@ type ACLEntry struct {
 	CreationTime	string
 	ExpirationTime	string
 	ServiceList	[]service.Service
+}
+
+func ACLIngest(filepath string) {
+	fmt.Println("Ingesting acl file")
+	fmt.Println("FilePATH: ", filepath)
 }

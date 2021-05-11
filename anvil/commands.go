@@ -7,10 +7,11 @@ import (
 	"log"
 	"io/ioutil"
 	"os"
-	"fmt"
+	//"fmt"
 
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/router"
+	"github.com/daltonhahn/anvil/acl"
 	//"github.com/daltonhahn/anvil/security"
 )
 
@@ -28,7 +29,9 @@ func CheckStatus() bool {
 	}
 }
 
-func Submit(comm string) {
+func Submit(filepath string) {
+	acl.ACLIngest(filepath)
+	/*
 	hname, err := os.Hostname()
         if err != nil {
                 log.Fatalln("Unable to get hostname")
@@ -49,6 +52,7 @@ func Submit(comm string) {
                 log.Fatalln("Unable to read received content")
         }
 	fmt.Println(string(body))
+	*/
 }
 
 func Join(target string) {
