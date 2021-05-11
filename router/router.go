@@ -235,6 +235,14 @@ func UpdateIter(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintf(w, "OK")
 }
 
+func RaftBacklog(w http.ResponseWriter, r *http.Request) {
+	strIndex := mux.Vars(r)["index"]
+	fmt.Println("Got backlog request for index: ", strIndex)
+	index, _ := strconv.ParseInt(strIndex, 10, 64)
+	entries := raft.PullBacklogEntries(index)
+	fmt.Println("Missing log entries: ", entries)
+}
+
 /*
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	var resp *http.Response

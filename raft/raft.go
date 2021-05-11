@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 	"errors"
+	"strconv"
 
 	"net/http"
         "encoding/json"
@@ -234,7 +235,15 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 		// Does our log contain an entry at PrevLogIndex whose term matches
 		// PrevLogTerm? Note that in the extreme case of PrevLogIndex=-1 this is
 		// vacuously true.
+		// If your log has fewer entries than the Leader, then you need to update your log
+		if args.PrevLogIndex > len(CM.log) {
+			fmt.Println("My log is behind Leader log")
+			fmt.Printf("\tMy Commit Index: %v; Leader Commit Index: %v\n", CM.commitIndex, args.LeaderCommit)
+			_, backlogEntries := BacklogRequest(args.LeaderId)
+			fmt.Printf("BACKENTRIES: %v\n", backlogEntries)
+		}
 		if args.PrevLogIndex == -1 || (args.PrevLogIndex < len(CM.log) && args.PrevLogTerm == CM.log[args.PrevLogIndex].Term) {
+			fmt.Println("log drift, adjusting")
 			reply.Success = true
 
 			// Find an insertion point - where there's a term mismatch between
@@ -245,11 +254,9 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 
 			for {
 				if logInsertIndex >= len(CM.log) || newEntriesIndex >= len(args.Entries) {
-					fmt.Println("Found reason to break from log increment")
 					break
 				}
 				if CM.log[logInsertIndex].Term != args.Entries[newEntriesIndex].Term {
-					fmt.Println("Found reason to break from log increment 2")
 					break
 				}
 				logInsertIndex++
@@ -454,6 +461,7 @@ func leaderSendHeartbeats() {
 					prevLogTerm = CM.log[prevLogIndex].Term
 				}
 				entries := CM.log[ni:]
+				//fmt.Printf("%v\n", entries)
 
 				args := AppendEntriesArgs{
 					Term:         savedCurrentTerm,
@@ -542,6 +550,34 @@ func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntrie
 		return errors.New("JSON Parse error"), AppendEntriesReply{}
         }
         return nil, ae_reply
+}
+
+func BacklogRequest(leader string) (error, []LogEntry) {
+	fmt.Println("Trying to catch up log")
+	resp, err := http.Get("http://" + leader + ":443/raft/backlog/" + strconv.Itoa(CM.commitIndex))
+        if err != nil {
+		return errors.New("No HTTP response"), []LogEntry{}
+        }
+
+        body, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+		return errors.New("Bad Read Error"), []LogEntry{}
+        }
+        var newEntries []LogEntry
+
+        err = json.Unmarshal(body, &newEntries)
+        if err != nil {
+		return errors.New("JSON Parse Error"), []LogEntry{}
+        }
+	return nil, newEntries
+}
+
+func PullBacklogEntries(index int64) []string {
+	fmt.Println("Backlog starting at: ", index)
+	backlog := CM.log[index:]
+	fmt.Printf("BACKLOG: %v\n", backlog)
+
+	return []string{"dummy", "dummy2"}
 }
 
 
