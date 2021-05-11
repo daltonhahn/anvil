@@ -240,6 +240,7 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Got backlog request for index: ", strIndex)
 	index, _ := strconv.ParseInt(strIndex, 10, 64)
 	entries := raft.PullBacklogEntries(index)
+	//Add some logic to put list of log entries in JSON object to give back
 	fmt.Println("Missing log entries: ", entries)
 }
 

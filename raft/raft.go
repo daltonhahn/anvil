@@ -554,10 +554,12 @@ func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntrie
 
 func BacklogRequest(leader string) (error, []LogEntry) {
 	fmt.Println("Trying to catch up log")
-	resp, err := http.Get("http://" + leader + ":443/raft/backlog/" + strconv.Itoa(CM.commitIndex))
+	fmt.Println("Contacting: " + leader + " with commit num: " + strconv.Itoa(CM.commitIndex))
+	resp, err := http.Get("http://" + leader + ":443/anvil/raft/backlog/" + strconv.Itoa(CM.commitIndex))
         if err != nil {
 		return errors.New("No HTTP response"), []LogEntry{}
         }
+	fmt.Printf("%v\n", resp)
 
         body, err := ioutil.ReadAll(resp.Body)
         if err != nil {
@@ -572,12 +574,11 @@ func BacklogRequest(leader string) (error, []LogEntry) {
 	return nil, newEntries
 }
 
-func PullBacklogEntries(index int64) []string {
+func PullBacklogEntries(index int64) []LogEntry {
 	fmt.Println("Backlog starting at: ", index)
 	backlog := CM.log[index:]
 	fmt.Printf("BACKLOG: %v\n", backlog)
-
-	return []string{"dummy", "dummy2"}
+	return backlog
 }
 
 
