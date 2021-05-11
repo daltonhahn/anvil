@@ -240,6 +240,9 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 			_, backlogEntries := BacklogRequest(args.LeaderId)
 			fmt.Printf("BACKENTRIES: %v\n", backlogEntries)
 			//Figure out a way to add these into your log and update the relevant values
+			dlog(fmt.Sprintf("Fast forwarding backlog"))
+                        CM.log = append(CM.log[:CM.commitIndex], backlogEntries...)
+			CM.commitIndex = CM.commitIndex + len(backlogEntries)
 		}
 		if args.PrevLogIndex == -1 || (args.PrevLogIndex < len(CM.log) && args.PrevLogTerm == CM.log[args.PrevLogIndex].Term) {
 			reply.Success = true
