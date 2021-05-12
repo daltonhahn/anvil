@@ -15,6 +15,27 @@ import (
 	//"github.com/daltonhahn/anvil/security"
 )
 
+func Check(tok string, svc string) bool {
+	hname, err := os.Hostname()
+        if err != nil {
+                log.Fatalln("Unable to get hostname")
+        }
+	postBody, _ := json.Marshal(tok)
+	responseBody := bytes.NewBuffer(postBody)
+	// NEED TO REFINE THIS CALL TO BE A LOOKUP TO ANY QUORUM MEMBER
+	resp, err := http.Post("http://"+hname+":443/anvil/raft/acl/"+svc, "application/json", responseBody)
+	if err != nil {
+		log.Fatalln("Unable to post content")
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln("Unable to read received content")
+	}
+	fmt.Println(string(body))
+	return true
+}
+
 func CheckStatus() bool {
 	hname, err := os.Hostname()
         if err != nil {

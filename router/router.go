@@ -201,6 +201,7 @@ func GetACL(w http.ResponseWriter, r *http.Request) {
 }
 
 func TokenLookup(w http.ResponseWriter, r *http.Request) {
+	serviceTarget := mux.Vars(r)["service"]
         dt := time.Now()
 	b, err := ioutil.ReadAll(r.Body)
         defer r.Body.Close()
@@ -208,11 +209,10 @@ func TokenLookup(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, err.Error(), 500)
                 return
         }
-	var token_meta map[string]string
-	err = json.Unmarshal(b, &token_meta)
-	fmt.Fprint(w, ("Retrieving ACL Token data for: " + token_meta["id"] + " at " + dt.String() + "\n"))
-	//result := raft.TokenLookup(token_meta["id"], token_meta["svc"], token_meta["requester"], token_meta["time"])
-	result := raft.TokenLookup("test")
+	var lookupDat string
+	err = json.Unmarshal(b, &lookupDat)
+	fmt.Fprint(w, ("Retrieving ACL Token status at " + dt.String() + "\n"))
+	result := raft.TokenLookup(lookupDat, serviceTarget)
 	fmt.Fprintf(w, strconv.FormatBool(result))
 }
 

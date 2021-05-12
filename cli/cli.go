@@ -123,7 +123,7 @@ func CLI() {
 		Register("acl").
 		SetDescription("This command is utilized to push a list of ACL objects into the raft log of Anvil.").
 		SetShortDescription("add an ACL object to the service mesh's raft log").
-		AddArgument("acl <file path>", "Anvil ACL object file to ingest", "").
+		AddArgument("<file path>", "Anvil ACL object file to ingest", "").
 		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
                         //Check if Anvil binary is running
                         res := anvil.CheckStatus()
@@ -132,6 +132,25 @@ func CLI() {
                                 for _,v := range args {
                                         anvil.Submit(v.Value)
                                 }
+                        } else {
+                                log.Fatalln("Anvil binary is not currently running")
+                        }
+                })
+
+	commando.
+		Register("check").
+		SetDescription("This command is utilized to check a received token with the Raft ACL Oracle.").
+		SetShortDescription("check a token with Raft").
+		AddArgument("<token>", "ACL token received", "").
+		AddArgument("<service>", "Target service to check", "").
+		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
+                        //Check if Anvil binary is running
+                        res := anvil.CheckStatus()
+			//leader := anvil.CheckQuorum()
+                        if (res == true) {
+				tok := args["<token>"].Value
+				svc := args["<service>"].Value
+				anvil.Check(tok, svc)
                         } else {
                                 log.Fatalln("Anvil binary is not currently running")
                         }

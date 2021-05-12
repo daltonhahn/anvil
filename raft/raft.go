@@ -101,16 +101,17 @@ func GetLog() {
 	}
 }
 
-func TokenLookup(id string) bool {
-	/*
-	for _, _ := range CM.log {
-		if ele.ID = id {
-
+func TokenLookup(token string, targetSvc string) bool {
+	for _, ele := range CM.log {
+		if ele.ACLObj.TokenValue == token {
+			for _,svc := range ele.ACLObj.ServiceList {
+				if svc == targetSvc {
+					return true
+				}
+			}
 		}
 	}
-	*/
-	fmt.Println(id)
-	return true
+	return false
 }
 
 
