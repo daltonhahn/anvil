@@ -127,6 +127,7 @@ func CLI() {
 		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
                         //Check if Anvil binary is running
                         res := anvil.CheckStatus()
+			//leader := anvil.CheckQuorum()
                         if (res == true) {
                                 for _,v := range args {
                                         anvil.Submit(v.Value)

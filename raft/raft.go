@@ -97,7 +97,7 @@ func GetPeers() {
 
 func GetLog() {
 	for _, ele := range CM.log {
-		fmt.Println(ele.ACLObj.TokenName)
+		fmt.Println(ele.ACLObj.Name)
 	}
 }
 
@@ -136,6 +136,8 @@ func dlog(format string) {
 
 
 //Pass this function any data type and it will return a boolean of whether it was appended to the log
+// Change this function to send a REST API Request to Leader instead
+// Will require the creation of a function within the catalog to return the current leader of the cluster
 func Submit(command acl.ACLEntry) bool {
 	CM.mu.Lock()
 	defer CM.mu.Unlock()

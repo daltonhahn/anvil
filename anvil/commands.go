@@ -7,7 +7,7 @@ import (
 	"log"
 	"io/ioutil"
 	"os"
-	//"fmt"
+	"fmt"
 
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/router"
@@ -29,30 +29,30 @@ func CheckStatus() bool {
 	}
 }
 
+func CheckQuorum() bool {
+	return true
+}
+
 func Submit(filepath string) {
-	acl.ACLIngest(filepath)
-	/*
+	aclEntries,_ := acl.ACLIngest(filepath)
 	hname, err := os.Hostname()
         if err != nil {
                 log.Fatalln("Unable to get hostname")
         }
-	var command struct {
-		Command	string `json:"command"`
-	}
-	command.Command = comm
-	postBody, _ := json.Marshal(command)
-	responseBody := bytes.NewBuffer(postBody)
-	resp, err := http.Post("http://"+hname+":443/anvil/raft/pushACL", "application/json", responseBody)
-        if err != nil {
-                log.Fatalln("Unable to post content")
+	for _, ele := range aclEntries {
+		postBody, _ := json.Marshal(ele)
+		responseBody := bytes.NewBuffer(postBody)
+		resp, err := http.Post("http://"+hname+":443/anvil/raft/pushACL", "application/json", responseBody)
+		if err != nil {
+			log.Fatalln("Unable to post content")
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatalln("Unable to read received content")
+		}
+		fmt.Println(string(body))
         }
-        defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-        if err != nil {
-                log.Fatalln("Unable to read received content")
-        }
-	fmt.Println(string(body))
-	*/
 }
 
 func Join(target string) {

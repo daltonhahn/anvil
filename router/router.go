@@ -83,6 +83,7 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
 func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Anvil Service Mesh Index\n")
 }
+
 func GetCatalog(w http.ResponseWriter, r *http.Request) {
 	anv_catalog := catalog.GetCatalog()
 	hname, _ := os.Hostname()
