@@ -101,11 +101,11 @@ func GetLog() {
 	}
 }
 
-func TokenLookup(token string, targetSvc string) bool {
+func TokenLookup(token string, targetSvc string, requestTime time.Time) bool {
 	for _, ele := range CM.log {
 		if ele.ACLObj.TokenValue == token {
 			for _,svc := range ele.ACLObj.ServiceList {
-				if svc == targetSvc {
+				if svc == targetSvc && requestTime.Before(ele.ACLObj.ExpirationTime) {
 					return true
 				}
 			}

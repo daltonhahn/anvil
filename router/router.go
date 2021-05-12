@@ -212,7 +212,7 @@ func TokenLookup(w http.ResponseWriter, r *http.Request) {
 	var lookupDat string
 	err = json.Unmarshal(b, &lookupDat)
 	fmt.Fprint(w, ("Retrieving ACL Token status at " + dt.String() + "\n"))
-	result := raft.TokenLookup(lookupDat, serviceTarget)
+	result := raft.TokenLookup(lookupDat, serviceTarget, time.Now())
 	fmt.Fprintf(w, strconv.FormatBool(result))
 }
 
