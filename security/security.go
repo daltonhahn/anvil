@@ -4,16 +4,26 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"crypto/tls"
-	"crypto/x509"
-	"errors"
+	//"crypto/tls"
+	//"crypto/x509"
+	//"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"gopkg.in/yaml.v2"
-	"net/http"
+	//"net/http"
+
+	"github.com/daltonhahn/anvil/service"
 )
+
+type ACLEntry struct {
+	TokenName	string	`yaml:"name,omitempty"`
+	SecretValue	string
+	CreationTime	string
+	ExpirationTime	string
+	ServiceList	[]service.Service
+}
 
 var SecConf = new(SecConfig)
 
@@ -86,6 +96,7 @@ func DecData(input_ciphertext string) []byte {
     return plaintext
 }
 
+/*
 func TLSGetReq(target string, path string) (*http.Response,error) {
 	ReadSecConfig()
 	caCertPath := SecConf.CACert
@@ -147,3 +158,4 @@ func TLSPostReq(target string, path string, options string, body io.Reader) (*ht
         }
         return resp, nil
 }
+*/

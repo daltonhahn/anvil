@@ -4,6 +4,11 @@ import (
 	"net"
 	"fmt"
 	"strings"
+	"log"
+	"net/http"
+	"os"
+	"bytes"
+	"encoding/json"
 	"github.com/google/gopacket"
 	layers "github.com/google/gopacket/layers"
 
@@ -25,7 +30,34 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 				fmt.Printf("Some error  %v", err)
 				continue
 			}
-			sendResponse(ser, remoteaddr)
+
+			var receivedStuff Message
+			err = json.Unmarshal(decMessage[10:], &receivedStuff)
+			if err != nil {
+				log.Fatalln("Unable to decode JSON")
+			}
+			var tempCatalog catalog.Catalog
+			for _, ele := range receivedStuff.Nodes {
+				tempCatalog.AddNode(ele)
+				for _, svc := range receivedStuff.Services {
+					if (ele.Address == svc.Address) {
+						tempCatalog.AddService(svc)
+					}
+				}
+				var localPost Message
+				localPost.NodeName = ele.Name
+				localPost.Services = tempCatalog.Services
+				localPost.NodeType = ele.Type
+				postBody, _ := json.Marshal(localPost)
+				responseBody := bytes.NewBuffer(postBody)
+				// Marshal the struct into a postable message
+				hname, err := os.Hostname()
+				if err != nil {
+					log.Fatalln("Unable to get hostname")
+				}
+				http.Post("http://"+hname+":443/anvil/catalog/register", "application/json", responseBody)
+				tempCatalog = catalog.Catalog{}
+			}
 		} else {
 			//Check if this is a valid DNS file
 			packet := gopacket.NewPacket(p, layers.LayerTypeDNS, gopacket.Default)

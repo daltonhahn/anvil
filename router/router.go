@@ -8,18 +8,30 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
+	"strconv"
+	//"strings"
 	//"errors"
 
+	"github.com/gorilla/mux"
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/raft"
-	"github.com/daltonhahn/anvil/security"
+	"github.com/daltonhahn/anvil/service"
+	"github.com/daltonhahn/anvil/acl"
+	//"github.com/daltonhahn/anvil/security"
 )
 
 type Message struct {
         NodeName string `json:"nodename"`
         Nodes []catalog.Node `json:"nodes"`
-        Services []catalog.Service `json:"services"`
+        Services []service.Service `json:"services"`
+	NodeType string `json:"nodetype"`
+}
+
+type G_Message struct {
+        NodeName string `json:"nodename"`
+        Iteration int64 `json:"iteration"`
+        Nodes []catalog.Node `json:"nodes"`
+        Services []service.Service `json:"services"`
 	NodeType string `json:"nodetype"`
 }
 
@@ -30,7 +42,7 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	var msg Message
+	var msg G_Message
 	err = json.Unmarshal(b, &msg)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -41,13 +53,14 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
         if err != nil {
                 log.Fatalln("Unable to get hostname")
         }
-	resp, err := security.TLSGetReq(hname, "/anvil/catalog")
+	resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
+	//resp, err := security.TLSGetReq(hname, "/anvil/catalog")
         if err != nil {
                 log.Fatalln("Unable to get response")
         }
 
         body, err := ioutil.ReadAll(resp.Body)
-        var receivedStuff Message
+        var receivedStuff G_Message
 
         err = json.Unmarshal(body, &receivedStuff)
         if err != nil {
@@ -70,13 +83,15 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
 func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Anvil Service Mesh Index\n")
 }
+
 func GetCatalog(w http.ResponseWriter, r *http.Request) {
 	anv_catalog := catalog.GetCatalog()
 	hname, _ := os.Hostname()
+	iteration := anv_catalog.GetIter()
 	nodes := []catalog.Node(anv_catalog.GetNodes())
-	services := []catalog.Service(anv_catalog.GetServices())
+	services := []service.Service(anv_catalog.GetServices())
 	nodeType := anv_catalog.GetNodeType(hname)
-	newMsg := &Message{hname, nodes, services, nodeType}
+	newMsg := &G_Message{hname, iteration, nodes, services, nodeType}
 	var jsonData []byte
 	jsonData, err := json.Marshal(newMsg)
 	if err != nil {
@@ -167,6 +182,76 @@ func UpdateLeader(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "OK")
 }
 
+func PushACL(w http.ResponseWriter, r *http.Request) {
+	b, err := ioutil.ReadAll(r.Body)
+        defer r.Body.Close()
+        if err != nil {
+                http.Error(w, err.Error(), 500)
+                return
+        }
+	var aclObj acl.ACLEntry
+	err = json.Unmarshal(b, &aclObj)
+	raft.Submit(aclObj)
+}
+
+func GetACL(w http.ResponseWriter, r *http.Request) {
+        dt := time.Now()
+        fmt.Fprint(w, ("Retrieving ACL Log at " + dt.String() + "\n"))
+        raft.GetLog()
+}
+
+func TokenLookup(w http.ResponseWriter, r *http.Request) {
+	serviceTarget := mux.Vars(r)["service"]
+        dt := time.Now()
+	b, err := ioutil.ReadAll(r.Body)
+        defer r.Body.Close()
+        if err != nil {
+                http.Error(w, err.Error(), 500)
+                return
+        }
+	var lookupDat string
+	err = json.Unmarshal(b, &lookupDat)
+	fmt.Fprint(w, ("Retrieving ACL Token status at " + dt.String() + "\n"))
+	result := raft.TokenLookup(lookupDat, serviceTarget, time.Now())
+	fmt.Fprintf(w, strconv.FormatBool(result))
+}
+
+func GetIterCatalog(w http.ResponseWriter, r *http.Request) {
+	target := mux.Vars(r)["node"]
+	anv_catalog := catalog.GetCatalog()
+	val := anv_catalog.GetNodeIter(target)
+	fmt.Fprintf(w, strconv.FormatInt(val,10))
+}
+
+func UpdateIter(w http.ResponseWriter, r *http.Request) {
+	target := mux.Vars(r)["node"]
+        b, err := ioutil.ReadAll(r.Body)
+        defer r.Body.Close()
+        if err != nil {
+                http.Error(w, err.Error(), 500)
+                return
+        }
+        var newIter G_Message
+        err = json.Unmarshal(b, &newIter)
+	anv_catalog := catalog.GetCatalog()
+        anv_catalog.UpdateIter(target, newIter.Iteration)
+        fmt.Fprintf(w, "OK")
+}
+
+func RaftBacklog(w http.ResponseWriter, r *http.Request) {
+	strIndex := mux.Vars(r)["index"]
+	index, _ := strconv.ParseInt(strIndex, 10, 64)
+	entries := raft.PullBacklogEntries(index)
+	var jsonData []byte
+	jsonData, err := json.Marshal(entries)
+        if err != nil {
+                log.Fatalln("Unable to marshal JSON")
+        }
+	w.Header().Set("Content-Type", "application/json")
+        fmt.Fprintf(w, string(jsonData))
+}
+
+/*
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	var resp *http.Response
 	var err error
@@ -192,3 +277,4 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	//fmt.Fprintf(w, string(respBody))
 	fmt.Fprintf(w, "Rerouting -------\n")
 }
+*/

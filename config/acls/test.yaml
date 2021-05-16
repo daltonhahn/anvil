@@ -1,0 +1,13 @@
+--- 
+- 
+  name: test
+  services: 
+    - "1"
+    - "2"
+    - "3"
+- 
+  name: test2
+  services: 
+    - one
+    - two
+    - three

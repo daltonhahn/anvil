@@ -2,12 +2,12 @@ package cli
 
 import (
 	"log"
-	//"net/http"
+	"net/http"
 	"fmt"
 	"os"
 	"github.com/thatisuday/commando"
 	"github.com/daltonhahn/anvil/anvil"
-	"github.com/daltonhahn/anvil/security"
+	//"github.com/daltonhahn/anvil/security"
 )
 
 func CLI() {
@@ -65,7 +65,8 @@ func CLI() {
 				if err != nil {
 					log.Fatalln("Unable to get hostname")
 				}
-				_, err = security.TLSGetReq(hname, "/anvil/catalog/nodes")
+				_, err = http.Get("http://" + hname + ":443/anvil/catalog/nodes")
+				//_, err = security.TLSGetReq(hname, "/anvil/catalog/nodes")
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -86,7 +87,8 @@ func CLI() {
 				if err != nil {
 					log.Fatalln("Unable to get hostname")
 				}
-				_, err = security.TLSGetReq(hname, "/anvil/catalog/services")
+				//_, err = security.TLSGetReq(hname, "/anvil/catalog/services")
+				_, err = http.Get("http://" + hname + ":443/anvil/catalog/services")
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -107,7 +109,8 @@ func CLI() {
 				if err != nil {
 					log.Fatalln("Unable to get hostname")
 				}
-				_, err = security.TLSGetReq(hname, "/anvil/raft/peers")
+				//_, err = security.TLSGetReq(hname, "/anvil/raft/peers")
+				_, err = http.Get("http://" + hname + ":443/anvil/raft/peers")
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -115,6 +118,65 @@ func CLI() {
 				log.Fatalln("Anvil binary is not currently running")
 			}
 		})
+
+	commando.
+		Register("acl").
+		SetDescription("This command is utilized to push a list of ACL objects into the raft log of Anvil.").
+		SetShortDescription("add an ACL object to the service mesh's raft log").
+		AddArgument("<file path>", "Anvil ACL object file to ingest", "").
+		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
+                        //Check if Anvil binary is running
+                        res := anvil.CheckStatus()
+			//leader := anvil.CheckQuorum()
+                        if (res == true) {
+                                for _,v := range args {
+                                        anvil.Submit(v.Value)
+                                }
+                        } else {
+                                log.Fatalln("Anvil binary is not currently running")
+                        }
+                })
+
+	commando.
+		Register("check").
+		SetDescription("This command is utilized to check a received token with the Raft ACL Oracle.").
+		SetShortDescription("check a token with Raft").
+		AddArgument("<token>", "ACL token received", "").
+		AddArgument("<service>", "Target service to check", "").
+		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
+                        //Check if Anvil binary is running
+                        res := anvil.CheckStatus()
+			//leader := anvil.CheckQuorum()
+                        if (res == true) {
+				tok := args["<token>"].Value
+				svc := args["<service>"].Value
+				anvil.Check(tok, svc)
+                        } else {
+                                log.Fatalln("Anvil binary is not currently running")
+                        }
+                })
+
+	commando.
+                Register("log").
+                SetDescription("This command is utilized to retrieve the Anvil Raft log.").
+                SetShortDescription("lists raft log entries of anvil service mesh").
+                SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
+                        //Check if Anvil binary is running
+                        res := anvil.CheckStatus()
+                        if (res == true) {
+                                hname, err := os.Hostname()
+                                if err != nil {
+                                        log.Fatalln("Unable to get hostname")
+                                }
+                                //_, err = security.TLSGetReq(hname, "/anvil/raft/peers")
+                                _, err = http.Get("http://" + hname + ":443/anvil/raft/getACL")
+                                if err != nil {
+                                        log.Fatalln(err)
+                                }
+                        } else {
+                                log.Fatalln("Anvil binary is not currently running")
+                        }
+                })
 
 	// parse command-line arguments from the STDIN
 	commando.Parse(nil)

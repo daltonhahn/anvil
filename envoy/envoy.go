@@ -7,7 +7,7 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/daltonhahn/anvil/catalog"
+	"github.com/daltonhahn/anvil/service"
 )
 
 const listener_config = `resources:
@@ -43,7 +43,7 @@ const listener_config = `resources:
                 prefix_rewrite: "/"
                 cluster: anvil_service
 `
-
+/*
 const catch_outbound =
 `
 - "@type": type.googleapis.com/envoy.config.listener.v3.Listener
@@ -87,7 +87,8 @@ const catch_outbound =
                     value: "%DOWNSTREAM_LOCAL_ADDRESS%"
                   append: true
 `
-
+*/
+/*
 const tls_config =
 `    transport_socket:
       name: envoy.transport_sockets.tls
@@ -104,6 +105,7 @@ const tls_config =
             private_key:
               filename: /root/anvil/config/certs/server1.key
 `
+*/
 
 const gossip_config = `
 - "@type": type.googleapis.com/envoy.config.listener.v3.Listener
@@ -125,7 +127,7 @@ const gossip_config = `
 var S_list = new(EnvoyConfig)
 
 type EnvoyConfig struct {
-	Services	[]catalog.Service
+	Services	[]service.Service
 }
 
 func SetServiceList() (EnvoyConfig) {
@@ -253,15 +255,19 @@ func SetupEnvoy() {
 		f_cds = writeCDS(ele.Name, ele.Port, f_cds)
 		f_lds = writeLDS(ele.Name, ele.Port, f_lds)
 	}
+	/*
 	if _, err := f_lds.WriteString(tls_config); err != nil {
 		log.Printf("Writing error %v", err)
 	}
+	*/
 	if _, err := f_lds.WriteString(gossip_config); err != nil {
 		log.Printf("Writing error %v", err)
 	}
+	/*
 	if _, err := f_lds.WriteString(catch_outbound); err != nil {
 		log.Printf("Writing error %v", err)
 	}
+	*/
 }
 
 func readEnvoyConfig() (*EnvoyConfig, error) {

@@ -60,6 +60,7 @@ func registerUDP() {
 	}
 	go gossip.HandleUDP(p, ser)
 	go gossip.CheckHealth()
+	go gossip.PropagateCatalog()
 }
 
 func registerRoutes(anv_router *mux.Router) {
@@ -67,10 +68,16 @@ func registerRoutes(anv_router *mux.Router) {
 	anv_router.HandleFunc("/raft/appendentries", router.AppendEntries).Methods("POST")
 	anv_router.HandleFunc("/raft/peers", router.RaftPeers).Methods("GET")
 	anv_router.HandleFunc("/raft/updateleader", router.UpdateLeader).Methods("POST")
+	anv_router.HandleFunc("/raft/backlog/{index}", router.RaftBacklog).Methods("GET")
+	anv_router.HandleFunc("/raft/pushACL", router.PushACL).Methods("POST")
+	anv_router.HandleFunc("/raft/getACL", router.GetACL).Methods("GET")
+	anv_router.HandleFunc("/raft/acl/{service}", router.TokenLookup).Methods("POST")
 	anv_router.HandleFunc("/catalog/nodes", router.GetNodeCatalog).Methods("GET")
+	anv_router.HandleFunc("/catalog/iter/{node}", router.GetIterCatalog).Methods("GET")
+	anv_router.HandleFunc("/catalog/iterupdate/{node}", router.UpdateIter).Methods("POST")
 	anv_router.HandleFunc("/catalog/services", router.GetServiceCatalog).Methods("GET")
 	anv_router.HandleFunc("/catalog/register", router.RegisterNode).Methods("POST")
 	anv_router.HandleFunc("/catalog", router.GetCatalog).Methods("GET")
-	anv_router.HandleFunc("/outbound/{query}", router.CatchOutbound).Methods("GET","POST")
+	//anv_router.HandleFunc("/outbound/{query}", router.CatchOutbound).Methods("GET","POST")
 	anv_router.HandleFunc("/", router.Index).Methods("GET")
 }
