@@ -259,10 +259,10 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 	target_port := anv_catalog.GetSvcPort(r.RequestURI[9:])
 	if (r.Method == "POST") {
 		// Add more URI Processing in-case Index page isn't the one called
-		resp, err = http.Post("http://localhost:"+target_port, r.Header.Get("Content-Type"), r.Body)
+		resp, err = http.Post("http://localhost:"+string(target_port), r.Header.Get("Content-Type"), r.Body)
 	} else {
 		// Add more URI Processing in-case Index page isn't the one called
-		resp, err = http.Get("http://localhost:"+target_port)
+		resp, err = http.Get("http://localhost:"+string(target_port))
 	}
 	if err != nil {
 		fmt.Fprintf(w, "Bad Response")
