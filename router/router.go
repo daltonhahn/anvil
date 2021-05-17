@@ -236,7 +236,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 		resp, err = security.TLSPostReq(target, r.RequestURI, r.Header.Get("Content-Type"), r.Body)
 	} else {
 		fmt.Println("Going through security module")
-		resp, err = security.TLSGetReq(target, r.RequestURI)
+		resp, err = security.TLSGetReq(target, r.RequestURI[9:])
 	}
 	if err != nil {
 		fmt.Println("Got error on return")
