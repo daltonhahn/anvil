@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	//"strings"
 	//"errors"
 
 	"github.com/gorilla/mux"
@@ -226,15 +225,14 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 }
 
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
-//	var resp *http.Response
-//	var err error
-	fmt.Println("CATCHING OUTBOUND")
-	fmt.Println("LOOKING FOR: ", r.Host, " AT PATH: ", r.RequestURI)
+	fmt.Fprintf(w, "Rerouting -------\n")
 	/*
+	var resp *http.Response
+	var err error
 	if (r.Method == "POST") {
-		resp, err = security.TLSPostReq(r.Host, r.RequestURI[strings.Index(r.RequestURI,"/outbound")+9:], r.Header.Get("Content-Type"), r.Body)
+		resp, err = security.TLSPostReq(r.Host, r.RequestURI, r.Header.Get("Content-Type"), r.Body)
 	} else {
-		resp, err = security.TLSGetReq(r.Host, r.RequestURI[strings.Index(r.RequestURI,"/outbound")+9:])
+		resp, err = security.TLSGetReq(r.Host, r.RequestURI)
 	}
 	if err != nil {
 		fmt.Fprintf(w, "Bad Response")
@@ -244,9 +242,33 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Fprintf(w, "Bad Read")
 	}
-	*/
 
-	//fmt.Println(string(respBody))
-	//fmt.Fprintf(w, string(respBody))
-	fmt.Fprintf(w, "Rerouting -------\n")
+	fmt.Println(string(respBody))
+	fmt.Fprintf(w, string(respBody))
+	*/
 }
+
+func RerouteService(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Landed in Reroute Service")
+	/*
+	var resp *http.Response
+	var err error
+	if (r.Method == "POST") {
+		resp, err = security.TLSPostReq(r.Host, r.RequestURI, r.Header.Get("Content-Type"), r.Body)
+	} else {
+		resp, err = security.TLSGetReq(r.Host, r.RequestURI)
+	}
+	if err != nil {
+		fmt.Fprintf(w, "Bad Response")
+	}
+	defer resp.Body.Close()
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Fprintf(w, "Bad Read")
+	}
+
+	fmt.Println(string(respBody))
+	fmt.Fprintf(w, string(respBody))
+	*/
+}
+

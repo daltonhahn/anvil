@@ -21,44 +21,10 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 		n,remoteaddr,err := ser.ReadFromUDP(p)
 
 		message := string(p[:n])
-		decMessage := security.DecData(message)
+		decMessage,err := security.DecData(message)
 
-		if strings.Contains(string(decMessage), "Health Check -- REQ --") {
-			sendHealthResp(ser, remoteaddr)
-		} else if (len(decMessage) > 6 && string(decMessage)[:6] == "gossip") {
-			if err !=  nil {
-				fmt.Printf("Some error  %v", err)
-				continue
-			}
-
-			var receivedStuff Message
-			err = json.Unmarshal(decMessage[10:], &receivedStuff)
-			if err != nil {
-				log.Fatalln("Unable to decode JSON")
-			}
-			var tempCatalog catalog.Catalog
-			for _, ele := range receivedStuff.Nodes {
-				tempCatalog.AddNode(ele)
-				for _, svc := range receivedStuff.Services {
-					if (ele.Address == svc.Address) {
-						tempCatalog.AddService(svc)
-					}
-				}
-				var localPost Message
-				localPost.NodeName = ele.Name
-				localPost.Services = tempCatalog.Services
-				localPost.NodeType = ele.Type
-				postBody, _ := json.Marshal(localPost)
-				responseBody := bytes.NewBuffer(postBody)
-				// Marshal the struct into a postable message
-				hname, err := os.Hostname()
-				if err != nil {
-					log.Fatalln("Unable to get hostname")
-				}
-				http.Post("http://"+hname+":443/anvil/catalog/register", "application/json", responseBody)
-				tempCatalog = catalog.Catalog{}
-			}
-		} else {
+		if err != nil {
+			fmt.Println("Decoding gave error, trying for DNS instead")
 			//Check if this is a valid DNS file
 			packet := gopacket.NewPacket(p, layers.LayerTypeDNS, gopacket.Default)
 			dnsPacket := packet.Layer(layers.LayerTypeDNS)
@@ -67,6 +33,43 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 				continue
 			} else {
 				serveDNS(ser, remoteaddr, tcp)
+			}
+		} else {
+			if strings.Contains(string(decMessage), "Health Check -- REQ --") {
+				sendHealthResp(ser, remoteaddr)
+			} else if (len(decMessage) > 6 && string(decMessage)[:6] == "gossip") {
+				if err !=  nil {
+					fmt.Printf("Some error  %v", err)
+					continue
+				}
+
+				var receivedStuff Message
+				err = json.Unmarshal(decMessage[10:], &receivedStuff)
+				if err != nil {
+					log.Fatalln("Unable to decode JSON")
+				}
+				var tempCatalog catalog.Catalog
+				for _, ele := range receivedStuff.Nodes {
+					tempCatalog.AddNode(ele)
+					for _, svc := range receivedStuff.Services {
+						if (ele.Address == svc.Address) {
+							tempCatalog.AddService(svc)
+						}
+					}
+					var localPost Message
+					localPost.NodeName = ele.Name
+					localPost.Services = tempCatalog.Services
+					localPost.NodeType = ele.Type
+					postBody, _ := json.Marshal(localPost)
+					responseBody := bytes.NewBuffer(postBody)
+					// Marshal the struct into a postable message
+					hname, err := os.Hostname()
+					if err != nil {
+						log.Fatalln("Unable to get hostname")
+					}
+					http.Post("http://"+hname+":443/anvil/catalog/register", "application/json", responseBody)
+					tempCatalog = catalog.Catalog{}
+				}
 			}
 		}
 	}

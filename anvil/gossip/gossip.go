@@ -33,7 +33,7 @@ func sendCatalogSync(target string, catalogCopy []byte) {
         if err != nil {
                 log.Fatalln("Unable to connect to target")
         }
-	encMessage := security.EncData(("gossip -- " + string(catalogCopy)))
+	encMessage,_ := security.EncData(("gossip -- " + string(catalogCopy)))
 	_,err = conn.Write([]byte(encMessage))
 	if err != nil {
 		fmt.Printf("Couldn't send response %v", err)
@@ -42,7 +42,7 @@ func sendCatalogSync(target string, catalogCopy []byte) {
 
 func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
 	dt := time.Now().UTC()
-	encMessage := security.EncData("OK -- " + dt.String())
+	encMessage,_ := security.EncData("OK -- " + dt.String())
 	_,err := conn.WriteToUDP([]byte(encMessage), addr)
 	if err != nil {
 		fmt.Printf("Couldn't send response %v", err)
@@ -59,7 +59,7 @@ func sendHealthProbe(target string) bool {
 	if err != nil {
 		log.Fatalln("Unable to connect to target")
 	}
-	encMessage := security.EncData(("Health Check -- REQ -- " + target))
+	encMessage,_ := security.EncData(("Health Check -- REQ -- " + target))
 	_, err = conn.Write([]byte(encMessage))
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
 	buf := make([]byte, 1024)
