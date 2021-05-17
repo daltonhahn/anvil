@@ -114,7 +114,11 @@ func TLSGetReq(target string, path string) (*http.Response,error) {
 		},
 	}
 
-	resp, err := client.Get("https://"+target+path)
+	bearer := "temp"
+	req, err := http.NewRequest("GET", ("https://"+target+path), nil)
+	req.Header.Add("Authorization", bearer)
+
+	resp, err := client.Do(req)
 	if err != nil {
 		log.Println(err)
 		return &http.Response{}, errors.New("No HTTPS response")
@@ -144,8 +148,12 @@ func TLSPostReq(target string, path string, options string, body io.Reader) (*ht
                         },
                 },
         }
+	bearer := "temp"
+	req, err := http.NewRequest("POST", ("https://"+target+path), body)
+	req.Header.Set("Content-type", options)
+	req.Header.Add("Authorization", bearer)
 
-        resp, err := client.Post("https://"+target+path, options, body)
+        resp, err := client.Do(req)
         if err != nil {
                 log.Println(err)
                 return &http.Response{}, errors.New("No HTTPS response")

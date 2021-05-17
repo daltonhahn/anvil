@@ -247,6 +247,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(r.Header)
 	var resp *http.Response
 	var err error
 	anv_catalog := catalog.GetCatalog()
