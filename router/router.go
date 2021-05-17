@@ -254,7 +254,8 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Landed in Reroute Service")
+	fmt.Println("Landed in Reroute Service")
+	fmt.Fprintf(w, "OK")
 	/*
 	var resp *http.Response
 	var err error
