@@ -247,7 +247,17 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.Header)
+	fmt.Println(r.Header["Authorization"][0])
+	// RequestURI needs better parsing
+	fmt.Println(r.RequestURI[9:])
+	// Get your catalog
+	// Find a quorum member in your catalog
+	// Make a /anvil/raft/acl/{service} POST request to the quorum member
+	    // In the POST body, include the token you pulled out of the connection received
+	// Process boolean response from quorum and proceed with routing functionality
+	//raft.TokenLookup(r.Header["Authorization"][0], r.RequestURI[9:], time.Now())
+	approval := false
+	fmt.Println(approval)
 	var resp *http.Response
 	var err error
 	anv_catalog := catalog.GetCatalog()
