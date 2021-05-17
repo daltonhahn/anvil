@@ -2,39 +2,43 @@ package anvil
 
 import (
 	"os"
-	"os/exec"
 	"log"
 	"net"
 	"net/http"
 	"fmt"
 	"github.com/gorilla/mux"
+	"io/ioutil"
+	"gopkg.in/yaml.v2"
 
-	"github.com/daltonhahn/anvil/envoy"
+	"github.com/daltonhahn/anvil/network"
 	"github.com/daltonhahn/anvil/router"
 	"github.com/daltonhahn/anvil/anvil/gossip"
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/raft"
 	"github.com/daltonhahn/anvil/security"
+	"github.com/daltonhahn/anvil/service"
 )
 
-func AnvilInit(nodeType string) {
-        envoy.SetupEnvoy()
-        cmd := &exec.Cmd {
-                Path: "/usr/bin/envoy",
-                Args: []string{"/usr/bin/envoy", "-c", "/root/anvil/envoy/envoy.yaml" },
-                Stdout: os.Stdout,
-                Stderr: os.Stdout,
+func SetServiceList() ([]service.Service) {
+        S_list, err := readEnvoyConfig()
+        if err != nil {
+                log.Fatal(err)
         }
-        cmd.Start()
+        return S_list.Services
+}
+
+func AnvilInit(nodeType string) {
+	network.CleanTables()
+        network.MakeIpTables()
 	security.ReadSecConfig()
 
 	hname, err := os.Hostname()
 	if err != nil {
 		log.Fatalln("Unable to get hostname")
 	}
-	envoy.SetHosts(hname)
-	serviceMap := envoy.S_list
-	catalog.Register(hname, serviceMap.Services, nodeType)
+	network.SetHosts(hname)
+	serviceMap := SetServiceList()
+	catalog.Register(hname, serviceMap, nodeType)
 
 	if nodeType == "server" {
 		CM := raft.NewConsensusModule(hname, []string{""})
@@ -44,14 +48,13 @@ func AnvilInit(nodeType string) {
         anv_router := mux.NewRouter()
 	registerRoutes(anv_router)
 	registerUDP()
-        log.Fatal(http.ListenAndServe(":8080", anv_router))
-        cmd.Wait()
+        log.Fatal(http.ListenAndServe(":443", anv_router))
 }
 
 func registerUDP() {
 	p := make([]byte, 4096)
 	addr := net.UDPAddr{
-		Port: 8080,
+		Port: 443,
 		IP: net.ParseIP("0.0.0.0"),
 	}
 	ser, err := net.ListenUDP("udp", &addr)
@@ -64,19 +67,35 @@ func registerUDP() {
 }
 
 func registerRoutes(anv_router *mux.Router) {
-	anv_router.HandleFunc("/raft/requestvote", router.RequestVote).Methods("POST")
-	anv_router.HandleFunc("/raft/appendentries", router.AppendEntries).Methods("POST")
-	anv_router.HandleFunc("/raft/peers", router.RaftPeers).Methods("GET")
-	anv_router.HandleFunc("/raft/updateleader", router.UpdateLeader).Methods("POST")
-	anv_router.HandleFunc("/raft/backlog/{index}", router.RaftBacklog).Methods("GET")
-	anv_router.HandleFunc("/raft/pushACL", router.PushACL).Methods("POST")
-	anv_router.HandleFunc("/raft/getACL", router.GetACL).Methods("GET")
-	anv_router.HandleFunc("/raft/acl/{service}", router.TokenLookup).Methods("POST")
-	anv_router.HandleFunc("/catalog/nodes", router.GetNodeCatalog).Methods("GET")
-	anv_router.HandleFunc("/catalog/services", router.GetServiceCatalog).Methods("GET")
-	anv_router.HandleFunc("/catalog/register", router.RegisterNode).Methods("POST")
-	anv_router.HandleFunc("/catalog/leader", router.GetCatalogLeader).Methods("GET")
-	anv_router.HandleFunc("/catalog", router.GetCatalog).Methods("GET")
+	anv_router.HandleFunc("/anvil/raft/requestvote", router.RequestVote).Methods("POST")
+	anv_router.HandleFunc("/anvil/raft/appendentries", router.AppendEntries).Methods("POST")
+	anv_router.HandleFunc("/anvil/raft/peers", router.RaftPeers).Methods("GET")
+	anv_router.HandleFunc("/anvil/raft/updateleader", router.UpdateLeader).Methods("POST")
+	anv_router.HandleFunc("/anvil/raft/backlog/{index}", router.RaftBacklog).Methods("GET")
+	anv_router.HandleFunc("/anvil/raft/pushACL", router.PushACL).Methods("POST")
+	anv_router.HandleFunc("/anvil/raft/getACL", router.GetACL).Methods("GET")
+	anv_router.HandleFunc("/anvil/raft/acl/{service}", router.TokenLookup).Methods("POST")
+	anv_router.HandleFunc("/anvil/catalog/nodes", router.GetNodeCatalog).Methods("GET")
+	anv_router.HandleFunc("/anvil/catalog/services", router.GetServiceCatalog).Methods("GET")
+	anv_router.HandleFunc("/anvil/catalog/register", router.RegisterNode).Methods("POST")
+	anv_router.HandleFunc("/anvil/catalog/leader", router.GetCatalogLeader).Methods("GET")
+	anv_router.HandleFunc("/anvil/catalog", router.GetCatalog).Methods("GET")
 	//anv_router.HandleFunc("/outbound/{query}", router.CatchOutbound).Methods("GET","POST")
-	anv_router.HandleFunc("/", router.Index).Methods("GET")
+	anv_router.HandleFunc("/anvil/", router.Index).Methods("GET")
+}
+
+func readEnvoyConfig() (*struct{Services []service.Service}, error) {
+        yamlFile, err := ioutil.ReadFile("/root/anvil/config/services/sample-svc.yaml")
+        if err != nil {
+                log.Printf("Read file error #%v", err)
+        }
+	var S_list struct {
+		Services	[]service.Service
+	}
+        err = yaml.Unmarshal(yamlFile, &S_list)
+        if err != nil {
+                log.Fatalf("Unmarshal: %v", err)
+        }
+
+        return &S_list, nil
 }

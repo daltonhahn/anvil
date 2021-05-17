@@ -1,4 +1,4 @@
-package envoy
+package network
 
 import (
 	"os/exec"
