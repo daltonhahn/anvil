@@ -27,14 +27,6 @@ type Message struct {
 	NodeType string `json:"nodetype"`
 }
 
-type G_Message struct {
-        NodeName string `json:"nodename"`
-        Iteration int64 `json:"iteration"`
-        Nodes []catalog.Node `json:"nodes"`
-        Services []service.Service `json:"services"`
-	NodeType string `json:"nodetype"`
-}
-
 func RegisterNode(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -42,7 +34,7 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	var msg G_Message
+	var msg Message
 	err = json.Unmarshal(b, &msg)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -60,7 +52,7 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
         }
 
         body, err := ioutil.ReadAll(resp.Body)
-        var receivedStuff G_Message
+        var receivedStuff Message
 
         err = json.Unmarshal(body, &receivedStuff)
         if err != nil {
@@ -87,11 +79,10 @@ func Index(w http.ResponseWriter, r *http.Request) {
 func GetCatalog(w http.ResponseWriter, r *http.Request) {
 	anv_catalog := catalog.GetCatalog()
 	hname, _ := os.Hostname()
-	iteration := anv_catalog.GetIter()
 	nodes := []catalog.Node(anv_catalog.GetNodes())
 	services := []service.Service(anv_catalog.GetServices())
 	nodeType := anv_catalog.GetNodeType(hname)
-	newMsg := &G_Message{hname, iteration, nodes, services, nodeType}
+	newMsg := &Message{hname, nodes, services, nodeType}
 	var jsonData []byte
 	jsonData, err := json.Marshal(newMsg)
 	if err != nil {
@@ -111,6 +102,11 @@ func GetServiceCatalog(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, ("Retrieving Anvil Services at " + dt.String() + "\n"))
 	anv_catalog := catalog.GetCatalog()
 	anv_catalog.PrintServices()
+}
+func GetCatalogLeader(w http.ResponseWriter, r *http.Request) {
+	anv_catalog := catalog.GetCatalog()
+	leader := anv_catalog.GetLeader()
+	fmt.Fprint(w, (leader))
 }
 
 func RaftPeers(w http.ResponseWriter, r *http.Request) {
@@ -214,28 +210,6 @@ func TokenLookup(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, ("Retrieving ACL Token status at " + dt.String() + "\n"))
 	result := raft.TokenLookup(lookupDat, serviceTarget, time.Now())
 	fmt.Fprintf(w, strconv.FormatBool(result))
-}
-
-func GetIterCatalog(w http.ResponseWriter, r *http.Request) {
-	target := mux.Vars(r)["node"]
-	anv_catalog := catalog.GetCatalog()
-	val := anv_catalog.GetNodeIter(target)
-	fmt.Fprintf(w, strconv.FormatInt(val,10))
-}
-
-func UpdateIter(w http.ResponseWriter, r *http.Request) {
-	target := mux.Vars(r)["node"]
-        b, err := ioutil.ReadAll(r.Body)
-        defer r.Body.Close()
-        if err != nil {
-                http.Error(w, err.Error(), 500)
-                return
-        }
-        var newIter G_Message
-        err = json.Unmarshal(b, &newIter)
-	anv_catalog := catalog.GetCatalog()
-        anv_catalog.UpdateIter(target, newIter.Iteration)
-        fmt.Fprintf(w, "OK")
 }
 
 func RaftBacklog(w http.ResponseWriter, r *http.Request) {

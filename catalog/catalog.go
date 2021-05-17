@@ -16,7 +16,6 @@ type Node struct {
 	Name	string
 	Address	string
 	Type	string
-	Iteration int64
 }
 /*
 type Service struct {
@@ -27,17 +26,8 @@ type Service struct {
 */
 
 type Catalog struct {
-	Iteration	int64
 	Nodes		[]Node
 	Services	[]service.Service
-}
-
-func (catalog *Catalog) UpdateIter(targetNode string, update int64) {
-        for ind,ele := range AnvilCatalog.Nodes {
-                if ele.Name == targetNode {
-                        AnvilCatalog.Nodes[ind].Iteration = update
-                }
-        }
 }
 
 func (catalog *Catalog) AddService(newSvc service.Service) []service.Service {
@@ -110,7 +100,6 @@ func UpdateNodeTypes(newLeader string) {
 			AnvilCatalog.Nodes[ind].Type = "server"
 		}
 	}
-	AnvilCatalog.Iteration++
 }
 
 func Register(nodeName string, svcList []service.Service, nodeType string) {
@@ -126,10 +115,6 @@ func Register(nodeName string, svcList []service.Service, nodeType string) {
 	for _, ele := range svcList {
 		AnvilCatalog.Services = AnvilCatalog.AddService(service.Service{ele.Name, addr[0].String(), ele.Port})
 	}
-	if AnvilCatalog.Iteration == 0 {
-		AnvilCatalog.Iteration = 1
-	}
-	AnvilCatalog.Iteration++
 }
 
 func Deregister(nodeName string) {
@@ -149,7 +134,6 @@ func Deregister(nodeName string) {
 		fmt.Println("Lookup failed")
 	}
 	raft.CM.PeerIds = RemovePeer(raft.CM.PeerIds, addr[0].String())
-	AnvilCatalog.Iteration++
 }
 
 func GetCatalog() *Catalog {
@@ -184,17 +168,13 @@ func (catalog *Catalog) GetNodes() ([]Node) {
 	return AnvilCatalog.Nodes
 }
 
-func (catalog *Catalog) GetNodeIter(targetNode string) (int64) {
-	for _, ele := range AnvilCatalog.Nodes {
-		if ele.Name == targetNode {
-			return ele.Iteration
+func (catalog *Catalog) GetLeader() (string) {
+	for _,ele := range AnvilCatalog.Nodes {
+		if ele.Type == "leader" {
+			return ele.Address
 		}
 	}
-	return 0
-}
-
-func (catalog *Catalog) GetIter() (int64) {
-	return AnvilCatalog.Iteration
+	return ""
 }
 
 func (catalog *Catalog) GetServices() ([]service.Service) {

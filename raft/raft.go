@@ -177,6 +177,8 @@ func RequestVote(args RequestVoteArgs) RequestVoteReply {
 
 	if args.Term > CM.currentTerm {
 		dlog("... term out of date in RequestVote")
+		leader := getLeader(CM.id)
+		UpdateLeader(CM.id, leader)
 		becomeFollower(args.Term)
 	}
 
@@ -228,6 +230,7 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 	reply.Success = false
 	if args.Term == CM.currentTerm {
 		if CM.state != Follower {
+			UpdateLeader(CM.id, args.LeaderId)
 			becomeFollower(args.Term)
 		}
 		CM.electionResetEvent = time.Now()
@@ -371,6 +374,8 @@ func startElection() {
 
 					if reply.Term > savedCurrentTerm {
 						dlog("term out of date in RequestVoteReply")
+						leader := getLeader(CM.id)
+						UpdateLeader(CM.id, leader)
 						becomeFollower(reply.Term)
 						return
 					} else if reply.Term == savedCurrentTerm {
@@ -477,6 +482,8 @@ func leaderSendHeartbeats() {
 					defer CM.mu.Unlock()
 					if (reply.Term > savedCurrentTerm || reply.Term == 0 || savedCurrentTerm == 0) {
 						dlog(fmt.Sprintf("term out of date in heartbeat reply"))
+						leader := getLeader(CM.id)
+						UpdateLeader(CM.id, leader)
 						becomeFollower(reply.Term)
 						return
 					}
@@ -512,6 +519,20 @@ func leaderSendHeartbeats() {
 			}(peerId)
 		}
 	}
+}
+
+func getLeader(target string) (string) {
+        resp, err := http.Get("http://" + target + ":443/anvil/catalog/leader")
+        if err != nil {
+                return ""
+        }
+
+        body, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+                return ""
+        }
+	defer resp.Body.Close()
+	return string(body)
 }
 
 func UpdateLeader(target string, newLeader string) {
