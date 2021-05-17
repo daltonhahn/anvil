@@ -7,7 +7,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -52,17 +51,14 @@ func EncData(plaintext string) ([]byte,error) {
 
     c, err := aes.NewCipher(key)
     if err != nil {
-        fmt.Println(err)
 	return []byte{}, err
     }
     gcm, err := cipher.NewGCM(c)
     if err != nil {
-        fmt.Println(err)
 	return []byte{}, err
     }
     nonce := make([]byte, gcm.NonceSize())
     if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-        fmt.Println(err)
 	return []byte{}, err
     }
     return []byte(gcm.Seal(nonce, nonce, text, nil)),nil
@@ -74,26 +70,22 @@ func DecData(input_ciphertext string) ([]byte,error) {
     data := []byte(input_ciphertext)
     c, err := aes.NewCipher(key)
     if err != nil {
-        fmt.Println(err)
 	return []byte{}, err
     }
 
     gcm, err := cipher.NewGCM(c)
     if err != nil {
-        fmt.Println(err)
 	return []byte{}, err
     }
 
     nonceSize := gcm.NonceSize()
     if len(data) < nonceSize {
-        fmt.Println(err)
 	return []byte{}, err
     }
 
     nonce, ciphertext := data[:nonceSize], data[nonceSize:]
     plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
     if err != nil {
-        fmt.Println(err)
 	return []byte{}, err
     }
     return plaintext,nil

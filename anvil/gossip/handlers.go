@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"log"
-	"net/http"
+//	"net/http"
 	"os"
 	"bytes"
 	"encoding/json"
@@ -24,7 +24,6 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 		decMessage,err := security.DecData(message)
 
 		if err != nil {
-			fmt.Println("Decoding gave error, trying for DNS instead")
 			//Check if this is a valid DNS file
 			packet := gopacket.NewPacket(p, layers.LayerTypeDNS, gopacket.Default)
 			dnsPacket := packet.Layer(layers.LayerTypeDNS)
@@ -67,7 +66,8 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 					if err != nil {
 						log.Fatalln("Unable to get hostname")
 					}
-					http.Post("http://"+hname+":443/anvil/catalog/register", "application/json", responseBody)
+					//http.Post("http://"+hname+":443/anvil/catalog/register", "application/json", responseBody)
+					security.TLSPostReq(hname, "/anvil/catalog/register", "application/json", responseBody)
 					tempCatalog = catalog.Catalog{}
 				}
 			}

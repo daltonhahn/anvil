@@ -64,7 +64,7 @@ func AnvilInit(nodeType string) {
         anv_router := mux.NewRouter()
 	registerRoutes(anv_router)
 	registerUDP()
-        log.Fatal(http.ListenAndServe(":443", anv_router))
+        log.Fatal(http.ListenAndServeTLS(":443", "/root/anvil/config/certs/server1.crt", "/root/anvil/config/certs/server1.key", anv_router))
 }
 
 func registerUDP() {

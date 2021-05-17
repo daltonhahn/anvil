@@ -16,7 +16,7 @@ import (
 	"github.com/daltonhahn/anvil/raft"
 	"github.com/daltonhahn/anvil/service"
 	"github.com/daltonhahn/anvil/acl"
-	//"github.com/daltonhahn/anvil/security"
+	"github.com/daltonhahn/anvil/security"
 )
 
 type Message struct {
@@ -44,8 +44,8 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
         if err != nil {
                 log.Fatalln("Unable to get hostname")
         }
-	resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
-	//resp, err := security.TLSGetReq(hname, "/anvil/catalog")
+	//resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
+	resp, err := security.TLSGetReq(hname, "/anvil/catalog")
         if err != nil {
                 log.Fatalln("Unable to get response")
         }
@@ -226,9 +226,9 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Rerouting -------\n")
-	/*
 	var resp *http.Response
 	var err error
+	fmt.Println(r.RequestURI)
 	if (r.Method == "POST") {
 		resp, err = security.TLSPostReq(r.Host, r.RequestURI, r.Header.Get("Content-Type"), r.Body)
 	} else {
@@ -245,7 +245,6 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(string(respBody))
 	fmt.Fprintf(w, string(respBody))
-	*/
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
