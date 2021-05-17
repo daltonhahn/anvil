@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"gopkg.in/yaml.v2"
+	"sync"
 
 	"github.com/daltonhahn/anvil/network"
 	"github.com/daltonhahn/anvil/router"
@@ -61,10 +62,22 @@ func AnvilInit(nodeType string) {
 		fmt.Println(CM)
 	}
 
+	wg := new(sync.WaitGroup)
+	wg.Add(2)
         anv_router := mux.NewRouter()
+        svc_router := mux.NewRouter()
 	registerRoutes(anv_router)
+	registerSvcRoutes(svc_router)
 	registerUDP()
-        log.Fatal(http.ListenAndServeTLS(":443", "/root/anvil/config/certs/server1.crt", "/root/anvil/config/certs/server1.key", anv_router))
+	go func() {
+		log.Fatal(http.ListenAndServeTLS(":443", "/root/anvil/config/certs/server1.crt", "/root/anvil/config/certs/server1.key", anv_router))
+		wg.Done()
+	}()
+	go func() {
+		log.Fatal(http.ListenAndServe(":444", svc_router))
+		wg.Done()
+	}()
+	wg.Wait()
 }
 
 func registerUDP() {
@@ -97,7 +110,9 @@ func registerRoutes(anv_router *mux.Router) {
 	anv_router.HandleFunc("/anvil/catalog/leader", router.GetCatalogLeader).Methods("GET")
 	anv_router.HandleFunc("/anvil/catalog", router.GetCatalog).Methods("GET")
 	anv_router.HandleFunc("/anvil/", router.Index).Methods("GET")
-	anv_router.PathPrefix("/outbound/{query}").HandlerFunc(router.CatchOutbound).Methods("GET","POST")
 	anv_router.PathPrefix("/service/{query}").HandlerFunc(router.RerouteService).Methods("GET","POST")
 }
 
+func registerSvcRoutes(svc_router *mux.Router) {
+	svc_router.PathPrefix("/outbound/{query}").HandlerFunc(router.CatchOutbound).Methods("GET","POST")
+}

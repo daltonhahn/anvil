@@ -225,26 +225,32 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 }
 
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Rerouting -------\n")
+	fmt.Println(r.RequestURI[9:])
 	var resp *http.Response
 	var err error
-	fmt.Println(r.RequestURI)
+
+	anv_catalog := catalog.GetCatalog()
+	target := anv_catalog.GetSvcHost(r.Host)
+
 	if (r.Method == "POST") {
-		resp, err = security.TLSPostReq(r.Host, r.RequestURI, r.Header.Get("Content-Type"), r.Body)
+		resp, err = security.TLSPostReq(target, r.RequestURI, r.Header.Get("Content-Type"), r.Body)
 	} else {
-		resp, err = security.TLSGetReq(r.Host, r.RequestURI)
+		fmt.Println("Going through security module")
+		resp, err = security.TLSGetReq(target, r.RequestURI)
 	}
 	if err != nil {
+		fmt.Println("Got error on return")
 		fmt.Fprintf(w, "Bad Response")
 	}
 	defer resp.Body.Close()
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		fmt.Println("Couldn't read returned content")
 		fmt.Fprintf(w, "Bad Read")
 	}
 
 	fmt.Println(string(respBody))
-	fmt.Fprintf(w, string(respBody))
+	//fmt.Fprintf(w, string(respBody))
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
