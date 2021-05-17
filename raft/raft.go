@@ -221,6 +221,7 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 
 	if args.Term > CM.currentTerm {
 		dlog("... term out of date in AppendEntries")
+		UpdateLeader(CM.id, args.LeaderId)
 		becomeFollower(args.Term)
 	}
 
