@@ -170,6 +170,15 @@ func (catalog *Catalog) GetSvcHost(addr string) (string) {
 	return ""
 }
 
+func (catalog *Catalog) GetSvcPort(svc string) (int64) {
+	for _,ele := range AnvilCatalog.Services {
+		if ele.Name == svc {
+			return ele.Port
+		}
+	}
+	return -1
+}
+
 func (catalog *Catalog) GetLeader() (string) {
 	for _,ele := range AnvilCatalog.Nodes {
 		if ele.Type == "leader" {

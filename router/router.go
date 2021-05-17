@@ -228,53 +228,54 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.RequestURI[9:])
 	var resp *http.Response
 	var err error
-
 	anv_catalog := catalog.GetCatalog()
 	target := anv_catalog.GetSvcHost(r.Host)
-
 	if (r.Method == "POST") {
-		resp, err = security.TLSPostReq(target, r.RequestURI, r.Header.Get("Content-Type"), r.Body)
+		resp, err = security.TLSPostReq(target, r.RequestURI[9:], r.Header.Get("Content-Type"), r.Body)
 	} else {
-		fmt.Println("Going through security module")
 		resp, err = security.TLSGetReq(target, r.RequestURI[9:])
 	}
 	if err != nil {
-		fmt.Println("Got error on return")
 		fmt.Fprintf(w, "Bad Response")
 	}
 	defer resp.Body.Close()
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Couldn't read returned content")
+		fmt.Fprintf(w, "Bad Read")
+	}
+
+	fmt.Fprintf(w, string(respBody))
+}
+
+func RerouteService(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("--- REROUTING --- \n")
+	// Get port that service runs on to properly reroute
+	// Generate HTTP request to localhost:<portNum>
+	// Process response and forward back
+
+	var resp *http.Response
+	var err error
+	anv_catalog := catalog.GetCatalog()
+	fmt.Println("Getting port for: ", r.RequestURI[9:])
+	target := anv_catalog.GetSvcPort(r.RequestURI[9:])
+	fmt.Println(target)
+	if (r.Method == "POST") {
+		fmt.Println(r.Host)
+		//resp, err = http.Post(r.Host, r.RequestURI, r.Header.Get("Content-Type"), r.Body)
+	} else {
+		//resp, err = security.TLSGetReq(r.Host, r.RequestURI)
+	}
+	if err != nil {
+		fmt.Fprintf(w, "Bad Response")
+	}
+	defer resp.Body.Close()
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
 		fmt.Fprintf(w, "Bad Read")
 	}
 
 	fmt.Println(string(respBody))
 	//fmt.Fprintf(w, string(respBody))
-}
-
-func RerouteService(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Landed in Reroute Service")
 	fmt.Fprintf(w, "OK")
-	/*
-	var resp *http.Response
-	var err error
-	if (r.Method == "POST") {
-		resp, err = security.TLSPostReq(r.Host, r.RequestURI, r.Header.Get("Content-Type"), r.Body)
-	} else {
-		resp, err = security.TLSGetReq(r.Host, r.RequestURI)
-	}
-	if err != nil {
-		fmt.Fprintf(w, "Bad Response")
-	}
-	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Fprintf(w, "Bad Read")
-	}
-
-	fmt.Println(string(respBody))
-	fmt.Fprintf(w, string(respBody))
-	*/
 }
 
