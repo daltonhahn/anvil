@@ -225,14 +225,12 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintf(w, string(jsonData))
 }
 
-/*
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
-	var resp *http.Response
-	var err error
+//	var resp *http.Response
+//	var err error
 	fmt.Println("CATCHING OUTBOUND")
 	fmt.Println("LOOKING FOR: ", r.Host, " AT PATH: ", r.RequestURI)
-	fmt.Println("Original DST: ", r.Header.Get("X-Envoy-Original-Dst-Host"))
-
+	/*
 	if (r.Method == "POST") {
 		resp, err = security.TLSPostReq(r.Host, r.RequestURI[strings.Index(r.RequestURI,"/outbound")+9:], r.Header.Get("Content-Type"), r.Body)
 	} else {
@@ -246,9 +244,9 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Fprintf(w, "Bad Read")
 	}
+	*/
 
-	fmt.Println(string(respBody))
+	//fmt.Println(string(respBody))
 	//fmt.Fprintf(w, string(respBody))
 	fmt.Fprintf(w, "Rerouting -------\n")
 }
-*/

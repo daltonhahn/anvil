@@ -19,6 +19,22 @@ import (
 	"github.com/daltonhahn/anvil/service"
 )
 
+func readEnvoyConfig() (*struct{Services []service.Service}, error) {
+        yamlFile, err := ioutil.ReadFile("/root/anvil/config/services/sample-svc.yaml")
+        if err != nil {
+                log.Printf("Read file error #%v", err)
+        }
+	var S_list struct {
+		Services	[]service.Service
+	}
+        err = yaml.Unmarshal(yamlFile, &S_list)
+        if err != nil {
+                log.Fatalf("Unmarshal: %v", err)
+        }
+
+        return &S_list, nil
+}
+
 func SetServiceList() ([]service.Service) {
         S_list, err := readEnvoyConfig()
         if err != nil {
@@ -82,20 +98,6 @@ func registerRoutes(anv_router *mux.Router) {
 	anv_router.HandleFunc("/anvil/catalog", router.GetCatalog).Methods("GET")
 	//anv_router.HandleFunc("/outbound/{query}", router.CatchOutbound).Methods("GET","POST")
 	anv_router.HandleFunc("/anvil/", router.Index).Methods("GET")
+	anv_router.PathPrefix("/").HandlerFunc(router.CatchOutbound).Methods("GET","POST")
 }
 
-func readEnvoyConfig() (*struct{Services []service.Service}, error) {
-        yamlFile, err := ioutil.ReadFile("/root/anvil/config/services/sample-svc.yaml")
-        if err != nil {
-                log.Printf("Read file error #%v", err)
-        }
-	var S_list struct {
-		Services	[]service.Service
-	}
-        err = yaml.Unmarshal(yamlFile, &S_list)
-        if err != nil {
-                log.Fatalf("Unmarshal: %v", err)
-        }
-
-        return &S_list, nil
-}

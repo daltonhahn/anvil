@@ -46,6 +46,7 @@ func ReadSecConfig() {
 }
 
 func EncData(plaintext string) []byte {
+	fmt.Println("In EncData")
     ReadSecConfig()
     text := []byte(plaintext)
     key := []byte(SecConf.Key)
@@ -68,6 +69,7 @@ func EncData(plaintext string) []byte {
 }
 
 func DecData(input_ciphertext string) []byte {
+	fmt.Println("In DecData")
     ReadSecConfig()
     key := []byte(SecConf.Key)
     data := []byte(input_ciphertext)
