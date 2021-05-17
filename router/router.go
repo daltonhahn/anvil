@@ -225,7 +225,6 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 }
 
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.RequestURI[9:])
 	var resp *http.Response
 	var err error
 	anv_catalog := catalog.GetCatalog()
