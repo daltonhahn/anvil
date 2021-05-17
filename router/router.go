@@ -256,14 +256,13 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 	var resp *http.Response
 	var err error
 	anv_catalog := catalog.GetCatalog()
-	fmt.Println("Getting port for: ", r.RequestURI[9:])
-	target := anv_catalog.GetSvcPort(r.RequestURI[9:])
-	fmt.Println(target)
+	target_port := anv_catalog.GetSvcPort(r.RequestURI[9:])
 	if (r.Method == "POST") {
-		fmt.Println(r.Host)
-		//resp, err = http.Post(r.Host, r.RequestURI, r.Header.Get("Content-Type"), r.Body)
+		// Add more URI Processing in-case Index page isn't the one called
+		resp, err = http.Post("http://localhost:"+target_port, r.Header.Get("Content-Type"), r.Body)
 	} else {
-		//resp, err = security.TLSGetReq(r.Host, r.RequestURI)
+		// Add more URI Processing in-case Index page isn't the one called
+		resp, err = http.Get("http://localhost:"+target_port)
 	}
 	if err != nil {
 		fmt.Fprintf(w, "Bad Response")
