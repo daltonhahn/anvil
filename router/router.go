@@ -248,21 +248,16 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("--- REROUTING --- \n")
-	// Get port that service runs on to properly reroute
-	// Generate HTTP request to localhost:<portNum>
-	// Process response and forward back
-
 	var resp *http.Response
 	var err error
 	anv_catalog := catalog.GetCatalog()
 	target_port := anv_catalog.GetSvcPort(r.RequestURI[9:])
 	if (r.Method == "POST") {
 		// Add more URI Processing in-case Index page isn't the one called
-		resp, err = http.Post("http://localhost:"+string(target_port), r.Header.Get("Content-Type"), r.Body)
+		resp, err = http.Post("http://"+r.Host+":"+strconv.FormatInt(target_port,10), r.Header.Get("Content-Type"), r.Body)
 	} else {
 		// Add more URI Processing in-case Index page isn't the one called
-		resp, err = http.Get("http://localhost:"+string(target_port))
+		resp, err = http.Get("http://"+r.Host+":"+strconv.FormatInt(target_port,10))
 	}
 	if err != nil {
 		fmt.Fprintf(w, "Bad Response")
@@ -273,8 +268,6 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Bad Read")
 	}
 
-	fmt.Println(string(respBody))
-	//fmt.Fprintf(w, string(respBody))
-	fmt.Fprintf(w, "OK")
+	fmt.Fprintf(w, string(respBody))
 }
 
