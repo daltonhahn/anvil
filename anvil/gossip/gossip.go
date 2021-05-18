@@ -97,7 +97,7 @@ func CheckHealth() {
 		if err != nil {
 			log.Fatalln("Unable to get hostname")
 		}
-		resp, err := security.TLSGetReq(hname, "/anvil/catalog")
+		resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
 		//resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
 		if err != nil {
 			log.Fatalln("Unable to get response")
@@ -131,7 +131,7 @@ func PropagateCatalog() {
 		if err != nil {
 			log.Fatalln("Unable to get hostname")
 		}
-		resp, err := security.TLSGetReq(hname, "/anvil/catalog")
+		resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
 		//resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
 		if err != nil {
 			log.Fatalln("Unable to get response")

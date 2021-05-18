@@ -24,7 +24,7 @@ func Check(tok string, svc string) bool {
 	responseBody := bytes.NewBuffer(postBody)
 	// NEED TO REFINE THIS CALL TO BE A LOOKUP TO ANY QUORUM MEMBER
 	//resp, err := http.Post("http://"+hname+":443/anvil/raft/acl/"+svc, "application/json", responseBody)
-	resp, err := security.TLSPostReq(hname, "/anvil/raft/acl/"+svc, "application/json", responseBody)
+	resp, err := security.TLSPostReq(hname, "/anvil/raft/acl/"+svc, "", "application/json", responseBody)
 	if err != nil {
 		log.Fatalln("Unable to post content")
 	}
@@ -42,7 +42,7 @@ func CheckStatus() bool {
         if err != nil {
                 log.Fatalln("Unable to get hostname")
         }
-	_, err = security.TLSGetReq(hname, "/anvil")
+	_, err = security.TLSGetReq(hname, "/anvil", "")
 	//_, err = http.Get("http://" + hname + ":443/anvil")
 	if err == nil {
 		return true
@@ -65,7 +65,7 @@ func Submit(filepath string) {
 		postBody, _ := json.Marshal(ele)
 		responseBody := bytes.NewBuffer(postBody)
 		//resp, err := http.Post("http://"+hname+":443/anvil/raft/pushACL", "application/json", responseBody)
-		resp, err := security.TLSPostReq(hname, "/anvil/raft/pushACL", "application/json", responseBody)
+		resp, err := security.TLSPostReq(hname, "/anvil/raft/pushACL", "", "application/json", responseBody)
 		if err != nil {
 			log.Fatalln("Unable to post content")
 		}
@@ -84,7 +84,7 @@ func Join(target string) {
         if err != nil {
                 log.Fatalln("Unable to get hostname")
         }
-	resp, err := security.TLSGetReq(hname, "/anvil/catalog")
+	resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
 	//resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
 	if err != nil {
 		log.Fatalln("Unable to get response")
@@ -101,7 +101,7 @@ func Join(target string) {
 	postBody, _ := json.Marshal(receivedStuff)
 
 	responseBody := bytes.NewBuffer(postBody)
-	resp, err = security.TLSPostReq(target, "/anvil/catalog/register", "application/json", responseBody)
+	resp, err = security.TLSPostReq(target, "/anvil/catalog/register", "", "application/json", responseBody)
 	//resp, err = http.Post("http://" + target + ":443/anvil/catalog/register", "application/json", responseBody)
 	if err != nil {
 		log.Fatalln("Unable to post content")
@@ -139,7 +139,7 @@ func Join(target string) {
 			log.Fatalln("Unable to get hostname")
 		}
 		//http.Post("http://"+hname+":443/anvil/catalog/register", "application/json", responseBody)
-		security.TLSPostReq(hname, "/anvil/catalog/register", "application/json", responseBody)
+		security.TLSPostReq(hname, "/anvil/catalog/register", "", "application/json", responseBody)
 		tempCatalog = catalog.Catalog{}
 	}
 }

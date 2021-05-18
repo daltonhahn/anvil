@@ -26,11 +26,17 @@ type ACLEntry struct {
 
 var SecConf = new(SecConfig)
 
+type TokMap struct {
+	ServiceName	string	`yaml:"sname,omitempty"`
+	TokenVal	string	`yaml:"tval,omitempty"`
+}
+
 type SecConfig struct {
-	Key	string `yaml:"key,omitempty"`
-	CACert	string `yaml:"cacert,omitempty"`
-	TLSCert	string `yaml:"tlscert,omitempty"`
-	TLSKey	string `yaml:"tlskey,omitempty"`
+	Key	string		`yaml:"key,omitempty"`
+	CACert	string		`yaml:"cacert,omitempty"`
+	TLSCert	string		`yaml:"tlscert,omitempty"`
+	TLSKey	string		`yaml:"tlskey,omitempty"`
+	Tokens	[]TokMap	`yaml:"tokens,omitempty"`
 }
 
 func ReadSecConfig() {
@@ -91,7 +97,7 @@ func DecData(input_ciphertext string) ([]byte,error) {
     return plaintext,nil
 }
 
-func TLSGetReq(target string, path string) (*http.Response,error) {
+func TLSGetReq(target string, path string, origin string) (*http.Response,error) {
 	ReadSecConfig()
 	caCertPath := SecConf.CACert
 	caCert, err := ioutil.ReadFile(caCertPath)
@@ -114,7 +120,7 @@ func TLSGetReq(target string, path string) (*http.Response,error) {
 		},
 	}
 
-	bearer := "temp"
+	bearer := attachToken(origin)
 	req, err := http.NewRequest("GET", ("https://"+target+path), nil)
 	req.Header.Add("Authorization", bearer)
 
@@ -126,7 +132,7 @@ func TLSGetReq(target string, path string) (*http.Response,error) {
 	return resp, nil
 }
 
-func TLSPostReq(target string, path string, options string, body io.Reader) (*http.Response, error) {
+func TLSPostReq(target string, path string, origin string, options string, body io.Reader) (*http.Response, error) {
 	ReadSecConfig()
         caCertPath := SecConf.CACert
         caCert, err := ioutil.ReadFile(caCertPath)
@@ -148,7 +154,8 @@ func TLSPostReq(target string, path string, options string, body io.Reader) (*ht
                         },
                 },
         }
-	bearer := "temp"
+
+	bearer := attachToken(origin)
 	req, err := http.NewRequest("POST", ("https://"+target+path), body)
 	req.Header.Set("Content-type", options)
 	req.Header.Add("Authorization", bearer)
@@ -159,4 +166,13 @@ func TLSPostReq(target string, path string, options string, body io.Reader) (*ht
                 return &http.Response{}, errors.New("No HTTPS response")
         }
         return resp, nil
+}
+
+func attachToken(originSvc string) string {
+	for _, ele := range SecConf.Tokens {
+		if ele.ServiceName == originSvc {
+			return ele.TokenVal
+		}
+	}
+	return ""
 }
