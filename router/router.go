@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"bytes"
 	//"errors"
 
 	"github.com/gorilla/mux"
@@ -249,20 +250,30 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.Header["Authorization"][0])
-	// RequestURI needs better parsing
-	fmt.Println("/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/"))
-	// Get your catalog
-	// Find a quorum member in your catalog
+	target_svc := strings.Split(r.RequestURI, "/")[2]
+	tok_recv := r.Header["Authorization"][0]
+	anv_catalog := catalog.GetCatalog()
+	verifier := anv_catalog.GetQuorumMem()
+	var resp *http.Response
+	var err error
+	postBody, _ := json.Marshal(tok_recv)
+        responseBody := bytes.NewBuffer(postBody)
+	resp, err = security.TLSPostReq(verifier, "/anvil/raft/acl/"+target_svc, "", "application/json", responseBody)
+        if err != nil {
+                log.Fatalln("Unable to post content")
+        }
+        defer resp.Body.Close()
+        body, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+                log.Fatalln("Unable to read received content")
+        }
+        fmt.Println("%T\n", body)
 	// Make a /anvil/raft/acl/{service} POST request to the quorum member
 	    // In the POST body, include the token you pulled out of the connection received
 	// Process boolean response from quorum and proceed with routing functionality
 	//raft.TokenLookup(r.Header["Authorization"][0], r.RequestURI[9:], time.Now())
 	approval := true
 	if (approval) {
-		var resp *http.Response
-		var err error
-		anv_catalog := catalog.GetCatalog()
 		target_port := anv_catalog.GetSvcPort(strings.Split(r.RequestURI, "/")[2])
 		rem_path := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
 		if (r.Method == "POST") {
