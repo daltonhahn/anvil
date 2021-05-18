@@ -182,7 +182,7 @@ func (catalog *Catalog) GetSvcPort(svc string) (int64) {
 func (catalog *Catalog) GetQuorumMem() (string) {
 	for _,ele := range AnvilCatalog.Nodes {
 		if ele.Type == "leader" || ele.Type == "server" {
-			return ele.Address
+			return ele.Name
 		}
 	}
 	return ""
