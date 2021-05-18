@@ -9,7 +9,8 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	//"strings"
+	"strings"
+	"bytes"
 	//"errors"
 
 	"github.com/gorilla/mux"
@@ -17,7 +18,7 @@ import (
 	"github.com/daltonhahn/anvil/raft"
 	"github.com/daltonhahn/anvil/service"
 	"github.com/daltonhahn/anvil/acl"
-	//"github.com/daltonhahn/anvil/security"
+	"github.com/daltonhahn/anvil/security"
 )
 
 type Message struct {
@@ -45,8 +46,8 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
         if err != nil {
                 log.Fatalln("Unable to get hostname")
         }
-	resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
-	//resp, err := security.TLSGetReq(hname, "/anvil/catalog")
+	//resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
+	resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
         if err != nil {
                 log.Fatalln("Unable to get response")
         }
@@ -198,7 +199,6 @@ func GetACL(w http.ResponseWriter, r *http.Request) {
 
 func TokenLookup(w http.ResponseWriter, r *http.Request) {
 	serviceTarget := mux.Vars(r)["service"]
-        dt := time.Now()
 	b, err := ioutil.ReadAll(r.Body)
         defer r.Body.Close()
         if err != nil {
@@ -207,7 +207,6 @@ func TokenLookup(w http.ResponseWriter, r *http.Request) {
         }
 	var lookupDat string
 	err = json.Unmarshal(b, &lookupDat)
-	fmt.Fprint(w, ("Retrieving ACL Token status at " + dt.String() + "\n"))
 	result := raft.TokenLookup(lookupDat, serviceTarget, time.Now())
 	fmt.Fprintf(w, strconv.FormatBool(result))
 }
@@ -226,15 +225,15 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 }
 
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
-//	var resp *http.Response
-//	var err error
-	fmt.Println("CATCHING OUTBOUND")
-	fmt.Println("LOOKING FOR: ", r.Host, " AT PATH: ", r.RequestURI)
-	/*
+	var resp *http.Response
+	var err error
+	anv_catalog := catalog.GetCatalog()
+	target := anv_catalog.GetSvcHost(r.Host)
+	target_uri := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
 	if (r.Method == "POST") {
-		resp, err = security.TLSPostReq(r.Host, r.RequestURI[strings.Index(r.RequestURI,"/outbound")+9:], r.Header.Get("Content-Type"), r.Body)
+		resp, err = security.TLSPostReq(target, target_uri, strings.Split(r.RequestURI, "/")[2], r.Header.Get("Content-Type"), r.Body)
 	} else {
-		resp, err = security.TLSGetReq(r.Host, r.RequestURI[strings.Index(r.RequestURI,"/outbound")+9:])
+		resp, err = security.TLSGetReq(target, target_uri, strings.Split(r.RequestURI, "/")[2])
 	}
 	if err != nil {
 		fmt.Fprintf(w, "Bad Response")
@@ -244,9 +243,48 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Fprintf(w, "Bad Read")
 	}
-	*/
 
-	//fmt.Println(string(respBody))
-	//fmt.Fprintf(w, string(respBody))
-	fmt.Fprintf(w, "Rerouting -------\n")
+	fmt.Fprintf(w, string(respBody))
+}
+
+func RerouteService(w http.ResponseWriter, r *http.Request) {
+        target_svc := strings.Split(r.RequestURI, "/")[2]
+        tok_recv := r.Header["Authorization"][0]
+        anv_catalog := catalog.GetCatalog()
+        verifier := anv_catalog.GetQuorumMem()
+        var resp *http.Response
+        var err error
+        postBody, _ := json.Marshal(tok_recv)
+        responseBody := bytes.NewBuffer(postBody)
+        resp, err = security.TLSPostReq(verifier, "/anvil/raft/acl/"+target_svc, "", "application/json", responseBody)
+        if err != nil {
+                log.Fatalln("Unable to post content")
+        }
+        defer resp.Body.Close()
+        body, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+                log.Fatalln("Unable to read received content")
+        }
+        approval, _ := strconv.ParseBool(string(body))
+        if (approval) {
+                target_port := anv_catalog.GetSvcPort(strings.Split(r.RequestURI, "/")[2])
+                rem_path := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
+                if (r.Method == "POST") {
+                        resp, err = http.Post("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path, r.Header.Get("Content-Type"), r.Body)
+		} else {
+			resp, err = http.Get("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path)
+		}
+		if err != nil {
+			fmt.Fprintf(w, "Bad Response")
+		}
+		defer resp.Body.Close()
+		respBody, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Fprintf(w, "Bad Read")
+		}
+
+		fmt.Fprintf(w, string(respBody))
+	} else {
+		http.Error(w, "Token not validated", http.StatusForbidden)
+	}
 }

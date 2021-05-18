@@ -11,12 +11,13 @@ import (
 	"errors"
 	"strconv"
 
-	"net/http"
+	//"net/http"
         "encoding/json"
         "bytes"
         "io/ioutil"
 
 	"github.com/daltonhahn/anvil/acl"
+	"github.com/daltonhahn/anvil/security"
 )
 
 const DebugCM = 1
@@ -522,7 +523,7 @@ func leaderSendHeartbeats() {
 }
 
 func getLeader(target string) (string) {
-        resp, err := http.Get("http://" + target + ":443/anvil/catalog/leader")
+        resp, err := security.TLSGetReq(target, "/anvil/catalog/leader", "")
         if err != nil {
                 return ""
         }
@@ -542,7 +543,8 @@ func UpdateLeader(target string, newLeader string) {
 
 	postBody := bytes.NewBuffer(reqBody)
 
-	resp, err := http.Post("http://" + target + ":443/anvil/raft/updateleader", "application/json", postBody)
+	//resp, err := http.Post("http://" + target + ":443/anvil/raft/updateleader", "application/json", postBody)
+	resp, err := security.TLSPostReq(target, "/anvil/raft/updateleader", "", "application/json", postBody)
 	if err != nil {
 		return
 	}
@@ -553,7 +555,8 @@ func UpdateLeader(target string, newLeader string) {
 func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntriesReply) {
         reqBody, _ := json.Marshal(args)
         postBody := bytes.NewBuffer(reqBody)
-	resp, err := http.Post("http://" + target + ":443/anvil/raft/appendentries", "application/json", postBody)
+	//resp, err := http.Post("http://" + target + ":443/anvil/raft/appendentries", "application/json", postBody)
+	resp, err := security.TLSPostReq(target, "/anvil/raft/appendentries", "", "application/json", postBody)
         if err != nil {
 		return errors.New("No HTTP response"), AppendEntriesReply{}
         }
@@ -572,7 +575,8 @@ func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntrie
 }
 
 func BacklogRequest(leader string) (error, []LogEntry) {
-	resp, err := http.Get("http://" + leader + ":443/anvil/raft/backlog/" + strconv.Itoa(CM.commitIndex))
+	//resp, err := http.Get("http://" + leader + ":443/anvil/raft/backlog/" + strconv.Itoa(CM.commitIndex))
+	resp, err := security.TLSGetReq(leader, "/anvil/raft/backlog/" + strconv.Itoa(CM.commitIndex), "")
         if err != nil {
 		return errors.New("No HTTP response"), []LogEntry{}
         }
@@ -599,7 +603,8 @@ func PullBacklogEntries(index int64) []LogEntry {
 func SendVoteReq(target string, args RequestVoteArgs) (error, RequestVoteReply) {
         reqBody, _ := json.Marshal(args)
         postBody := bytes.NewBuffer(reqBody)
-	resp, err := http.Post("http://" + target + ":443/anvil/raft/requestvote", "application/json", postBody)
+	//resp, err := http.Post("http://" + target + ":443/anvil/raft/requestvote", "application/json", postBody)
+	resp, err := security.TLSPostReq(target, "/anvil/raft/requestvote", "", "application/json", postBody)
         if err != nil {
 		return errors.New("No HTTP response"), RequestVoteReply{}
         }

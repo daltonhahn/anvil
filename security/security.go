@@ -4,15 +4,14 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	//"crypto/tls"
-	//"crypto/x509"
-	//"errors"
-	"fmt"
+	"crypto/tls"
+	"crypto/x509"
+	"errors"
 	"io"
 	"io/ioutil"
 	"log"
 	"gopkg.in/yaml.v2"
-	//"net/http"
+	"net/http"
 
 	"github.com/daltonhahn/anvil/service"
 )
@@ -27,11 +26,17 @@ type ACLEntry struct {
 
 var SecConf = new(SecConfig)
 
+type TokMap struct {
+	ServiceName	string	`yaml:"sname,omitempty"`
+	TokenVal	string	`yaml:"tval,omitempty"`
+}
+
 type SecConfig struct {
-	Key	string `yaml:"key,omitempty"`
-	CACert	string `yaml:"cacert,omitempty"`
-	TLSCert	string `yaml:"tlscert,omitempty"`
-	TLSKey	string `yaml:"tlskey,omitempty"`
+	Key	string		`yaml:"key,omitempty"`
+	CACert	string		`yaml:"cacert,omitempty"`
+	TLSCert	string		`yaml:"tlscert,omitempty"`
+	TLSKey	string		`yaml:"tlskey,omitempty"`
+	Tokens	[]TokMap	`yaml:"tokens,omitempty"`
 }
 
 func ReadSecConfig() {
@@ -45,61 +50,54 @@ func ReadSecConfig() {
         }
 }
 
-func EncData(plaintext string) []byte {
-	fmt.Println("In EncData")
+func EncData(plaintext string) ([]byte,error) {
     ReadSecConfig()
     text := []byte(plaintext)
     key := []byte(SecConf.Key)
 
     c, err := aes.NewCipher(key)
     if err != nil {
-        fmt.Println(err)
+	return []byte{}, err
     }
     gcm, err := cipher.NewGCM(c)
     if err != nil {
-        fmt.Println(err)
+	return []byte{}, err
     }
     nonce := make([]byte, gcm.NonceSize())
     if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-        fmt.Println(err)
+	return []byte{}, err
     }
-    //fmt.Println("\tENC NONCE: %x", nonce)
-    //fmt.Println("ENC MSG: %x", gcm.Seal(nonce, nonce, text, nil))
-    return []byte(gcm.Seal(nonce, nonce, text, nil))
+    return []byte(gcm.Seal(nonce, nonce, text, nil)),nil
 }
 
-func DecData(input_ciphertext string) []byte {
-	fmt.Println("In DecData")
+func DecData(input_ciphertext string) ([]byte,error) {
     ReadSecConfig()
     key := []byte(SecConf.Key)
     data := []byte(input_ciphertext)
     c, err := aes.NewCipher(key)
     if err != nil {
-        fmt.Println(err)
+	return []byte{}, err
     }
 
     gcm, err := cipher.NewGCM(c)
     if err != nil {
-        fmt.Println(err)
+	return []byte{}, err
     }
 
     nonceSize := gcm.NonceSize()
     if len(data) < nonceSize {
-        fmt.Println(err)
+	return []byte{}, err
     }
 
     nonce, ciphertext := data[:nonceSize], data[nonceSize:]
-    //fmt.Println("\tDEC NONCE: %x", nonce)
-    //fmt.Println("DEC CIPHERTXT: %x", data)
     plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
     if err != nil {
-        fmt.Println(err)
+	return []byte{}, err
     }
-    return plaintext
+    return plaintext,nil
 }
 
-/*
-func TLSGetReq(target string, path string) (*http.Response,error) {
+func TLSGetReq(target string, path string, origin string) (*http.Response,error) {
 	ReadSecConfig()
 	caCertPath := SecConf.CACert
 	caCert, err := ioutil.ReadFile(caCertPath)
@@ -122,7 +120,11 @@ func TLSGetReq(target string, path string) (*http.Response,error) {
 		},
 	}
 
-	resp, err := client.Get("https://"+target+path)
+	bearer := attachToken(origin)
+	req, err := http.NewRequest("GET", ("https://"+target+path), nil)
+	req.Header.Add("Authorization", bearer)
+
+	resp, err := client.Do(req)
 	if err != nil {
 		log.Println(err)
 		return &http.Response{}, errors.New("No HTTPS response")
@@ -130,7 +132,7 @@ func TLSGetReq(target string, path string) (*http.Response,error) {
 	return resp, nil
 }
 
-func TLSPostReq(target string, path string, options string, body io.Reader) (*http.Response, error) {
+func TLSPostReq(target string, path string, origin string, options string, body io.Reader) (*http.Response, error) {
 	ReadSecConfig()
         caCertPath := SecConf.CACert
         caCert, err := ioutil.ReadFile(caCertPath)
@@ -153,11 +155,24 @@ func TLSPostReq(target string, path string, options string, body io.Reader) (*ht
                 },
         }
 
-        resp, err := client.Post("https://"+target+path, options, body)
+	bearer := attachToken(origin)
+	req, err := http.NewRequest("POST", ("https://"+target+path), body)
+	req.Header.Set("Content-type", options)
+	req.Header.Add("Authorization", bearer)
+
+        resp, err := client.Do(req)
         if err != nil {
                 log.Println(err)
                 return &http.Response{}, errors.New("No HTTPS response")
         }
         return resp, nil
 }
-*/
+
+func attachToken(originSvc string) string {
+	for _, ele := range SecConf.Tokens {
+		if ele.ServiceName == originSvc {
+			return ele.TokenVal
+		}
+	}
+	return ""
+}

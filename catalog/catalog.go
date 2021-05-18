@@ -17,13 +17,6 @@ type Node struct {
 	Address	string
 	Type	string
 }
-/*
-type Service struct {
-	Name	string
-	Address	string
-	Port	int64
-}
-*/
 
 type Catalog struct {
 	Nodes		[]Node
@@ -166,6 +159,33 @@ func (catalog *Catalog) PrintServices() {
 
 func (catalog *Catalog) GetNodes() ([]Node) {
 	return AnvilCatalog.Nodes
+}
+
+func (catalog *Catalog) GetSvcHost(addr string) (string) {
+	for _,ele := range AnvilCatalog.Nodes {
+		if ele.Address == addr {
+			return ele.Name
+		}
+	}
+	return ""
+}
+
+func (catalog *Catalog) GetSvcPort(svc string) (int64) {
+	for _,ele := range AnvilCatalog.Services {
+		if ele.Name == svc {
+			return ele.Port
+		}
+	}
+	return -1
+}
+
+func (catalog *Catalog) GetQuorumMem() (string) {
+	for _,ele := range AnvilCatalog.Nodes {
+		if ele.Type == "leader" || ele.Type == "server" {
+			return ele.Name
+		}
+	}
+	return ""
 }
 
 func (catalog *Catalog) GetLeader() (string) {
