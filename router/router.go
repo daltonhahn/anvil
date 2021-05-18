@@ -199,7 +199,6 @@ func GetACL(w http.ResponseWriter, r *http.Request) {
 
 func TokenLookup(w http.ResponseWriter, r *http.Request) {
 	serviceTarget := mux.Vars(r)["service"]
-        dt := time.Now()
 	b, err := ioutil.ReadAll(r.Body)
         defer r.Body.Close()
         if err != nil {
@@ -208,7 +207,6 @@ func TokenLookup(w http.ResponseWriter, r *http.Request) {
         }
 	var lookupDat string
 	err = json.Unmarshal(b, &lookupDat)
-	fmt.Fprint(w, ("Retrieving ACL Token status at " + dt.String() + "\n"))
 	result := raft.TokenLookup(lookupDat, serviceTarget, time.Now())
 	fmt.Fprintf(w, strconv.FormatBool(result))
 }
@@ -250,15 +248,15 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
-	target_svc := strings.Split(r.RequestURI, "/")[2]
-	tok_recv := r.Header["Authorization"][0]
-	anv_catalog := catalog.GetCatalog()
-	verifier := anv_catalog.GetQuorumMem()
-	var resp *http.Response
-	var err error
-	postBody, _ := json.Marshal(tok_recv)
+        target_svc := strings.Split(r.RequestURI, "/")[2]
+        tok_recv := r.Header["Authorization"][0]
+        anv_catalog := catalog.GetCatalog()
+        verifier := anv_catalog.GetQuorumMem()
+        var resp *http.Response
+        var err error
+        postBody, _ := json.Marshal(tok_recv)
         responseBody := bytes.NewBuffer(postBody)
-	resp, err = security.TLSPostReq(verifier, "/anvil/raft/acl/"+target_svc, "", "application/json", responseBody)
+        resp, err = security.TLSPostReq(verifier, "/anvil/raft/acl/"+target_svc, "", "application/json", responseBody)
         if err != nil {
                 log.Fatalln("Unable to post content")
         }
@@ -267,17 +265,13 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
         if err != nil {
                 log.Fatalln("Unable to read received content")
         }
-        fmt.Println("%T\n", body)
-	// Make a /anvil/raft/acl/{service} POST request to the quorum member
-	    // In the POST body, include the token you pulled out of the connection received
-	// Process boolean response from quorum and proceed with routing functionality
-	//raft.TokenLookup(r.Header["Authorization"][0], r.RequestURI[9:], time.Now())
-	approval := true
-	if (approval) {
-		target_port := anv_catalog.GetSvcPort(strings.Split(r.RequestURI, "/")[2])
-		rem_path := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
-		if (r.Method == "POST") {
-			resp, err = http.Post("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path, r.Header.Get("Content-Type"), r.Body)
+        approval, _ := strconv.ParseBool(string(body))
+        fmt.Println(approval)
+        if (approval) {
+                target_port := anv_catalog.GetSvcPort(strings.Split(r.RequestURI, "/")[2])
+                rem_path := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
+                if (r.Method == "POST") {
+                        resp, err = http.Post("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path, r.Header.Get("Content-Type"), r.Body)
 		} else {
 			resp, err = http.Get("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path)
 		}

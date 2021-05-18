@@ -1,10 +1,8 @@
 --- 
 - 
-  name: test
+  name: webapp
   services: 
-    - "1"
-    - "2"
-    - "3"
+    - "db"
 - 
   name: test2
   services: 
