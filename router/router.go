@@ -266,7 +266,6 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
                 log.Fatalln("Unable to read received content")
         }
         approval, _ := strconv.ParseBool(string(body))
-        fmt.Println(approval)
         if (approval) {
                 target_port := anv_catalog.GetSvcPort(strings.Split(r.RequestURI, "/")[2])
                 rem_path := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
