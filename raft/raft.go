@@ -11,7 +11,7 @@ import (
 	"errors"
 	"strconv"
 
-	//"net/http"
+	"net/http"
         "encoding/json"
         "bytes"
         "io/ioutil"
@@ -64,10 +64,12 @@ type ConsensusModule struct {
 	electionResetEvent time.Time
 	nextIndex	map[int]int
 	matchIndex	map[int]int
+	iteration	int
 }
 
 
 var CM ConsensusModule
+var iteration int
 
 func NewConsensusModule(id string, peerIds []string) *ConsensusModule {
 	CM := new(ConsensusModule)
@@ -79,6 +81,7 @@ func NewConsensusModule(id string, peerIds []string) *ConsensusModule {
 	CM.matchIndex = make(map[int]int)
 	CM.commitIndex = -1
 	CM.lastApplied = -1
+	iteration = 1
 
 	go func() {
 		CM.mu.Lock()
@@ -434,6 +437,31 @@ func startLeader() {
 				return
 			}
 			CM.mu.Unlock()
+		}
+	}()
+	go func() {
+		rotateTicker := time.NewTicker(5 * time.Minute)
+		defer rotateTicker.Stop()
+		for {
+			hname, err := os.Hostname()
+			if err != nil {
+				log.Fatalln("Unable to get hostname")
+			}
+			postVal := map[string]string{"iteration": strconv.Itoa(iteration), "quorumMems": strconv.Itoa(len(CM.PeerIds) + 1)}
+			jsonDat, err := json.Marshal(postVal)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
+			if err != nil {
+				fmt.Printf("%v\n", err)
+			}
+			// Send CA files to other Quorum members
+			// Send Assignments to other Quorum members
+			// Hold until OK signals received
+			// Send collection signal to all quorum members
+			iteration = iteration + 1
+			<-rotateTicker.C
 		}
 	}()
 }

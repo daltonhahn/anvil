@@ -1,8 +1,8 @@
 ---
 key: passphrasewhichneedstobe32bytes!
 cacert: /root/anvil/config/certs/ca.crt
-tlscert: /root/anvil/config/certs/server1.crt
-tlskey: /root/anvil/config/certs/server1.key
+tlscert: /root/anvil/config/certs/test1.crt
+tlskey: /root/anvil/config/certs/test1.key
 tokens:
         -
                 sname: webapp

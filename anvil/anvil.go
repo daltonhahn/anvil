@@ -70,7 +70,7 @@ func AnvilInit(nodeType string) {
 	registerSvcRoutes(svc_router)
 	registerUDP()
 	go func() {
-		log.Fatal(http.ListenAndServeTLS(":443", "/root/anvil/config/certs/server1.crt", "/root/anvil/config/certs/server1.key", anv_router))
+		log.Fatal(http.ListenAndServeTLS(":443", "/root/anvil/config/certs/test1.crt", "/root/anvil/config/certs/test1.key", anv_router))
 		wg.Done()
 	}()
 	go func() {
