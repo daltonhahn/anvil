@@ -1,0 +1,24 @@
+--- 
+nodes: 
+  - server1
+  - server2
+  - server3
+svcmap: 
+  - 
+    node: server1
+    svc: rotation
+    tokname: s1r
+    valid: 
+      - rotation
+  - 
+    node: server2
+    svc: rotation
+    tokname: s2r
+    valid: 
+      - rotation
+  - 
+    node: server3
+    svc: rotation
+    tokname: s3r
+    valid: 
+      - rotation
