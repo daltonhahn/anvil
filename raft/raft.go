@@ -18,7 +18,21 @@ import (
 
 	"github.com/daltonhahn/anvil/acl"
 	"github.com/daltonhahn/anvil/security"
+	"gopkg.in/yaml.v2"
 )
+
+type AssignmentMap struct {
+        Nodes		[]string	`yaml:"nodes,omitempty"`
+	SvcMap		[]ACLMap	`yaml:"svcmap,omitempty"`
+	Iteration	int
+}
+
+type ACLMap struct {
+        Node            string
+        Svc             string
+        TokName         string
+	Valid		[]string
+}
 
 const DebugCM = 1
 
@@ -453,13 +467,59 @@ func startLeader() {
 				log.Fatalln(err)
 			}
 			resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
-			if err != nil {
-				fmt.Printf("%v\n", err)
+			if err != nil || resp.StatusCode != http.StatusOK {
+				fmt.Printf("Failure to generate CA artifacts\n")
 			}
-			// Send CA files to other Quorum members
-			// Send Assignments to other Quorum members
-			// Hold until OK signals received
+
+			// Make gofunc()
+			for _, ele := range CM.PeerIds {
+				postVal = map[string]string{"iteration": strconv.Itoa(iteration), "prefix": ele}
+				jsonDat, err = json.Marshal(postVal)
+				if err != nil {
+					log.Fatalln(err)
+				}
+				resp, err = http.Post("http://" + ele + ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
+				if err != nil || resp.StatusCode != http.StatusOK {
+					fmt.Printf("Failure to notify other Quorum members of CA artifacts\n")
+				}
+			}
+			var newMap AssignmentMap
+			fullMap := processManifest(newMap)
+			splitMap := splitAssignments(len(CM.PeerIds)+1, fullMap)
+			//splitAssignments(len(CM.PeerIds)+3, fullMap)
+
+			// Make gofunc()
+			var semaphore = make(chan struct{}, len(CM.PeerIds)+1)
+			for i:=0; i < len(CM.PeerIds)+1; i++ {
+				semaphore <- struct{}{}
+				if i == len(CM.PeerIds) {
+					splitMap[i].Iteration = iteration
+					prepVal := splitMap[i]
+					jsonDat, err = json.Marshal(prepVal)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					resp, err = http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
+					if err != nil || resp.StatusCode != http.StatusOK {
+						fmt.Printf("Failure to send generation assignment to self\n")
+					}
+					<-semaphore
+				} else {
+					splitMap[i].Iteration = iteration
+					prepVal := splitMap[i]
+					jsonDat, err = json.Marshal(prepVal)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					resp, err = http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
+					if err != nil || resp.StatusCode != http.StatusOK {
+						fmt.Printf("Failure to send generation assignments to other quorum members\n")
+					}
+					<-semaphore
+				}
+			}
 			// Send collection signal to all quorum members
+			fmt.Println("Finished rotate loop, changing iteration, adding time")
 			iteration = iteration + 1
 			<-rotateTicker.C
 		}
@@ -663,4 +723,33 @@ func lastLogIndexAndTerm() (int, int) {
 	} else {
 		return -1, -1
 	}
+}
+
+func processManifest(aMap AssignmentMap) (AssignmentMap) {
+	yamlFile, err := ioutil.ReadFile("./config/manifest.yaml")
+        if err != nil {
+                log.Printf("Read file error #%v", err)
+        }
+        err = yaml.Unmarshal(yamlFile, &aMap)
+        if err != nil {
+                log.Fatalf("Unmarshal: %v", err)
+        }
+	return aMap
+}
+
+func splitAssignments(numPeers int, aMap AssignmentMap) ([]AssignmentMap) {
+	lastNode := 0.0
+	lastSvc := 0.0
+	splitMap := make([]AssignmentMap, numPeers)
+	nodeQuantity := float64(len(aMap.Nodes)) / float64(numPeers)
+	svcQuantity := float64(len(aMap.SvcMap)) / float64(numPeers)
+	for i:=0; i < numPeers; i++ {
+		var tMap AssignmentMap
+		tMap.Nodes = aMap.Nodes[int(lastNode):int(lastNode+nodeQuantity)]
+		tMap.SvcMap = aMap.SvcMap[int(lastSvc):int(lastSvc+svcQuantity)]
+		lastNode = lastNode+nodeQuantity
+		lastSvc = lastSvc+svcQuantity
+		splitMap[i] = tMap
+	}
+	return splitMap
 }
