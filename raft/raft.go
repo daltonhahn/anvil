@@ -454,77 +454,79 @@ func startLeader() {
 			CM.mu.Unlock()
 		}
 	}()
-	go func() {
-		rotateTicker := time.NewTicker(5 * time.Minute)
-		defer rotateTicker.Stop()
-		for {
-			hname, err := os.Hostname()
-			if err != nil {
-				log.Fatalln("Unable to get hostname")
-			}
-			postVal := map[string]string{"iteration": strconv.Itoa(iteration), "quorumMems": strconv.Itoa(len(CM.PeerIds) + 1)}
-			jsonDat, err := json.Marshal(postVal)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
-			if err != nil || resp.StatusCode != http.StatusOK {
-				fmt.Printf("Failure to generate CA artifacts\n")
-			}
-
-			// Make gofunc()
-			for _, ele := range CM.PeerIds {
-				postVal = map[string]string{"iteration": strconv.Itoa(iteration), "prefix": ele}
-				jsonDat, err = json.Marshal(postVal)
+	if CM.currentTerm > 1 {
+		go func() {
+			rotateTicker := time.NewTicker(5 * time.Minute)
+			defer rotateTicker.Stop()
+			for {
+				hname, err := os.Hostname()
+				if err != nil {
+					log.Fatalln("Unable to get hostname")
+				}
+				postVal := map[string]string{"iteration": strconv.Itoa(iteration), "quorumMems": strconv.Itoa(len(CM.PeerIds) + 1)}
+				jsonDat, err := json.Marshal(postVal)
 				if err != nil {
 					log.Fatalln(err)
 				}
-				resp, err = http.Post("http://" + ele + ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
+				resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
 				if err != nil || resp.StatusCode != http.StatusOK {
-					fmt.Printf("Failure to notify other Quorum members of CA artifacts\n")
+					fmt.Printf("Failure to generate CA artifacts\n")
 				}
-			}
-			var newMap AssignmentMap
-			fullMap := processManifest(newMap)
-			splitMap := splitAssignments(len(CM.PeerIds)+1, fullMap)
-			//splitAssignments(len(CM.PeerIds)+3, fullMap)
 
-			// Make gofunc()
-			var semaphore = make(chan struct{}, len(CM.PeerIds)+1)
-			for i:=0; i < len(CM.PeerIds)+1; i++ {
-				semaphore <- struct{}{}
-				if i == len(CM.PeerIds) {
-					splitMap[i].Iteration = iteration
-					prepVal := splitMap[i]
-					jsonDat, err = json.Marshal(prepVal)
+				// Make gofunc()
+				for _, ele := range CM.PeerIds {
+					postVal = map[string]string{"iteration": strconv.Itoa(iteration), "prefix": ele}
+					jsonDat, err = json.Marshal(postVal)
 					if err != nil {
 						log.Fatalln(err)
 					}
-					resp, err = http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
+					resp, err = http.Post("http://" + ele + ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
 					if err != nil || resp.StatusCode != http.StatusOK {
-						fmt.Printf("Failure to send generation assignment to self\n")
+						fmt.Printf("Failure to notify other Quorum members of CA artifacts\n")
 					}
-					<-semaphore
-				} else {
-					splitMap[i].Iteration = iteration
-					prepVal := splitMap[i]
-					jsonDat, err = json.Marshal(prepVal)
-					if err != nil {
-						log.Fatalln(err)
-					}
-					resp, err = http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
-					if err != nil || resp.StatusCode != http.StatusOK {
-						fmt.Printf("Failure to send generation assignments to other quorum members\n")
-					}
-					<-semaphore
 				}
+				var newMap AssignmentMap
+				fullMap := processManifest(newMap)
+				splitMap := splitAssignments(len(CM.PeerIds)+1, fullMap)
+				//splitAssignments(len(CM.PeerIds)+3, fullMap)
+
+				// Make gofunc()
+				var semaphore = make(chan struct{}, len(CM.PeerIds)+1)
+				for i:=0; i < len(CM.PeerIds)+1; i++ {
+					semaphore <- struct{}{}
+					if i == len(CM.PeerIds) {
+						splitMap[i].Iteration = iteration
+						prepVal := splitMap[i]
+						jsonDat, err = json.Marshal(prepVal)
+						if err != nil {
+							log.Fatalln(err)
+						}
+						resp, err = http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
+						if err != nil || resp.StatusCode != http.StatusOK {
+							fmt.Printf("Failure to send generation assignment to self\n")
+						}
+						<-semaphore
+					} else {
+						splitMap[i].Iteration = iteration
+						prepVal := splitMap[i]
+						jsonDat, err = json.Marshal(prepVal)
+						if err != nil {
+							log.Fatalln(err)
+						}
+						resp, err = http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
+						if err != nil || resp.StatusCode != http.StatusOK {
+							fmt.Printf("Failure to send generation assignments to other quorum members\n")
+						}
+						<-semaphore
+					}
+				}
+				// Send collection signal to all quorum members
+				fmt.Println("Finished rotate loop, changing iteration, adding time")
+				iteration = iteration + 1
+				<-rotateTicker.C
 			}
-			// Send collection signal to all quorum members
-			fmt.Println("Finished rotate loop, changing iteration, adding time")
-			iteration = iteration + 1
-			<-rotateTicker.C
-		}
-	}()
+		}()
+	}
 }
 
 func leaderSendHeartbeats() {
