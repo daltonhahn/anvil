@@ -1,5 +1,5 @@
 ---
-key: dW5pbmp5b1dNamxyRmRBVWxoT2tOY0VKOVd3bXhPamI=
+key: dW5pbmp5b1dNamxyRmRBVWxoT2tOY0VK
 cacert: /root/anvil/config/certs/ca.crt
 tlscert: /root/anvil/config/certs/server1.crt
 tlskey: /root/anvil/config/certs/server1.key
