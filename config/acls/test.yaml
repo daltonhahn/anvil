@@ -1,11 +1,19 @@
---- 
-- 
-  name: webapp
-  services: 
-    - "db"
-- 
-  name: test2
-  services: 
-    - one
-    - two
-    - three
+---
+-
+  name: s1r
+  sname: rotation
+  val: c3hZcnhKVnk2cFpwc1FJV2hMRFpjekpuUldxTnF6MGliY09PZ0YxQ1lGZ0ZvNU93QTNjVVpnS3pWWG5QQWVoOQ==
+  services:
+    - rotation
+-
+  name: s2r
+  sname: rotation
+  val: RVJBSklPWG5UU1RkcXpEYm9zMVdYWjdRSFpmSEVJYm9KWklaNkJQejVZdml1NmF2Z2tSR3dXMUFSMTZaT1ZRaw==
+  services:
+    - rotation
+-
+  name: s3r
+  sname: rotation
+  val: SkZWQmxwcnZEeVdJRjNOWWl5SENiWFNyQmhqWDRrMWNPdk5WQm9zMU9wM2pNN29vYVlDdGhSY2NHdHpjVzVtNw==
+  services:
+    - rotation

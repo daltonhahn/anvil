@@ -1,9 +1,9 @@
 ---
-key: passphrasewhichneedstobe32bytes!
+key: dW5pbmp5b1dNamxyRmRBVWxoT2tOY0VKOVd3bXhPamI=
 cacert: /root/anvil/config/certs/ca.crt
 tlscert: /root/anvil/config/certs/server1.crt
 tlskey: /root/anvil/config/certs/server1.key
 tokens:
         -
-                sname: webapp
-                tval: asaskldfjkasdjfljasd
+                sname: rotation
+                tval: c3hZcnhKVnk2cFpwc1FJV2hMRFpjekpuUldxTnF6MGliY09PZ0YxQ1lGZ0ZvNU93QTNjVVpnS3pWWG5QQWVoOQ==
