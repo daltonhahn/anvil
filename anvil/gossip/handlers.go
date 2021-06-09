@@ -28,9 +28,11 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 			packet := gopacket.NewPacket(p, layers.LayerTypeDNS, gopacket.Default)
 			dnsPacket := packet.Layer(layers.LayerTypeDNS)
 			tcp,valid := dnsPacket.(*layers.DNS)
-			if valid != true {
+			if valid != true || len(tcp.Questions) == 0 {
 				continue
 			} else {
+				fmt.Println("Got a DNS packet?, sending to DNS server")
+				fmt.Printf("%v\n", tcp)
 				serveDNS(ser, remoteaddr, tcp)
 			}
 		} else {
@@ -81,6 +83,7 @@ func serveDNS(u *net.UDPConn, clientAddr net.Addr, request *layers.DNS) {
 	dnsAnswer.Type = layers.DNSTypeA
 	var ip string
 	var err error
+	fmt.Printf("Received question: %v\n", request.Questions)
 	ip,err = catalog.LookupDNS(string(request.Questions[0].Name[:strings.IndexByte(string(request.Questions[0].Name), '.')]))
 
 	if err != nil {
