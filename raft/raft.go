@@ -474,6 +474,7 @@ func startLeader() {
 					fmt.Printf("Failure to generate CA artifacts\n")
 					fmt.Println(err)
 				}
+				time.Sleep(1 * time.Second)
 
 				// Make gofunc()
 				for _, ele := range CM.PeerIds {
