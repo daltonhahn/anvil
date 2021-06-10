@@ -15,7 +15,7 @@ var aclList []ACLEntry
 
 type ACLEntry struct {
 	Name		string		`yaml:"name,omitempty"`
-	TokenValue	string
+	TokenValue	string		`yaml:"val,omitempty"`
 	CreationTime	time.Time
 	ExpirationTime	time.Time
 	ServiceList	[]string	`yaml:"services,omitempty"`
@@ -33,7 +33,10 @@ func ACLIngest(filepath string) ([]ACLEntry, error) {
 	}
 
 	for _,ele := range tempList {
-		tokVal := StringWithCharset(64, charset)
+		tokVal := ele.TokenValue
+		if len(tokVal) == 0 {
+			tokVal = StringWithCharset(64, charset)
+		}
 		createTime := time.Now()
 		expTime := time.Now().Add(24*time.Hour)
 		aclList = append(aclList, ACLEntry{Name: ele.Name, TokenValue: tokVal, CreationTime: createTime,

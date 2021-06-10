@@ -454,11 +454,11 @@ func startLeader() {
 			CM.mu.Unlock()
 		}
 	}()
-	if CM.currentTerm > 1 {
-		go func() {
-			rotateTicker := time.NewTicker(5 * time.Minute)
-			defer rotateTicker.Stop()
-			for {
+	go func() {
+		rotateTicker := time.NewTicker(1 * time.Minute)
+		defer rotateTicker.Stop()
+		for {
+			if CM.currentTerm > 1 {
 				hname, err := os.Hostname()
 				if err != nil {
 					log.Fatalln("Unable to get hostname")
@@ -468,19 +468,25 @@ func startLeader() {
 				if err != nil {
 					log.Fatalln(err)
 				}
+				//resp, err := security.TLSPostReq(hname, "/service/rotation/makeCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 				resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
 				if err != nil || resp.StatusCode != http.StatusOK {
 					fmt.Printf("Failure to generate CA artifacts\n")
+					fmt.Println(err)
 				}
 
 				// Make gofunc()
 				for _, ele := range CM.PeerIds {
+					// need to do DNS lookup on ele
 					postVal = map[string]string{"iteration": strconv.Itoa(iteration), "prefix": ele}
 					jsonDat, err = json.Marshal(postVal)
 					if err != nil {
 						log.Fatalln(err)
 					}
-					resp, err = http.Post("http://" + ele + ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
+					//CM.PeerIds stores IP addresses, not node names, need to look up so that TLS req can be made properly and verified with cert
+					resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
+					//resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
+					//resp, err = http.Post("http://" + ele + ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
 					if err != nil || resp.StatusCode != http.StatusOK {
 						fmt.Printf("Failure to notify other Quorum members of CA artifacts\n")
 					}
@@ -501,6 +507,7 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln(err)
 						}
+						//resp, err = security.TLSPostReq(hname, "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 						resp, err = http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
 						if err != nil || resp.StatusCode != http.StatusOK {
 							fmt.Printf("Failure to send generation assignment to self\n")
@@ -513,7 +520,8 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln(err)
 						}
-						resp, err = http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
+						resp, err = security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
+						//resp, err = http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
 						if err != nil || resp.StatusCode != http.StatusOK {
 							fmt.Printf("Failure to send generation assignments to other quorum members\n")
 						}
@@ -521,12 +529,12 @@ func startLeader() {
 					}
 				}
 				// Send collection signal to all quorum members
-				fmt.Println("Finished rotate loop, changing iteration, adding time")
 				iteration = iteration + 1
-				<-rotateTicker.C
 			}
-		}()
-	}
+			<-rotateTicker.C
+			fmt.Println("Finished rotate loop, changing iteration, adding time")
+		}
+	}()
 }
 
 func leaderSendHeartbeats() {

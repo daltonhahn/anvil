@@ -103,7 +103,7 @@ func Register(nodeName string, svcList []service.Service, nodeType string) {
 	AnvilCatalog.Nodes = AnvilCatalog.AddNode(Node{Name: nodeName, Address: addr[0].String(), Type: nodeType})
 	hname, err := os.Hostname()
 	if (nodeType == "server" || nodeType == "leader") && nodeName != hname {
-		raft.CM.PeerIds = AddPeer(raft.CM.PeerIds, addr[0].String())
+		raft.CM.PeerIds = AddPeer(raft.CM.PeerIds, nodeName)//addr[0].String())
 	}
 	for _, ele := range svcList {
 		AnvilCatalog.Services = AnvilCatalog.AddService(service.Service{ele.Name, addr[0].String(), ele.Port})
