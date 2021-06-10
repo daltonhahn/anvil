@@ -248,7 +248,9 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("received reroute request")
         target_svc := strings.Split(r.RequestURI, "/")[2]
+	fmt.Println(target_svc)
         tok_recv := r.Header["Authorization"][0]
         anv_catalog := catalog.GetCatalog()
         verifier := anv_catalog.GetQuorumMem()
