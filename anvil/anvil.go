@@ -113,7 +113,7 @@ func registerRoutes(anv_router *mux.Router) {
 	anv_router.HandleFunc("/anvil/catalog/leader", router.GetCatalogLeader).Methods("GET")
 	anv_router.HandleFunc("/anvil/catalog", router.GetCatalog).Methods("GET")
 	anv_router.HandleFunc("/anvil/", router.Index).Methods("GET")
-	anv_router.HandleFunc("/service/{query}", router.RerouteService).Methods("GET","POST")
+	anv_router.PathPrefix("/service/{query}").HandlerFunc(router.RerouteService).Methods("GET","POST")
 }
 
 func registerSvcRoutes(svc_router *mux.Router) {
