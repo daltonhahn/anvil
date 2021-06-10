@@ -278,7 +278,7 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 			Header: r.Header,
 			Body: r.Body,
 		}
-		req.Header.Add("X-Forwarded-For", r.RemoteAddr)
+		req.Header.Add("X-Forwarded-For", strings.Split(r.RemoteAddr,":")[0])
                 if (r.Method == "POST") {
                         //resp, err = http.Post("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path, r.Header.Get("Content-Type"), r.Body)
 			resp, err = http.DefaultClient.Do(req)
