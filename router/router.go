@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -248,9 +249,8 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("received reroute request")
+	fmt.Printf("REMOTE ADDR: %v\n", r.RemoteAddr)
         target_svc := strings.Split(r.RequestURI, "/")[2]
-	fmt.Println(target_svc)
         tok_recv := r.Header["Authorization"][0]
         anv_catalog := catalog.GetCatalog()
         verifier := anv_catalog.GetQuorumMem()
@@ -271,10 +271,20 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
         if (approval) {
                 target_port := anv_catalog.GetSvcPort(strings.Split(r.RequestURI, "/")[2])
                 rem_path := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
+		reqURL, _ := url.Parse("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path)
+		req := &http.Request {
+			URL: reqURL,
+			Method: r.Method,
+			Header: r.Header,
+			Body: r.Body,
+		}
+		req.Header.Add("X-Forwarded-For", r.RemoteAddr)
                 if (r.Method == "POST") {
-                        resp, err = http.Post("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path, r.Header.Get("Content-Type"), r.Body)
+                        //resp, err = http.Post("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path, r.Header.Get("Content-Type"), r.Body)
+			resp, err = http.DefaultClient.Do(req)
 		} else {
-			resp, err = http.Get("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path)
+			//resp, err = http.Get("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path)
+			resp, err = http.DefaultClient.Do(req)
 		}
 		if err != nil {
 			fmt.Fprintf(w, "Bad Response")
