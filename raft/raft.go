@@ -455,9 +455,16 @@ func startLeader() {
 		}
 	}()
 	go func() {
+		CM.mu.Lock()
+		if CM.state != Leader {
+			CM.mu.Unlock()
+			return
+		}
+		CM.mu.Unlock()
 		rotateTicker := time.NewTicker(1 * time.Minute)
 		defer rotateTicker.Stop()
 		for {
+			fmt.Println("If I'm not leader I shouldn't be here")
 			if CM.currentTerm > 1 {
 				hname, err := os.Hostname()
 				if err != nil {
@@ -489,6 +496,8 @@ func startLeader() {
 					//resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 					//resp, err = http.Post("http://" + ele + ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
 					if err != nil || resp.StatusCode != http.StatusOK {
+						fmt.Printf("%v\n", err)
+						fmt.Printf("%v\n", resp)
 						fmt.Printf("Failure to notify other Quorum members of CA artifacts\n")
 					}
 				}
