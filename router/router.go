@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 	"bytes"
-	"io"
 	//"errors"
 
 	"github.com/gorilla/mux"
@@ -22,8 +21,6 @@ import (
 	"github.com/daltonhahn/anvil/acl"
 	"github.com/daltonhahn/anvil/security"
 )
-
-var i int
 
 type Message struct {
         NodeName string `json:"nodename"`
@@ -297,21 +294,6 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Fprintf(w, "Bad Read")
 		}
-
-		out, err := os.OpenFile("/root/anvil/r"+strconv.Itoa(i), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-		if err != nil  {
-			fmt.Printf("FAILURE OPENING FILE\n")
-		}
-		defer out.Close()
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			fmt.Errorf("bad status: %s", resp.Status)
-		}
-		_, err = io.Copy(out, resp.Body)
-		if err != nil  {
-			fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
-		}
-		i = i + 1
 
 		fmt.Fprintf(w, string(respBody))
 	} else {
