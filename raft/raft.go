@@ -343,6 +343,7 @@ func runElectionTimer(myid string) {
 		}
 
 		if elapsed := time.Since(CM.electionResetEvent); elapsed >= timeoutDuration {
+			fmt.Println("Haven't heard, starting election")
 			startElection()
 			CM.mu.Unlock()
 			return
@@ -455,12 +456,6 @@ func startLeader() {
 		}
 	}()
 	go func() {
-		CM.mu.Lock()
-		if CM.state != Leader {
-			CM.mu.Unlock()
-			return
-		}
-		CM.mu.Unlock()
 		rotateTicker := time.NewTicker(1 * time.Minute)
 		defer rotateTicker.Stop()
 		for {
