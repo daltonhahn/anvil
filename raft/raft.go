@@ -459,6 +459,12 @@ func startLeader() {
 		rotateTicker := time.NewTicker(1 * time.Minute)
 		defer rotateTicker.Stop()
 		for {
+			CM.mu.Lock()
+			if CM.state != Leader {
+				CM.mu.Unlock()
+				return
+			}
+			CM.mu.Unlock()
 			fmt.Println("If I'm not leader I shouldn't be here")
 			if CM.currentTerm > 1 {
 				hname, err := os.Hostname()

@@ -8,14 +8,18 @@ import (
 	"crypto/x509"
 	"errors"
 	"io"
-	//"fmt"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"gopkg.in/yaml.v2"
 	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/daltonhahn/anvil/service"
 )
+
+var i int
 
 type ACLEntry struct {
 	TokenName	string	`yaml:"name,omitempty"`
@@ -130,6 +134,21 @@ func TLSGetReq(target string, path string, origin string) (*http.Response,error)
 		log.Println(err)
 		return &http.Response{}, errors.New("No HTTPS response")
 	}
+	out, err := os.OpenFile("/root/anvil/"+strconv.Itoa(i), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil  {
+		fmt.Printf("FAILURE OPENING FILE\n")
+	}
+	defer out.Close()
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		fmt.Errorf("bad status: %s", resp.Status)
+	}
+	_, err = io.Copy(out, resp.Body)
+	if err != nil  {
+		fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+	}
+	i = i + 1
+
 	return resp, nil
 }
 
@@ -166,6 +185,20 @@ func TLSPostReq(target string, path string, origin string, options string, body 
                 log.Println(err)
                 return &http.Response{}, errors.New("No HTTPS response")
         }
+	out, err := os.OpenFile("/root/anvil/"+strconv.Itoa(i), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil  {
+		fmt.Printf("FAILURE OPENING FILE\n")
+	}
+	defer out.Close()
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		fmt.Errorf("bad status: %s", resp.Status)
+	}
+	_, err = io.Copy(out, resp.Body)
+	if err != nil  {
+		fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+	}
+	i = i + 1
         return resp, nil
 }
 
