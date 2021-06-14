@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"io"
+	//"fmt"
 	"io/ioutil"
 	"log"
 	"gopkg.in/yaml.v2"

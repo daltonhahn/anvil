@@ -11,7 +11,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	//"bytes"
+	"bytes"
 	//"errors"
 
 	"github.com/gorilla/mux"
@@ -262,8 +262,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("REMOTE ADDR: %v\n", r.RemoteAddr)
-        //target_svc := strings.Split(r.RequestURI, "/")[2]
-	/*
+        target_svc := strings.Split(r.RequestURI, "/")[2]
         tok_recv := r.Header["Authorization"][0]
         anv_catalog := catalog.GetCatalog()
         verifier := anv_catalog.GetQuorumMem()
@@ -282,8 +281,6 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
         }
         approval, _ := strconv.ParseBool(string(body))
         if (approval) {
-		*/
-        	anv_catalog := catalog.GetCatalog()
                 target_port := anv_catalog.GetSvcPort(strings.Split(r.RequestURI, "/")[2])
                 rem_path := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
 		reqURL, _ := url.Parse("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path)
@@ -319,9 +316,7 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 			}
 			fmt.Fprintf(w, string(respBody))
 		}
-		/*
 	} else {
 		http.Error(w, "Token not validated", http.StatusForbidden)
 	}
-	*/
 }
