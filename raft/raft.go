@@ -10,6 +10,7 @@ import (
 	"time"
 	"errors"
 	"strconv"
+	"net"
 
 	"net/http"
         "encoding/json"
@@ -91,7 +92,7 @@ var iteration int
 func NewConsensusModule(id string, peerIds []string) *ConsensusModule {
 	CM := new(ConsensusModule)
 	CM.id = id
-	CM.PeerIds = peerIds
+	CM.PeerIds= peerIds
 	CM.state = Follower
 	CM.votedFor = ""
 	CM.nextIndex = make(map[int]int)
@@ -489,7 +490,6 @@ func startLeader() {
 
 				// Make gofunc()
 				for _, ele := range CM.PeerIds {
-					// need to do DNS lookup on ele
 					postVal = map[string]string{"iteration": strconv.Itoa(iteration), "prefix": ele}
 					jsonDat, err = json.Marshal(postVal)
 					if err != nil {
@@ -550,15 +550,24 @@ func startLeader() {
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
 					semaphore <- struct{}{}
 					if i == len(CM.PeerIds) {
+						targets := CM.PeerIds[:0]
+						for _,t := range CM.PeerIds {
+							addr, err := net.LookupIP(t)
+							if err != nil {
+								fmt.Println("Lookup failed")
+							}
+							targets = append(targets, addr[0].String())
+						}
 						collectMap := struct {
 							Targets         []string
 							Iteration       string
-						}{Targets: CM.PeerIds, Iteration: strconv.Itoa(iteration)}
+						}{Targets: targets, Iteration: strconv.Itoa(iteration)}
 
 						jsonData, err := json.Marshal(collectMap)
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
+						fmt.Printf("Sending collection signal to self with %v\n", collectMap)
 						resp, err := http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
 						defer resp.Body.Close()
 						respBody, err := ioutil.ReadAll(resp.Body)
@@ -569,9 +578,23 @@ func startLeader() {
 						fmt.Println(string(respBody))
 						<-semaphore
 					} else {
-						targets := CM.PeerIds
-						targets[len(targets)-1], targets[i] = targets[i], targets[len(targets)-1]
-						targets = append(targets, hname)
+						sendTarg := CM.PeerIds[i]
+						targets := CM.PeerIds[:0]
+						for _,t := range CM.PeerIds {
+							if t != CM.PeerIds[i] {
+								// Instead of adding DNS name to list of targets, need to add IP address
+								addr, err := net.LookupIP(t)
+								if err != nil {
+									fmt.Println("Lookup failed")
+								}
+								targets = append(targets, addr[0].String())
+							}
+						}
+						addr, err := net.LookupIP(hname)
+						if err != nil {
+							fmt.Println("Lookup failed")
+						}
+						targets = append(targets, addr[1].String())
 
 						collectMap := struct {
 							Targets         []string
@@ -582,7 +605,8 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
-						resp, err = security.TLSPostReq(CM.PeerIds[i], "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
+						fmt.Printf("Sending collection signal to %v with %v\n", sendTarg, collectMap)
+						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
 						defer resp.Body.Close()
 						respBody, err := ioutil.ReadAll(resp.Body)
 						if err != nil {
