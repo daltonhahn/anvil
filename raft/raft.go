@@ -546,6 +546,64 @@ func startLeader() {
 						<-semaphore
 					}
 				}
+
+				for i:=0; i < len(CM.PeerIds)+1; i++ {
+					semaphore <- struct{}{}
+					if i == len(CM.PeerIds) {
+						collectMap := struct {
+							Targets         []string
+							Iteration       string
+						}{Targets: CM.PeerIds, Iteration: strconv.Itoa(iteration)}
+
+						jsonData, err := json.Marshal(collectMap)
+						if err != nil {
+							log.Fatalln("Unable to marshal JSON")
+						}
+						resp, err := http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
+						defer resp.Body.Close()
+						respBody, err := ioutil.ReadAll(resp.Body)
+						if err != nil {
+							fmt.Println("Bad Read")
+						}
+
+						fmt.Println(string(respBody))
+						<-semaphore
+					} else {
+						targets := CM.PeerIds
+						targets[len(targets)-1], targets[i] = targets[i], targets[len(targets)-1]
+						targets = append(targets, hname)
+
+						collectMap := struct {
+							Targets         []string
+							Iteration       string
+						}{Targets: targets, Iteration: strconv.Itoa(iteration)}
+
+						jsonData, err := json.Marshal(collectMap)
+						if err != nil {
+							log.Fatalln("Unable to marshal JSON")
+						}
+						resp, err = security.TLSPostReq(CM.PeerIds[i], "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
+						defer resp.Body.Close()
+						respBody, err := ioutil.ReadAll(resp.Body)
+						if err != nil {
+							fmt.Println("Bad Read")
+						}
+
+						fmt.Println(string(respBody))
+						<-semaphore
+					}
+				}
+
+				// Collection signal must be from every quorum member to every other quorum member
+				// 1 -> 2
+				// 1 -> 3
+				// 2 -> 1
+				// 2-> 3
+				// 3-> 1
+				// 3-> 2
+
+
+
 				// Send collection signal to all quorum members
 				iteration = iteration + 1
 			}
