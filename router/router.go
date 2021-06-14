@@ -11,7 +11,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"bytes"
+	//"bytes"
 	//"errors"
 
 	"github.com/gorilla/mux"
@@ -262,7 +262,8 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("REMOTE ADDR: %v\n", r.RemoteAddr)
-        target_svc := strings.Split(r.RequestURI, "/")[2]
+        //target_svc := strings.Split(r.RequestURI, "/")[2]
+	/*
         tok_recv := r.Header["Authorization"][0]
         anv_catalog := catalog.GetCatalog()
         verifier := anv_catalog.GetQuorumMem()
@@ -281,6 +282,8 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
         }
         approval, _ := strconv.ParseBool(string(body))
         if (approval) {
+		*/
+        	anv_catalog := catalog.GetCatalog()
                 target_port := anv_catalog.GetSvcPort(strings.Split(r.RequestURI, "/")[2])
                 rem_path := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
 		reqURL, _ := url.Parse("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path)
@@ -293,22 +296,32 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 		req.Header.Add("X-Forwarded-For", strings.Split(r.RemoteAddr,":")[0])
                 if (r.Method == "POST") {
                         //resp, err = http.Post("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path, r.Header.Get("Content-Type"), r.Body)
-			resp, err = http.DefaultClient.Do(req)
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				fmt.Fprintf(w, "Bad Response")
+			}
+			defer resp.Body.Close()
+			respBody, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Fprintf(w, "Bad Read")
+			}
+			fmt.Fprintf(w, string(respBody))
 		} else {
 			//resp, err = http.Get("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path)
-			resp, err = http.DefaultClient.Do(req)
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				fmt.Fprintf(w, "Bad Response")
+			}
+			defer resp.Body.Close()
+			respBody, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Fprintf(w, "Bad Read")
+			}
+			fmt.Fprintf(w, string(respBody))
 		}
-		if err != nil {
-			fmt.Fprintf(w, "Bad Response")
-		}
-		defer resp.Body.Close()
-		respBody, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Fprintf(w, "Bad Read")
-		}
-
-		fmt.Fprintf(w, string(respBody))
+		/*
 	} else {
 		http.Error(w, "Token not validated", http.StatusForbidden)
 	}
+	*/
 }
