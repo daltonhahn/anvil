@@ -1,8 +1,9 @@
 --- 
-nodes: 
+quorum:
   - server1
   - server2
   - server3
+nodes: 
 svcmap: 
   - 
     node: server1

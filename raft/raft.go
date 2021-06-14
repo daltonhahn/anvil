@@ -22,8 +22,10 @@ import (
 )
 
 type AssignmentMap struct {
+	Quorum		[]string	`yaml:"quorum,omitempty"`
         Nodes		[]string	`yaml:"nodes,omitempty"`
 	SvcMap		[]ACLMap	`yaml:"svcmap,omitempty"`
+	Gossip		bool
 	Iteration	int
 	Prefix		string
 }
@@ -515,6 +517,7 @@ func startLeader() {
 					if i == len(CM.PeerIds) {
 						splitMap[i].Iteration = iteration
 						splitMap[i].Prefix = hname
+						splitMap[i].Gossip = true
 						prepVal := splitMap[i]
 						jsonDat, err = json.Marshal(prepVal)
 						if err != nil {
@@ -529,6 +532,7 @@ func startLeader() {
 					} else {
 						splitMap[i].Iteration = iteration
 						splitMap[i].Prefix = CM.PeerIds[i]
+						splitMap[i].Gossip = false
 						prepVal := splitMap[i]
 						jsonDat, err = json.Marshal(prepVal)
 						if err != nil {
