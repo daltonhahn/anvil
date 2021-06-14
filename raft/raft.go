@@ -328,7 +328,7 @@ func runElectionTimer(myid string) {
 	dlog(fmt.Sprintf("election timer started (%v), term=%d", timeoutDuration, termStarted))
 	CM.id = myid
 
-	ticker := time.NewTicker(1000 * time.Millisecond)
+	ticker := time.NewTicker(5000 * time.Millisecond)
 	defer ticker.Stop()
 	for {
 		<-ticker.C
