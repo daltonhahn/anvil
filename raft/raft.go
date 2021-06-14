@@ -550,13 +550,26 @@ func startLeader() {
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
 					semaphore <- struct{}{}
 					if i == len(CM.PeerIds) {
-						targets := CM.PeerIds[:0]
-						for _,t := range CM.PeerIds {
-							addr, err := net.LookupIP(t)
-							if err != nil {
-								fmt.Println("Lookup failed")
+						resp, err := security.TLSGetReq(hname, "/anvil/raft/peerList", "")
+						b, err := ioutil.ReadAll(resp.Body)
+						if err != nil {
+							fmt.Println(err)
+						}
+						defer resp.Body.Close()
+						var temptargets []string
+						err = json.Unmarshal(b, &temptargets)
+						if err != nil {
+							log.Println(err)
+						}
+						targets := []string{}
+						for _,e := range temptargets {
+							if e != hname {
+								addr, err := net.LookupIP(e)
+								if err != nil {
+									fmt.Println("Lookup failed")
+								}
+								targets = append(targets, addr[0].String())
 							}
-							targets = append(targets, addr[0].String())
 						}
 						collectMap := struct {
 							Targets         []string
@@ -568,13 +581,13 @@ func startLeader() {
 							log.Fatalln("Unable to marshal JSON")
 						}
 						fmt.Printf("Sending collection signal to self with %v\n", collectMap)
-						resp, err := http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
+						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
 						defer resp.Body.Close()
 						respBody, err := ioutil.ReadAll(resp.Body)
 						if err != nil {
 							fmt.Println("Bad Read")
 						}
-
+						fmt.Println("Outside of self collectSignal")
 						fmt.Println(string(respBody))
 						<-semaphore
 					} else {

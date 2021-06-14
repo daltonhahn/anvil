@@ -188,6 +188,16 @@ func (catalog *Catalog) GetQuorumMem() (string) {
 	return ""
 }
 
+func (catalog *Catalog) GetPeers() ([]string) {
+	retList := []string{}
+	for _,ele := range AnvilCatalog.Nodes {
+		if ele.Type == "leader" || ele.Type == "server" {
+			retList = append(retList, ele.Name)
+		}
+	}
+	return retList
+}
+
 func (catalog *Catalog) GetLeader() (string) {
 	for _,ele := range AnvilCatalog.Nodes {
 		if ele.Type == "leader" {

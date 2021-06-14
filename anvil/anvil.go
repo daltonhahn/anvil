@@ -102,6 +102,7 @@ func registerRoutes(anv_router *mux.Router) {
 	anv_router.HandleFunc("/anvil/raft/requestvote", router.RequestVote).Methods("POST")
 	anv_router.HandleFunc("/anvil/raft/appendentries", router.AppendEntries).Methods("POST")
 	anv_router.HandleFunc("/anvil/raft/peers", router.RaftPeers).Methods("GET")
+	anv_router.HandleFunc("/anvil/raft/peerList", router.RaftGetPeers).Methods("GET")
 	anv_router.HandleFunc("/anvil/raft/updateleader", router.UpdateLeader).Methods("POST")
 	anv_router.HandleFunc("/anvil/raft/backlog/{index}", router.RaftBacklog).Methods("GET")
 	anv_router.HandleFunc("/anvil/raft/pushACL", router.PushACL).Methods("POST")

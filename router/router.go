@@ -111,6 +111,18 @@ func GetCatalogLeader(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, (leader))
 }
 
+func RaftGetPeers(w http.ResponseWriter, r *http.Request) {
+	anv_catalog := catalog.GetCatalog()
+	peerList := anv_catalog.GetPeers()
+
+	jsonData, err := json.Marshal(peerList)
+        if err != nil {
+                log.Fatalln("Unable to marshal JSON")
+        }
+        w.Header().Set("Content-Type", "application/json")
+        fmt.Fprintf(w, string(jsonData))
+}
+
 func RaftPeers(w http.ResponseWriter, r *http.Request) {
 	dt := time.Now()
 	fmt.Fprint(w, ("Retrieving Raft Peers at " + dt.String() + "\n"))
