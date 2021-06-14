@@ -25,6 +25,7 @@ type AssignmentMap struct {
         Nodes		[]string	`yaml:"nodes,omitempty"`
 	SvcMap		[]ACLMap	`yaml:"svcmap,omitempty"`
 	Iteration	int
+	Prefix		string
 }
 
 type ACLMap struct {
@@ -513,6 +514,7 @@ func startLeader() {
 					semaphore <- struct{}{}
 					if i == len(CM.PeerIds) {
 						splitMap[i].Iteration = iteration
+						splitMap[i].Prefix = hname
 						prepVal := splitMap[i]
 						jsonDat, err = json.Marshal(prepVal)
 						if err != nil {
@@ -526,6 +528,7 @@ func startLeader() {
 						<-semaphore
 					} else {
 						splitMap[i].Iteration = iteration
+						splitMap[i].Prefix = CM.PeerIds[i]
 						prepVal := splitMap[i]
 						jsonDat, err = json.Marshal(prepVal)
 						if err != nil {
