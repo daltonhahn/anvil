@@ -490,7 +490,6 @@ func startLeader() {
 					fmt.Printf("Failure to generate CA artifacts\n")
 					fmt.Println(err)
 				}
-				time.Sleep(1 * time.Second)
 
 				// Make gofunc()
 				for _, ele := range CM.PeerIds {
@@ -591,9 +590,18 @@ func startLeader() {
 						<-semaphore
 					} else {
 						sendTarg := CM.PeerIds[i]
-						targets := CM.PeerIds[:0]
+						var targets []string
+						copy(targets, CM.PeerIds[:0])
+						hostAddr, err := net.LookupIP(hname)
+						if err != nil {
+							fmt.Println("Lookup failed")
+						}
 						for _,t := range CM.PeerIds {
-							if t != CM.PeerIds[i] {
+							targAddr, err := net.LookupIP(sendTarg)
+							if err != nil {
+								fmt.Println("Lookup failed")
+							}
+							if t != sendTarg && t != targAddr[0].String() && t != hname && t != hostAddr[1].String() {
 								addr, err := net.LookupIP(t)
 								if err != nil {
 									fmt.Println("Lookup failed")
@@ -601,11 +609,7 @@ func startLeader() {
 								targets = append(targets, addr[0].String())
 							}
 						}
-						addr, err := net.LookupIP(hname)
-						if err != nil {
-							fmt.Println("Lookup failed")
-						}
-						targets = append(targets, addr[1].String())
+						targets = append(targets, hostAddr[1].String())
 
 						collectMap := struct {
 							Targets         []string

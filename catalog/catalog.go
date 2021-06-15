@@ -102,7 +102,14 @@ func Register(nodeName string, svcList []service.Service, nodeType string) {
 	}
 	AnvilCatalog.Nodes = AnvilCatalog.AddNode(Node{Name: nodeName, Address: addr[0].String(), Type: nodeType})
 	hname, err := os.Hostname()
-	if (nodeType == "server" || nodeType == "leader") && nodeName != hname {
+	hostIPs, _ := net.LookupIP(hname)
+	var targIP net.IP
+	if hostIPs[0].Equal(net.ParseIP("127.0.0.1")) {
+		targIP = hostIPs[1]
+	} else {
+		targIP = hostIPs[0]
+	}
+	if (nodeType == "server" || nodeType == "leader") && nodeName != hname && nodeName != targIP.String() {
 		raft.CM.PeerIds = AddPeer(raft.CM.PeerIds, nodeName)//addr[0].String())
 	}
 	for _, ele := range svcList {
@@ -122,11 +129,7 @@ func Deregister(nodeName string) {
 			}
 		}
 	}
-	addr, err := net.LookupIP(nodeName)
-	if err != nil {
-		fmt.Println("Lookup failed")
-	}
-	raft.CM.PeerIds = RemovePeer(raft.CM.PeerIds, addr[0].String())
+	raft.CM.PeerIds = RemovePeer(raft.CM.PeerIds, nodeName)
 }
 
 func GetCatalog() *Catalog {
