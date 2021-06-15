@@ -312,7 +312,7 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 
 
 func electionTimeout() time.Duration {
-	duration := 5000
+	duration := 50000
 	if len(os.Getenv("RAFT_FORCE_MORE_REELECTION")) > 0 && rand.Intn(3) == 0 {
 		return time.Duration(duration) * time.Millisecond
 	} else {
