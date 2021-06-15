@@ -500,8 +500,6 @@ func startLeader() {
 					//resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 					//resp, err = http.Post("http://" + ele + ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
 					if err != nil || resp.StatusCode != http.StatusOK {
-						fmt.Printf("%v\n", err)
-						fmt.Printf("%v\n", resp)
 						fmt.Printf("Failure to notify other Quorum members of CA artifacts\n")
 					}
 				}
@@ -580,22 +578,18 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
-						fmt.Printf("Sending collection signal to self with %v\n", collectMap)
 						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
 						defer resp.Body.Close()
-						respBody, err := ioutil.ReadAll(resp.Body)
+						_, err = ioutil.ReadAll(resp.Body)
 						if err != nil {
 							fmt.Println("Bad Read")
 						}
-						fmt.Println("Outside of self collectSignal")
-						fmt.Println(string(respBody))
 						<-semaphore
 					} else {
 						sendTarg := CM.PeerIds[i]
 						targets := CM.PeerIds[:0]
 						for _,t := range CM.PeerIds {
 							if t != CM.PeerIds[i] {
-								// Instead of adding DNS name to list of targets, need to add IP address
 								addr, err := net.LookupIP(t)
 								if err != nil {
 									fmt.Println("Lookup failed")
@@ -618,30 +612,15 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
-						fmt.Printf("Sending collection signal to %v with %v\n", sendTarg, collectMap)
 						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
 						defer resp.Body.Close()
-						respBody, err := ioutil.ReadAll(resp.Body)
+						_, err = ioutil.ReadAll(resp.Body)
 						if err != nil {
 							fmt.Println("Bad Read")
 						}
-
-						fmt.Println(string(respBody))
 						<-semaphore
 					}
 				}
-
-				// Collection signal must be from every quorum member to every other quorum member
-				// 1 -> 2
-				// 1 -> 3
-				// 2 -> 1
-				// 2-> 3
-				// 3-> 1
-				// 3-> 2
-
-
-
-				// Send collection signal to all quorum members
 				iteration = iteration + 1
 			}
 			<-rotateTicker.C
