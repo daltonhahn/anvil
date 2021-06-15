@@ -202,6 +202,7 @@ func RequestVote(args RequestVoteArgs) RequestVoteReply {
 		dlog("... term out of date in RequestVote")
 		leader := getLeader(CM.id)
 		UpdateLeader(CM.id, leader)
+		fmt.Println("Becoming follower because args.Term received higher than mine")
 		becomeFollower(args.Term)
 	}
 
@@ -247,6 +248,7 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 	if args.Term > CM.currentTerm {
 		dlog("... term out of date in AppendEntries")
 		UpdateLeader(CM.id, args.LeaderId)
+		fmt.Println("Becoming follower because args.Term received higher than mine 2")
 		becomeFollower(args.Term)
 	}
 
@@ -254,6 +256,7 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 	if args.Term == CM.currentTerm {
 		if CM.state != Follower {
 			UpdateLeader(CM.id, args.LeaderId)
+			fmt.Println("Becoming follower because args.Term is the same as my term and I'm not a follower")
 			becomeFollower(args.Term)
 		}
 		CM.electionResetEvent = time.Now()
@@ -400,6 +403,7 @@ func startElection() {
 						dlog("term out of date in RequestVoteReply")
 						leader := getLeader(CM.id)
 						UpdateLeader(CM.id, leader)
+						fmt.Println("Becoming follower because reply.Term higher than my saved CurrentTerm")
 						becomeFollower(reply.Term)
 						return
 					} else if reply.Term == savedCurrentTerm {
@@ -676,6 +680,7 @@ func leaderSendHeartbeats() {
 						dlog(fmt.Sprintf("term out of date in heartbeat reply"))
 						leader := getLeader(CM.id)
 						UpdateLeader(CM.id, leader)
+						fmt.Println("Becoming follower because reply.Term higher than my saved CurrentTerm or I have term vars set to 0")
 						becomeFollower(reply.Term)
 						return
 					}
@@ -744,6 +749,7 @@ func UpdateLeader(target string, newLeader string) {
 }
 
 func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntriesReply) {
+	fmt.Println("Sending an append entry")
         reqBody, _ := json.Marshal(args)
         postBody := bytes.NewBuffer(reqBody)
 	//resp, err := http.Post("http://" + target + ":443/anvil/raft/appendentries", "application/json", postBody)
