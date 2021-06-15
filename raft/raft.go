@@ -312,7 +312,7 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 
 
 func electionTimeout() time.Duration {
-	duration := 2000
+	duration := 5000
 	if len(os.Getenv("RAFT_FORCE_MORE_REELECTION")) > 0 && rand.Intn(3) == 0 {
 		return time.Duration(duration) * time.Millisecond
 	} else {
@@ -508,10 +508,10 @@ func startLeader() {
 				splitMap := splitAssignments(len(CM.PeerIds)+1, fullMap)
 				//splitAssignments(len(CM.PeerIds)+3, fullMap)
 
-				var semaphore = make(chan struct{}, len(CM.PeerIds)+1)
+				var wg sync.WaitGroup
+				wg.Add(len(CM.PeerIds)+1)
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
 					go func(i int) {
-						semaphore <- struct{}{}
 						if i == len(CM.PeerIds) {
 							splitMap[i].Iteration = iteration
 							splitMap[i].Prefix = hname
@@ -526,7 +526,6 @@ func startLeader() {
 							if err != nil || resp.StatusCode != http.StatusOK {
 								fmt.Printf("Failure to send generation assignment to self\n")
 							}
-							<-semaphore
 						} else {
 							splitMap[i].Iteration = iteration
 							splitMap[i].Prefix = CM.PeerIds[i]
@@ -541,15 +540,15 @@ func startLeader() {
 							if err != nil || resp.StatusCode != http.StatusOK {
 								fmt.Printf("Failure to send generation assignments to other quorum members\n")
 							}
-							<-semaphore
 						}
+						wg.Done()
 					}(i)
 				}
+				wg.Wait()
 
-				semaphore = make(chan struct{}, len(CM.PeerIds)+1)
+				wg.Add(len(CM.PeerIds)+1)
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
 					go func (i int) {
-						semaphore <- struct{}{}
 						if i == len(CM.PeerIds) {
 							resp, err := security.TLSGetReq(hname, "/anvil/raft/peerList", "")
 							b, err := ioutil.ReadAll(resp.Body)
@@ -588,7 +587,6 @@ func startLeader() {
 							if err != nil {
 								fmt.Println("Bad Read")
 							}
-							<-semaphore
 						} else {
 							sendTarg := CM.PeerIds[i]
 							targets := CM.PeerIds[:0]
@@ -628,9 +626,10 @@ func startLeader() {
 							if err != nil {
 								fmt.Println("Bad Read")
 							}
-							<-semaphore
 						}
+						wg.Done()
 					}(i)
+					wg.Wait()
 				}
 				iteration = iteration + 1
 			}
