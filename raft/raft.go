@@ -238,8 +238,6 @@ type AppendEntriesReply struct {
 }
 
 func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
-	fmt.Println("Appending Entries")
-	fmt.Printf("%v\n", args)
 	CM.mu.Lock()
 	defer CM.mu.Unlock()
 	reply := AppendEntriesReply{}
@@ -317,11 +315,11 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 
 
 func electionTimeout() time.Duration {
-	duration := 2000
+	duration := 20
 	if len(os.Getenv("RAFT_FORCE_MORE_REELECTION")) > 0 && rand.Intn(3) == 0 {
-		return time.Duration(duration) * time.Millisecond
+		return time.Duration(duration) * time.Second
 	} else {
-		return time.Duration(duration+rand.Intn(150)) * time.Millisecond
+		return time.Duration(duration+rand.Intn(150)) * time.Second
 	}
 }
 
