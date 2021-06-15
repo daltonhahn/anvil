@@ -238,6 +238,8 @@ type AppendEntriesReply struct {
 }
 
 func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
+	fmt.Println("Appending Entries")
+	fmt.Printf("%v\n", args)
 	CM.mu.Lock()
 	defer CM.mu.Unlock()
 	reply := AppendEntriesReply{}
@@ -254,7 +256,7 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 
 	reply.Success = false
 	if args.Term == CM.currentTerm {
-		if CM.state != Follower {
+		if CM.state != Follower && args.LeaderId != CM.id {
 			UpdateLeader(CM.id, args.LeaderId)
 			fmt.Println("Becoming follower because args.Term is the same as my term and I'm not a follower")
 			becomeFollower(args.Term)
@@ -448,7 +450,7 @@ func startLeader() {
 	}
 
 	go func() {
-		ticker := time.NewTicker(100 * time.Millisecond)
+		ticker := time.NewTicker(50 * time.Millisecond)
 		defer ticker.Stop()
 
 		for {
@@ -749,7 +751,6 @@ func UpdateLeader(target string, newLeader string) {
 }
 
 func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntriesReply) {
-	fmt.Println("Sending an append entry")
         reqBody, _ := json.Marshal(args)
         postBody := bytes.NewBuffer(reqBody)
 	//resp, err := http.Post("http://" + target + ":443/anvil/raft/appendentries", "application/json", postBody)
