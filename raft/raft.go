@@ -312,7 +312,7 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 
 
 func electionTimeout() time.Duration {
-	duration := 50000
+	duration := 2000
 	if len(os.Getenv("RAFT_FORCE_MORE_REELECTION")) > 0 && rand.Intn(3) == 0 {
 		return time.Duration(duration) * time.Millisecond
 	} else {
@@ -328,7 +328,7 @@ func runElectionTimer(myid string) {
 	dlog(fmt.Sprintf("election timer started (%v), term=%d", timeoutDuration, termStarted))
 	CM.id = myid
 
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(5000 * time.Millisecond)
 	defer ticker.Stop()
 	for {
 		<-ticker.C
@@ -460,7 +460,7 @@ func startLeader() {
 		}
 	}()
 	go func() {
-		rotateTicker := time.NewTicker(2 * time.Minute)
+		rotateTicker := time.NewTicker(1 * time.Minute)
 		defer rotateTicker.Stop()
 		for {
 			CM.mu.Lock()
@@ -508,128 +508,118 @@ func startLeader() {
 				splitMap := splitAssignments(len(CM.PeerIds)+1, fullMap)
 				//splitAssignments(len(CM.PeerIds)+3, fullMap)
 
-				var wg sync.WaitGroup
-				wg.Add(len(CM.PeerIds)+1)
+				// Make gofunc()
+				var semaphore = make(chan struct{}, len(CM.PeerIds)+1)
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
-					go func(i int) {
-						if i == len(CM.PeerIds) {
-							splitMap[i].Iteration = iteration
-							splitMap[i].Prefix = hname
-							splitMap[i].Gossip = true
-							prepVal := splitMap[i]
-							jsonDat, err = json.Marshal(prepVal)
-							if err != nil {
-								log.Fatalln(err)
-							}
-							//resp, err = security.TLSPostReq(hname, "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
-							resp, err = http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
-							if err != nil || resp.StatusCode != http.StatusOK {
-								fmt.Printf("Failure to send generation assignment to self\n")
-							}
-						} else {
-							splitMap[i].Iteration = iteration
-							splitMap[i].Prefix = CM.PeerIds[i]
-							splitMap[i].Gossip = false
-							prepVal := splitMap[i]
-							jsonDat, err = json.Marshal(prepVal)
-							if err != nil {
-								log.Fatalln(err)
-							}
-							resp, err = security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
-							//resp, err = http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
-							if err != nil || resp.StatusCode != http.StatusOK {
-								fmt.Printf("Failure to send generation assignments to other quorum members\n")
-							}
+					semaphore <- struct{}{}
+					if i == len(CM.PeerIds) {
+						splitMap[i].Iteration = iteration
+						splitMap[i].Prefix = hname
+						splitMap[i].Gossip = true
+						prepVal := splitMap[i]
+						jsonDat, err = json.Marshal(prepVal)
+						if err != nil {
+							log.Fatalln(err)
 						}
-						wg.Done()
-					}(i)
+						//resp, err = security.TLSPostReq(hname, "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
+						resp, err = http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
+						if err != nil || resp.StatusCode != http.StatusOK {
+							fmt.Printf("Failure to send generation assignment to self\n")
+						}
+						<-semaphore
+					} else {
+						splitMap[i].Iteration = iteration
+						splitMap[i].Prefix = CM.PeerIds[i]
+						splitMap[i].Gossip = false
+						prepVal := splitMap[i]
+						jsonDat, err = json.Marshal(prepVal)
+						if err != nil {
+							log.Fatalln(err)
+						}
+						resp, err = security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
+						//resp, err = http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
+						if err != nil || resp.StatusCode != http.StatusOK {
+							fmt.Printf("Failure to send generation assignments to other quorum members\n")
+						}
+						<-semaphore
+					}
 				}
-				wg.Wait()
 
-				wg.Add(len(CM.PeerIds)+1)
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
-					go func (i int) {
-						if i == len(CM.PeerIds) {
-							resp, err := security.TLSGetReq(hname, "/anvil/raft/peerList", "")
-							b, err := ioutil.ReadAll(resp.Body)
-							if err != nil {
-								fmt.Println(err)
-							}
-							defer resp.Body.Close()
-							var temptargets []string
-							err = json.Unmarshal(b, &temptargets)
-							if err != nil {
-								log.Println(err)
-							}
-							targets := []string{}
-							for _,e := range temptargets {
-								if e != hname {
-									addr, err := net.LookupIP(e)
-									if err != nil {
-										fmt.Println("Lookup failed")
-									}
-									targets = append(targets, addr[0].String())
+					semaphore <- struct{}{}
+					if i == len(CM.PeerIds) {
+						resp, err := security.TLSGetReq(hname, "/anvil/raft/peerList", "")
+						b, err := ioutil.ReadAll(resp.Body)
+						if err != nil {
+							fmt.Println(err)
+						}
+						defer resp.Body.Close()
+						var temptargets []string
+						err = json.Unmarshal(b, &temptargets)
+						if err != nil {
+							log.Println(err)
+						}
+						targets := []string{}
+						for _,e := range temptargets {
+							if e != hname {
+								addr, err := net.LookupIP(e)
+								if err != nil {
+									fmt.Println("Lookup failed")
 								}
-							}
-							collectMap := struct {
-								Targets         []string
-								Iteration       string
-							}{Targets: targets, Iteration: strconv.Itoa(iteration)}
-
-							jsonData, err := json.Marshal(collectMap)
-							if err != nil {
-								log.Fatalln("Unable to marshal JSON")
-							}
-							// Turn into Async call
-							resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
-							defer resp.Body.Close()
-							_, err = ioutil.ReadAll(resp.Body)
-							if err != nil {
-								fmt.Println("Bad Read")
-							}
-						} else {
-							sendTarg := CM.PeerIds[i]
-							targets := CM.PeerIds[:0]
-							for _,t := range CM.PeerIds {
-								if t != CM.PeerIds[i] {
-									addr, err := net.LookupIP(t)
-									if err != nil {
-										fmt.Println("Lookup failed")
-									}
-									targets = append(targets, addr[0].String())
-								}
-							}
-							addr, err := net.LookupIP(hname)
-							if err != nil {
-								fmt.Println("Lookup failed")
-							}
-							targets = append(targets, addr[1].String())
-
-							collectMap := struct {
-								Targets         []string
-								Iteration       string
-							}{Targets: targets, Iteration: strconv.Itoa(iteration)}
-
-							jsonData, err := json.Marshal(collectMap)
-							if err != nil {
-								log.Fatalln("Unable to marshal JSON")
-							}
-							// Turn into Async call
-							//cSignalChan := make(chan *http.Response)
-							//go SendPostAsync(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData), cSignalChan)
-							resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
-							//cResp := <-cSignalChan
-							//defer cResp.Body.Close()
-							defer resp.Body.Close()
-							//_, err = ioutil.ReadAll(cResp.Body)
-							_, err = ioutil.ReadAll(resp.Body)
-							if err != nil {
-								fmt.Println("Bad Read")
+								targets = append(targets, addr[0].String())
 							}
 						}
-						wg.Done()
-					}(i)
-					wg.Wait()
+						collectMap := struct {
+							Targets         []string
+							Iteration       string
+						}{Targets: targets, Iteration: strconv.Itoa(iteration)}
+
+						jsonData, err := json.Marshal(collectMap)
+						if err != nil {
+							log.Fatalln("Unable to marshal JSON")
+						}
+						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
+						defer resp.Body.Close()
+						_, err = ioutil.ReadAll(resp.Body)
+						if err != nil {
+							fmt.Println("Bad Read")
+						}
+						<-semaphore
+					} else {
+						sendTarg := CM.PeerIds[i]
+						targets := CM.PeerIds[:0]
+						for _,t := range CM.PeerIds {
+							if t != CM.PeerIds[i] {
+								addr, err := net.LookupIP(t)
+								if err != nil {
+									fmt.Println("Lookup failed")
+								}
+								targets = append(targets, addr[0].String())
+							}
+						}
+						addr, err := net.LookupIP(hname)
+						if err != nil {
+							fmt.Println("Lookup failed")
+						}
+						targets = append(targets, addr[1].String())
+
+						collectMap := struct {
+							Targets         []string
+							Iteration       string
+						}{Targets: targets, Iteration: strconv.Itoa(iteration)}
+
+						jsonData, err := json.Marshal(collectMap)
+						if err != nil {
+							log.Fatalln("Unable to marshal JSON")
+						}
+						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
+						defer resp.Body.Close()
+						_, err = ioutil.ReadAll(resp.Body)
+						if err != nil {
+							fmt.Println("Bad Read")
+						}
+						<-semaphore
+					}
 				}
 				iteration = iteration + 1
 			}
@@ -654,7 +644,6 @@ func leaderSendHeartbeats() {
         if len(CM.PeerIds) == 0 {
                 return
         } else {
-		fmt.Println("~")
 		  for ind, peerId := range CM.PeerIds {
 			go func(peerId string) {
 				if peerId == "" {
@@ -866,13 +855,4 @@ func splitAssignments(numPeers int, aMap AssignmentMap) ([]AssignmentMap) {
 		splitMap[i] = tMap
 	}
 	return splitMap
-}
-
-func SendPostAsync(targHost string, url string, origin string, options string, jsonData *bytes.Buffer, rc chan *http.Response) {
-	//resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
-	resp, err := security.TLSPostReq(targHost, url, origin, options, jsonData)
-	if err != nil {
-		panic(err)
-	}
-	rc <- resp
 }
