@@ -633,9 +633,50 @@ func startLeader() {
 
 				// FOR ALL OTHER NODES (CLIENTS), SEND THEM A NOTIFICATION WITH THE ITERATION NUMBER IN ORDER TO HAVE THEM DOWNLOAD
 				// THEIR NEEDED FILES
-				// for
+				// Go func it
+				// Pull a list of all clients in the catalog
+
+				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
+				if err != nil {
+					fmt.Println(err)
+				}
+				defer resp.Body.Close()
+
+				b, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					fmt.Println(err)
+				}
+				clientList := struct {
+					Clients		[]string
+				}{}
+				err = json.Unmarshal(b, &clientList)
+				if err != nil {
+					fmt.Println(err)
+				}
+				fmt.Printf("%v\n", clientList)
 
 
+				/*
+				var semaphore = make(chan struct{}, ) // len of all clients
+				for _, ele := range clientList.Clients { // Range over the list of all clients in the Catalog
+					semaphore <- struct{}{}
+                                        postVal = map[string]string{"iteration": strconv.Itoa(iteration), "prefix": ele}
+                                        jsonDat, err = json.Marshal(postVal)
+                                        if err != nil {
+                                                log.Fatalln(err)
+                                        }
+                                        resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
+                                        if err != nil || resp.StatusCode != http.StatusOK {
+                                                fmt.Printf("Failure to notify other Quorum members of CA artifacts\n")
+                                        }
+					defer resp.Body.Close()
+					_, err = ioutil.ReadAll(resp.Body)
+					if err != nil {
+						fmt.Println("Bad Read")
+					}
+					<-semaphore
+                                }
+				*/
 
 				iteration = iteration + 1
 			}

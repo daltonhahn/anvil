@@ -182,6 +182,16 @@ func (catalog *Catalog) GetSvcPort(svc string) (int64) {
 	return -1
 }
 
+func (catalog *Catalog) GetClients() ([]string) {
+	var clientList []string
+	for _,ele := range AnvilCatalog.Nodes {
+		if ele.Type == "client" {
+			clientList = append(clientList, ele.Name)
+		}
+	}
+	return clientList
+}
+
 func (catalog *Catalog) GetQuorumMem() (string) {
 	for _,ele := range AnvilCatalog.Nodes {
 		if ele.Type == "leader" || ele.Type == "server" {

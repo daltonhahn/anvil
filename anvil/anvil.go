@@ -108,11 +108,13 @@ func registerRoutes(anv_router *mux.Router) {
 	anv_router.HandleFunc("/anvil/raft/pushACL", router.PushACL).Methods("POST")
 	anv_router.HandleFunc("/anvil/raft/getACL", router.GetACL).Methods("GET")
 	anv_router.HandleFunc("/anvil/raft/acl/{service}", router.TokenLookup).Methods("POST")
+	anv_router.HandleFunc("/anvil/catalog/clients", router.GetCatalogClients).Methods("GET")
 	anv_router.HandleFunc("/anvil/catalog/nodes", router.GetNodeCatalog).Methods("GET")
 	anv_router.HandleFunc("/anvil/catalog/services", router.GetServiceCatalog).Methods("GET")
 	anv_router.HandleFunc("/anvil/catalog/register", router.RegisterNode).Methods("POST")
 	anv_router.HandleFunc("/anvil/catalog/leader", router.GetCatalogLeader).Methods("GET")
 	anv_router.HandleFunc("/anvil/catalog", router.GetCatalog).Methods("GET")
+	anv_router.HandleFunc("/anvil/rotation", router.HandleRotation).Methods("POST")
 	anv_router.HandleFunc("/anvil/", router.Index).Methods("GET")
 	anv_router.PathPrefix("/service/{query}").HandlerFunc(router.RerouteService).Methods("GET","POST")
 }
