@@ -118,8 +118,6 @@ func CollectFiles(iter string, nodeName string) bool {
 		fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
 
-
-	/*
 	fMess = &FPMess{FilePath: nodeName+"/ca.crt"}
 	jsonData, err = json.Marshal(fMess)
 	if err != nil {
@@ -141,6 +139,5 @@ func CollectFiles(iter string, nodeName string) bool {
 	if err != nil  {
 		fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
-	*/
 	return true
 }
