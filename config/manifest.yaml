@@ -2,8 +2,8 @@
 quorum:
   - server1
   - server2
-  - server3
 nodes: 
+  - server3
 svcmap: 
   - 
     node: server1

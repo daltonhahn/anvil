@@ -36,7 +36,7 @@ func CollectFiles(iter string, nodeName string) bool {
 		log.Fatalln("Unable to marshal JSON")
 	}
 	postVal := bytes.NewBuffer(jsonData)
-	resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle"+iter, "rotation", "application/json", postVal)
+	resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
 
 	out, err := os.Create("/root/anvil/config/gossip/"+iter+"/"+fMess.FilePath)
 	if err != nil  {
@@ -58,7 +58,7 @@ func CollectFiles(iter string, nodeName string) bool {
 		log.Fatalln("Unable to marshal JSON")
 	}
 	postVal = bytes.NewBuffer(jsonData)
-	resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle"+iter, "rotation", "application/json", postVal)
+	resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
 
 	out, err = os.Create("/root/anvil/config/acls/"+iter+"/acl.yaml")
 	if err != nil  {
@@ -80,7 +80,7 @@ func CollectFiles(iter string, nodeName string) bool {
 		log.Fatalln("Unable to marshal JSON")
 	}
 	postVal = bytes.NewBuffer(jsonData)
-	resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle"+iter, "rotation", "application/json", postVal)
+	resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
 
 	out, err = os.Create("/root/anvil/config/certs/"+iter+"/"+nodeName+".key")
 	if err != nil  {
@@ -102,7 +102,7 @@ func CollectFiles(iter string, nodeName string) bool {
 		log.Fatalln("Unable to marshal JSON")
 	}
 	postVal = bytes.NewBuffer(jsonData)
-	resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle"+iter, "rotation", "application/json", postVal)
+	resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
 
 	out, err = os.Create("/root/anvil/config/certs/"+iter+"/"+nodeName+".crt")
 	if err != nil  {
@@ -126,7 +126,7 @@ func CollectFiles(iter string, nodeName string) bool {
 		log.Fatalln("Unable to marshal JSON")
 	}
 	postVal = bytes.NewBuffer(jsonData)
-	resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle"+iter, "rotation", "application/json", postVal)
+	resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
 
 	out, err = os.Create("/root/anvil/config/certs/"+iter+"/ca.crt")
 	if err != nil  {
@@ -142,12 +142,5 @@ func CollectFiles(iter string, nodeName string) bool {
 		fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
 	*/
-
-	// Every time this is called, select a random quorum member
-	// For loop for 4 files
-		// gossip.key
-		// ca.crt
-		// nodeName.crt
-		// nodeName.key
 	return true
 }
