@@ -630,6 +630,9 @@ func startLeader() {
 					}
 				}
 
+				// COORDINATION AND GENERATION OF ALL ARTIFACTS COMPLETE, SINCE YOU ARE LEADER, INGEST THE FULL AND COMPILED
+				// ACLS.YAML FILE AT THE ROOT OF THE NEWLY MADE ARTIFACTS DIRECTORY FOR THIS ITERATION
+
 				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
 				if err != nil {
 					fmt.Println(err)
