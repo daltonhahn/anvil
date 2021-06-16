@@ -629,6 +629,14 @@ func startLeader() {
 						<-semaphore
 					}
 				}
+
+
+				// FOR ALL OTHER NODES (CLIENTS), SEND THEM A NOTIFICATION WITH THE ITERATION NUMBER IN ORDER TO HAVE THEM DOWNLOAD
+				// THEIR NEEDED FILES
+				// for
+
+
+
 				iteration = iteration + 1
 			}
 			<-rotateTicker.C
