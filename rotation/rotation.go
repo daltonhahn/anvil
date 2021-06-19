@@ -211,9 +211,14 @@ func rewriteYaml(indA int, indB int) {
         listSecConf := []SecConfig{}
 
         if indB == 0 && indA == 0 {
+		b, err := ioutil.ReadFile("/root/anvil/config/gossip/0/gossip.key")
+		if err != nil {
+			panic(err)
+		}
+		gKey := string(b)
                 tokMap := readACLFile("/root/anvil/config/acls/0/test.yaml")
                 tmpSecConf := SecConfig {
-                        Key: "/root/anvil/config/gossip/0/gossip.key",
+                        Key: gKey,
                         CACert: "/root/anvil/config/certs/0/ca.crt",
                         TLSCert: "/root/anvil/config/certs/0/"+hname+".crt",
                         TLSKey: "/root/anvil/config/certs/0/"+hname+".key",
@@ -232,15 +237,25 @@ func rewriteYaml(indA int, indB int) {
 
                 tMapA := readACLFile("/root/anvil/config/acls/"+strA+"/acl.yaml")
                 tMapB := readACLFile("/root/anvil/config/acls/"+strB+"/acl.yaml")
+		b, err := ioutil.ReadFile("/root/anvil/config/gossip/"+strA+"/gossip.key")
+		if err != nil {
+			panic(err)
+		}
+		gKeyA := string(b)
                 sConfA := SecConfig {
-                        Key: "/root/anvil/config/gossip/"+strA+"/gossip.key",
+                        Key: gKeyA,
                         CACert: "/root/anvil/config/certs/"+strA+"/ca.crt",
                         TLSCert: "/root/anvil/config/certs/"+strA+"/"+hname+".crt",
                         TLSKey: "/root/anvil/config/certs/"+strA+"/"+hname+".key",
                         Tokens: tMapA,
                 }
+		b, err = ioutil.ReadFile("/root/anvil/config/gossip/"+strB+"/gossip.key")
+		if err != nil {
+			panic(err)
+		}
+		gKeyB := string(b)
                 sConfB := SecConfig {
-                        Key: "/root/anvil/config/gossip/"+strB+"/gossip.key",
+                        Key: gKeyB,
                         CACert: "/root/anvil/config/certs/"+strB+"/ca.crt",
                         TLSCert: "/root/anvil/config/certs/"+strB+"/"+hname+".crt",
                         TLSKey: "/root/anvil/config/certs/"+strB+"/"+hname+".key",
