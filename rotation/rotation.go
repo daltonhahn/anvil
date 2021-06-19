@@ -4,22 +4,40 @@ import (
 	"fmt"
 	"os"
 	"io"
+	"io/ioutil"
 	"path/filepath"
 	"log"
 	"bytes"
 	"encoding/json"
 	"net/http"
+        "gopkg.in/yaml.v2"
+        "strconv"
+        "reflect"
 
 	"github.com/daltonhahn/anvil/security"
 	"github.com/daltonhahn/anvil/catalog"
 )
+
+type SecConfig struct {
+        Key     string          `yaml:"key,omitempty"`
+        CACert  string          `yaml:"cacert,omitempty"`
+        TLSCert string          `yaml:"tlscert,omitempty"`
+        TLSKey  string          `yaml:"tlskey,omitempty"`
+        Tokens  []TokMap        `yaml:"tokens,omitempty"`
+}
+
+type TokMap struct {
+        ServiceName     string  `yaml:"sname,omitempty"`
+        TokenVal        string  `yaml:"tval,omitempty"`
+}
+
+var SecConf []SecConfig
 
 type FPMess struct {
         FilePath        string
 }
 
 func CollectFiles(iter string, nodeName string) bool {
-	fmt.Printf("THIS IS ITER: %v and I'm %v\n", iter, nodeName)
 	newpath := filepath.Join("/root/anvil/", "config/gossip", iter)
         os.MkdirAll(newpath, os.ModePerm)
         newpath = filepath.Join("/root/anvil/", "config/acls", iter)
@@ -139,5 +157,159 @@ func CollectFiles(iter string, nodeName string) bool {
 	if err != nil  {
 		fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
+
+	adjustConfig()
 	return true
+}
+
+func adjustConfig() {
+        iterMap := getDirMap()
+        fmt.Printf("%v\n", iterMap)
+
+        cmpList := []int{}
+        for key, list := range iterMap {
+                if key == "acls" {
+                        cmpList = list
+                } else {
+                        if !reflect.DeepEqual(cmpList, list) {
+                                fmt.Println("We've got problems")
+                        }
+                }
+                fmt.Printf("%v\n", list)
+        }
+
+        if len(cmpList) < 2 {
+                rewriteYaml(cmpList[0], 0)
+        } else {
+                rewriteYaml(cmpList[len(cmpList)-1], cmpList[len(cmpList)-2])
+        }
+}
+
+func updateRunningConfig() {
+	// Adjusting the config file itself will solve all OUTBOUND PROBLEMS and
+	// a lot of the INBOUND decryption problems, but will not solve the
+	// ACTIVE TLS instance problem
+
+	// THIS FUNCTION SHOULD INTERRUPT AND ADJUST OR MODIFY THE EXISTING
+	// TLS CONFIG SO THAT WE CAN HANDLE NEW INCOMING REQUESTS
+
+}
+
+func rewriteYaml(indA int, indB int) {
+        yamlFile, err := ioutil.ReadFile("/root/anvil/config/test_config.yaml")
+        if err != nil {
+                log.Printf("Read file error #%v", err)
+        }
+        err = yaml.Unmarshal(yamlFile, &SecConf)
+        if err != nil {
+                log.Fatalf("Unmarshal: %v", err)
+        }
+        fmt.Printf("%v\n", SecConf)
+        fmt.Printf("------\n")
+
+        hname, _ := os.Hostname()
+        listSecConf := []SecConfig{}
+
+        if indB == 0 && indA == 0 {
+                tokMap := readACLFile("/root/anvil/config/acls/0/test.yaml")
+                tmpSecConf := SecConfig {
+                        Key: "/root/anvil/config/gossip/0/gossip.key",
+                        CACert: "/root/anvil/config/certs/0/ca.crt",
+                        TLSCert: "/root/anvil/config/certs/0/"+hname+".crt",
+                        TLSKey: "/root/anvil/config/certs/0/"+hname+".key",
+                        Tokens: tokMap,
+                }
+                listSecConf = []SecConfig{tmpSecConf}
+
+                yamlOut, err := yaml.Marshal(listSecConf)
+                if err != nil {
+                        panic(err)
+                }
+                fmt.Printf("%v\n", string(yamlOut))
+        } else {
+                strA := strconv.Itoa(indA)
+                strB := strconv.Itoa(indB)
+
+                tMapA := readACLFile("/root/anvil/config/acls/"+strA+"/acl.yaml")
+                tMapB := readACLFile("/root/anvil/config/acls/"+strB+"/acl.yaml")
+                sConfA := SecConfig {
+                        Key: "/root/anvil/config/gossip/"+strA+"/gossip.key",
+                        CACert: "/root/anvil/config/certs/"+strA+"/ca.crt",
+                        TLSCert: "/root/anvil/config/certs/"+strA+"/"+hname+".crt",
+                        TLSKey: "/root/anvil/config/certs/"+strA+"/"+hname+".key",
+                        Tokens: tMapA,
+                }
+                sConfB := SecConfig {
+                        Key: "/root/anvil/config/gossip/"+strB+"/gossip.key",
+                        CACert: "/root/anvil/config/certs/"+strB+"/ca.crt",
+                        TLSCert: "/root/anvil/config/certs/"+strB+"/"+hname+".crt",
+                        TLSKey: "/root/anvil/config/certs/"+strB+"/"+hname+".key",
+                        Tokens: tMapB,
+                }
+                listSecConf = []SecConfig{sConfA, sConfB}
+                yamlOut, err := yaml.Marshal(listSecConf)
+                if err != nil {
+                        panic(err)
+                }
+                fmt.Printf("%v\n", string(yamlOut))
+        }
+}
+
+func getDirMap() map[string][]int {
+        aclIters, err := ioutil.ReadDir("/root/anvil/config/acls")
+        if err != nil {
+                log.Println(err)
+        }
+        gossipIters, err := ioutil.ReadDir("/root/anvil/config/gossip")
+        if err != nil {
+                log.Println(err)
+        }
+        certIters, err := ioutil.ReadDir("/root/anvil/config/certs")
+        if err != nil {
+                log.Println(err)
+        }
+
+        iterMap := make(map[string][]int)
+        for _, f := range aclIters {
+                if f.IsDir() {
+                        val, err := strconv.Atoi(f.Name())
+                        if err != nil {
+                                fmt.Println("Unable to convert")
+                        }
+                        iterMap["acls"] = append(iterMap["acls"], val)
+                }
+        }
+        for _, f := range gossipIters {
+                if f.IsDir() {
+                        val, err := strconv.Atoi(f.Name())
+                        if err != nil {
+                                fmt.Println("Unable to convert")
+                        }
+                        iterMap["gossip"] = append(iterMap["gossip"], val)
+                }
+        }
+        for _, f := range certIters {
+                if f.IsDir() {
+                        val, err := strconv.Atoi(f.Name())
+                        if err != nil {
+                                fmt.Println("Unable to convert")
+                        }
+                        iterMap["certs"] = append(iterMap["certs"], val)
+                }
+        }
+
+        return iterMap
+}
+
+func readACLFile(fpath string) []TokMap {
+        retToks := []TokMap{}
+        yamlFile, err := ioutil.ReadFile(fpath)
+        if err != nil {
+                log.Printf("Read file error #%v", err)
+        }
+        err = yaml.Unmarshal(yamlFile, &retToks)
+        if err != nil {
+                log.Fatalf("Unmarshal: %v", err)
+        }
+        return retToks
 }
