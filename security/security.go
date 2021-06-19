@@ -51,10 +51,10 @@ func ReadSecConfig() {
         }
 }
 
-func EncData(plaintext string) ([]byte,error) {
+func EncDataSvc(plaintext string, confNum int) ([]byte,error) {
     ReadSecConfig()
     text := []byte(plaintext)
-    key := []byte(SecConf[0].Key)
+    key := []byte(SecConf[confNum].Key)
 
     c, err := aes.NewCipher(key)
     if err != nil {
@@ -71,9 +71,9 @@ func EncData(plaintext string) ([]byte,error) {
     return []byte(gcm.Seal(nonce, nonce, text, nil)),nil
 }
 
-func DecData(input_ciphertext string) ([]byte,error) {
+func DecDataSvc(input_ciphertext string, confNum int) ([]byte,error) {
     ReadSecConfig()
-    key := []byte(SecConf[0].Key)
+    key := []byte(SecConf[confNum].Key)
     data := []byte(input_ciphertext)
     c, err := aes.NewCipher(key)
     if err != nil {
@@ -98,16 +98,16 @@ func DecData(input_ciphertext string) ([]byte,error) {
     return plaintext,nil
 }
 
-func TLSGetReq(target string, path string, origin string) (*http.Response,error) {
+func TLSGetReqSvc(target string, path string, origin string, confNum int) (*http.Response,error) {
 	ReadSecConfig()
-	caCertPath := SecConf[0].CACert
+	caCertPath := SecConf[confNum].CACert
 	caCert, err := ioutil.ReadFile(caCertPath)
         if err != nil {
                 log.Printf("Read file error #%v", err)
         }
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
-	cert,err := tls.LoadX509KeyPair(SecConf[0].TLSCert, SecConf[0].TLSKey)
+	cert,err := tls.LoadX509KeyPair(SecConf[confNum].TLSCert, SecConf[confNum].TLSKey)
         if err != nil {
                 log.Printf("Read file error #%v", err)
         }
@@ -134,16 +134,16 @@ func TLSGetReq(target string, path string, origin string) (*http.Response,error)
 	return resp, nil
 }
 
-func TLSPostReq(target string, path string, origin string, options string, body io.Reader) (*http.Response, error) {
+func TLSPostReqSvc(target string, path string, origin string, options string, body io.Reader, confNum int) (*http.Response, error) {
 	ReadSecConfig()
-        caCertPath := SecConf[0].CACert
+        caCertPath := SecConf[confNum].CACert
         caCert, err := ioutil.ReadFile(caCertPath)
         if err != nil {
                 log.Printf("Read file error #%v", err)
         }
         caCertPool := x509.NewCertPool()
         caCertPool.AppendCertsFromPEM(caCert)
-        cert,err := tls.LoadX509KeyPair(SecConf[0].TLSCert, SecConf[0].TLSKey)
+        cert,err := tls.LoadX509KeyPair(SecConf[confNum].TLSCert, SecConf[confNum].TLSKey)
         if err != nil {
                 log.Printf("Read file error #%v", err)
         }
