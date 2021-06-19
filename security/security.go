@@ -8,7 +8,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"io"
-	"fmt"
+	//"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
