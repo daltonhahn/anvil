@@ -11,48 +11,10 @@ import (
 	//"fmt"
 	"io/ioutil"
 	"log"
-	"gopkg.in/yaml.v2"
 	"net/http"
-
-	"github.com/daltonhahn/anvil/service"
 )
 
-type ACLEntry struct {
-	TokenName	string	`yaml:"name,omitempty"`
-	SecretValue	string
-	CreationTime	string
-	ExpirationTime	string
-	ServiceList	[]service.Service
-}
-
-var SecConf = []SecConfig{}
-
-type TokMap struct {
-	ServiceName	string	`yaml:"sname,omitempty"`
-	TokenVal	string	`yaml:"tval,omitempty"`
-}
-
-type SecConfig struct {
-	Key	string		`yaml:"key,omitempty"`
-	CACert	string		`yaml:"cacert,omitempty"`
-	TLSCert	string		`yaml:"tlscert,omitempty"`
-	TLSKey	string		`yaml:"tlskey,omitempty"`
-	Tokens	[]TokMap	`yaml:"tokens,omitempty"`
-}
-
-func ReadSecConfig() {
-	yamlFile, err := ioutil.ReadFile("/root/anvil/config/test_config.yaml")
-        if err != nil {
-                log.Printf("Read file error #%v", err)
-        }
-        err = yaml.Unmarshal(yamlFile, &SecConf)
-        if err != nil {
-                log.Fatalf("Unmarshal: %v", err)
-        }
-}
-
 func EncDataSvc(plaintext string, confNum int) ([]byte,error) {
-    ReadSecConfig()
     text := []byte(plaintext)
     key := []byte(SecConf[confNum].Key)
 
@@ -72,7 +34,6 @@ func EncDataSvc(plaintext string, confNum int) ([]byte,error) {
 }
 
 func DecDataSvc(input_ciphertext string, confNum int) ([]byte,error) {
-    ReadSecConfig()
     key := []byte(SecConf[confNum].Key)
     data := []byte(input_ciphertext)
     c, err := aes.NewCipher(key)
@@ -99,7 +60,6 @@ func DecDataSvc(input_ciphertext string, confNum int) ([]byte,error) {
 }
 
 func TLSGetReqSvc(target string, path string, origin string, confNum int) (*http.Response,error) {
-	ReadSecConfig()
 	caCertPath := SecConf[confNum].CACert
 	caCert, err := ioutil.ReadFile(caCertPath)
         if err != nil {
@@ -135,7 +95,6 @@ func TLSGetReqSvc(target string, path string, origin string, confNum int) (*http
 }
 
 func TLSPostReqSvc(target string, path string, origin string, options string, body io.Reader, confNum int) (*http.Response, error) {
-	ReadSecConfig()
         caCertPath := SecConf[confNum].CACert
         caCert, err := ioutil.ReadFile(caCertPath)
         if err != nil {
