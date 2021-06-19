@@ -25,7 +25,7 @@ type ACLEntry struct {
 	ServiceList	[]service.Service
 }
 
-var SecConf = new(SecConfig)
+var SecConf = []SecConfig{}
 
 type TokMap struct {
 	ServiceName	string	`yaml:"sname,omitempty"`
@@ -54,7 +54,7 @@ func ReadSecConfig() {
 func EncData(plaintext string) ([]byte,error) {
     ReadSecConfig()
     text := []byte(plaintext)
-    key := []byte(SecConf.Key)
+    key := []byte(SecConf[0].Key)
 
     c, err := aes.NewCipher(key)
     if err != nil {
@@ -73,7 +73,7 @@ func EncData(plaintext string) ([]byte,error) {
 
 func DecData(input_ciphertext string) ([]byte,error) {
     ReadSecConfig()
-    key := []byte(SecConf.Key)
+    key := []byte(SecConf[0].Key)
     data := []byte(input_ciphertext)
     c, err := aes.NewCipher(key)
     if err != nil {
@@ -100,14 +100,14 @@ func DecData(input_ciphertext string) ([]byte,error) {
 
 func TLSGetReq(target string, path string, origin string) (*http.Response,error) {
 	ReadSecConfig()
-	caCertPath := SecConf.CACert
+	caCertPath := SecConf[0].CACert
 	caCert, err := ioutil.ReadFile(caCertPath)
         if err != nil {
                 log.Printf("Read file error #%v", err)
         }
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
-	cert,err := tls.LoadX509KeyPair(SecConf.TLSCert, SecConf.TLSKey)
+	cert,err := tls.LoadX509KeyPair(SecConf[0].TLSCert, SecConf[0].TLSKey)
         if err != nil {
                 log.Printf("Read file error #%v", err)
         }
@@ -136,14 +136,14 @@ func TLSGetReq(target string, path string, origin string) (*http.Response,error)
 
 func TLSPostReq(target string, path string, origin string, options string, body io.Reader) (*http.Response, error) {
 	ReadSecConfig()
-        caCertPath := SecConf.CACert
+        caCertPath := SecConf[0].CACert
         caCert, err := ioutil.ReadFile(caCertPath)
         if err != nil {
                 log.Printf("Read file error #%v", err)
         }
         caCertPool := x509.NewCertPool()
         caCertPool.AppendCertsFromPEM(caCert)
-        cert,err := tls.LoadX509KeyPair(SecConf.TLSCert, SecConf.TLSKey)
+        cert,err := tls.LoadX509KeyPair(SecConf[0].TLSCert, SecConf[0].TLSKey)
         if err != nil {
                 log.Printf("Read file error #%v", err)
         }
@@ -172,7 +172,7 @@ func TLSPostReq(target string, path string, origin string, options string, body 
 }
 
 func attachToken(originSvc string) string {
-	for _, ele := range SecConf.Tokens {
+	for _, ele := range SecConf[0].Tokens {
 		if ele.ServiceName == originSvc {
 			return ele.TokenVal
 		}
