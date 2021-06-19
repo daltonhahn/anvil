@@ -70,10 +70,22 @@ func AnvilInit(nodeType string) {
 	registerSvcRoutes(svc_router)
 	registerUDP()
 	go func() {
-		log.Fatal(http.ListenAndServeTLS(":443", security.SecConf[0].TLSCert, security.SecConf[0].TLSKey, anv_router))
-		// ListenAndServeTLS returns an error, on error, try with second set of config, if that errors as well, then crash
-		// otherwise, proceed with second, successful config
-		// Reloading certs on the fly: https://stackoverflow.com/questions/37473201/is-there-a-way-to-update-the-tls-certificates-in-a-net-http-server-without-any-d/40883377
+		fmt.Println("Starting first config server")
+		err1 := http.ListenAndServeTLS(":443", security.SecConf[0].TLSCert, security.SecConf[0].TLSKey, anv_router)
+		if err1 != nil {
+			fmt.Println("Got an error on first config")
+			if len(security.SecConf) < 2 {
+				fmt.Println("Killing on first error")
+				log.Fatal(err1)
+			} else {
+				fmt.Println("Trying with second config")
+				err2 := http.ListenAndServeTLS(":443", security.SecConf[1].TLSCert, security.SecConf[1].TLSKey, anv_router)
+				if err2 != nil {
+					fmt.Println("Killing on second error")
+					log.Fatal(err2)
+				}
+			}
+		}
 		wg.Done()
 	}()
 	go func() {

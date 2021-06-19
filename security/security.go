@@ -8,7 +8,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"io"
-	//"fmt"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -87,7 +87,6 @@ func TLSGetReqSvc(target string, path string, origin string, confNum int) (*http
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println(err)
 		return &http.Response{}, errors.New("No HTTPS response")
 	}
 
@@ -123,7 +122,6 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
 
         resp, err := client.Do(req)
         if err != nil {
-                log.Println(err)
                 return &http.Response{}, errors.New("No HTTPS response")
         }
 
