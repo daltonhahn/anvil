@@ -1,0 +1,10 @@
+---
+- 
+        key: dW5pbmp5b1dNamxyRmRBVWxoT2tOY0VK
+        cacert: /root/anvil/config/certs/0/ca.crt
+        tlscert: /root/anvil/config/certs/0/server1.crt
+        tlskey: /root/anvil/config/certs/0/server1.key
+        tokens:
+                -
+                        sname: rotation
+                        tval: c3hZcnhKVnk2cFpwc1FJV2hMRFpjekpuUldxTnF6MGliY09PZ0YxQ1lGZ0ZvNU93QTNjVVpnS3pWWG5QQWVoOQ==
