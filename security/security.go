@@ -8,7 +8,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"io"
-	//"fmt"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -121,6 +121,9 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
 	req, err := http.NewRequest("POST", ("https://"+target+path), body)
 	req.Header.Set("Content-type", options)
 	req.Header.Add("Authorization", bearer)
+
+	b, _ := ioutil.ReadAll(body)
+	fmt.Printf("%v\n", string(b))
 
         resp, err := client.Do(req)
         if err != nil {

@@ -118,8 +118,10 @@ func TLSPostReq(target string, path string, origin string, options string, body 
 				fmt.Println("TLS Post Req -- got an error with second config, erroring")
 				return &http.Response{},err2
 			}
+			fmt.Printf("%v\n", res2)
 			return res2, nil
 		}
 	}
+	fmt.Printf("%v\n", res1)
 	return res1, nil
 }
