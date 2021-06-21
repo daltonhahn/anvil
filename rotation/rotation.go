@@ -185,7 +185,18 @@ func adjustConfig() {
         }
 }
 
-func updateRunningConfig() {
+func updateRunningConfig(yamlOut []byte) {
+	f, err := os.OpenFile("/root/anvil/config/test_config.yaml", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		log.Fatal(err)
+	}
+	_,err = f.Write(yamlOut)
+        if err != nil {
+                fmt.Println(err)
+        }
 	// Adjusting the config file itself will solve all OUTBOUND PROBLEMS and
 	// a lot of the INBOUND decryption problems, but will not solve the
 	// ACTIVE TLS instance problem
@@ -209,6 +220,7 @@ func rewriteYaml(indA int, indB int) {
 
         hname, _ := os.Hostname()
         listSecConf := []SecConfig{}
+	var yamlOut []byte
 
         if indB == 0 && indA == 0 {
 		b, err := ioutil.ReadFile("/root/anvil/config/gossip/0/gossip.key")
@@ -226,7 +238,7 @@ func rewriteYaml(indA int, indB int) {
                 }
                 listSecConf = []SecConfig{tmpSecConf}
 
-                yamlOut, err := yaml.Marshal(listSecConf)
+                yamlOut, err = yaml.Marshal(listSecConf)
                 if err != nil {
                         panic(err)
                 }
@@ -262,12 +274,13 @@ func rewriteYaml(indA int, indB int) {
                         Tokens: tMapB,
                 }
                 listSecConf = []SecConfig{sConfA, sConfB}
-                yamlOut, err := yaml.Marshal(listSecConf)
+                yamlOut, err = yaml.Marshal(listSecConf)
                 if err != nil {
                         panic(err)
                 }
                 fmt.Printf("%v\n", string(yamlOut))
         }
+	updateRunningConfig(yamlOut)
 }
 
 func getDirMap() map[string][]int {
