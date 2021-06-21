@@ -3,7 +3,6 @@ package security
 import (
 	"net/http"
 	"io"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"gopkg.in/yaml.v2"
@@ -101,7 +100,7 @@ func TLSPostReq(target string, path string, origin string, options string, body 
 	ReadSecConfig()
 	b, err := ioutil.ReadAll(body)
 	if err != nil {
-		fmt.Println("Body read failure")
+		log.Println("Body read failure")
 	}
 	res1, err1 := TLSPostReqSvc(target, path, origin, options, string(b), 0)
 	if err1 != nil {

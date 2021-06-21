@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"fmt"
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"gopkg.in/yaml.v2"

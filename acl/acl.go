@@ -4,7 +4,6 @@ import (
 	"math/rand"
 	"time"
 	b64 "encoding/base64"
-        //"fmt"
         "io/ioutil"
 	"log"
 
