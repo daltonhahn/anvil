@@ -158,11 +158,11 @@ func CollectFiles(iter string, nodeName string) bool {
 		fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
 
-	adjustConfig()
+	AdjustConfig()
 	return true
 }
 
-func adjustConfig() {
+func AdjustConfig() {
         iterMap := getDirMap()
         fmt.Printf("%v\n", iterMap)
 
@@ -185,18 +185,17 @@ func adjustConfig() {
         }
 }
 
-func updateRunningConfig(yamlOut []byte) {
+func updateRunningConfig(yamlOut string) {
 	f, err := os.OpenFile("/root/anvil/config/test_config.yaml", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := f.Close(); err != nil {
-		log.Fatal(err)
-	}
-	_,err = f.Write(yamlOut)
+	yamlOut = "---\n" + yamlOut
+	_,err = f.Write([]byte(yamlOut))
         if err != nil {
                 fmt.Println(err)
         }
+	defer f.Close()
 	// Adjusting the config file itself will solve all OUTBOUND PROBLEMS and
 	// a lot of the INBOUND decryption problems, but will not solve the
 	// ACTIVE TLS instance problem
@@ -280,7 +279,7 @@ func rewriteYaml(indA int, indB int) {
                 }
                 fmt.Printf("%v\n", string(yamlOut))
         }
-	updateRunningConfig(yamlOut)
+	updateRunningConfig(string(yamlOut))
 }
 
 func getDirMap() map[string][]int {
