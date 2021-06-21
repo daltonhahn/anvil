@@ -105,7 +105,11 @@ func TLSGetReq(target string, path string, origin string) (*http.Response,error)
 func TLSPostReq(target string, path string, origin string, options string, body io.Reader) (*http.Response, error) {
 	fmt.Println("Landed in TLS Post Req")
 	ReadSecConfig()
-	res1, err1 := TLSPostReqSvc(target, path, origin, options, body, 0)
+	b, err := ioutil.ReadAll(body)
+	if err != nil {
+		fmt.Println("Body read failure")
+	}
+	res1, err1 := TLSPostReqSvc(target, path, origin, options, string(b), 0)
 	if err1 != nil {
 		fmt.Println("TLS Post Req -- got an error with first config")
 		if len(SecConf) < 2 {
@@ -113,15 +117,13 @@ func TLSPostReq(target string, path string, origin string, options string, body 
 			return &http.Response{},err1
 		} else {
 			fmt.Println("TLS Post Req -- trying with second config")
-			res2, err2 := TLSPostReqSvc(target, path, origin, options, body, 1)
+			res2, err2 := TLSPostReqSvc(target, path, origin, options, string(b), 1)
 			if err2 != nil {
 				fmt.Println("TLS Post Req -- got an error with second config, erroring")
 				return &http.Response{},err2
 			}
-			fmt.Printf("%v\n", res2)
 			return res2, nil
 		}
 	}
-	fmt.Printf("%v\n", res1)
 	return res1, nil
 }

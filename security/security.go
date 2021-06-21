@@ -8,10 +8,10 @@ import (
 	"crypto/x509"
 	"errors"
 	"io"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func EncDataSvc(plaintext string, confNum int) ([]byte,error) {
@@ -94,7 +94,7 @@ func TLSGetReqSvc(target string, path string, origin string, confNum int) (*http
 	return resp, nil
 }
 
-func TLSPostReqSvc(target string, path string, origin string, options string, body io.Reader, confNum int) (*http.Response, error) {
+func TLSPostReqSvc(target string, path string, origin string, options string, body string, confNum int) (*http.Response, error) {
         caCertPath := SecConf[confNum].CACert
         caCert, err := ioutil.ReadFile(caCertPath)
         if err != nil {
@@ -118,17 +118,15 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
         }
 
 	bearer := attachToken(origin)
-	req, err := http.NewRequest("POST", ("https://"+target+path), body)
+	req, err := http.NewRequest("POST", ("https://"+target+path), strings.NewReader(body))
 	req.Header.Set("Content-type", options)
 	req.Header.Add("Authorization", bearer)
-
-	b, _ := ioutil.ReadAll(body)
-	fmt.Printf("%v\n", string(b))
 
         resp, err := client.Do(req)
         if err != nil {
                 return &http.Response{}, errors.New("No HTTPS response")
         }
+	client.CloseIdleConnections()
 
         return resp, nil
 }
