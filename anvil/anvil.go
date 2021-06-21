@@ -10,6 +10,8 @@ import (
 	"io/ioutil"
 	"gopkg.in/yaml.v2"
 	"sync"
+	"crypto/tls"
+	"crypto/x509"
 
 	"github.com/daltonhahn/anvil/network"
 	"github.com/daltonhahn/anvil/router"
@@ -49,6 +51,36 @@ func AnvilInit(nodeType string) {
         network.MakeIpTables()
 	security.ReadSecConfig()
 
+	caCert, err := ioutil.ReadFile(security.SecConf[0].CACert)
+        if err != nil {
+                log.Printf("Read file error #%v", err)
+        }
+        caCertPool := x509.NewCertPool()
+        caCertPool.AppendCertsFromPEM(caCert)
+	tlsConfig := &tls.Config{
+		ClientAuth:		tls.RequireAndVerifyClientCert,
+		ClientCAs:		caCertPool,
+	}
+	tlsConfig.Certificates = make([]tls.Certificate, 1)
+	tlsConfig.Certificates[0], err = tls.LoadX509KeyPair(security.SecConf[0].TLSCert, security.SecConf[0].TLSKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+	/*
+	if len(security.SecConf) >= 2 {
+		caCert, err := ioutil.ReadFile(security.SecConf[1].CACert)
+		if err != nil {
+			log.Printf("Read file error #%v", err)
+		}
+		caCertPool.AppendCertsFromPEM(caCert)
+		tlsConfig.Certificates[1], err = tls.LoadX509KeyPair(security.SecConf[1].TLSCert, security.SecConf[1].TLSKey)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	*/
+	tlsConfig.BuildNameToCertificate()
+
 	hname, err := os.Hostname()
 	if err != nil {
 		log.Fatalln("Unable to get hostname")
@@ -69,7 +101,22 @@ func AnvilInit(nodeType string) {
 	registerRoutes(anv_router)
 	registerSvcRoutes(svc_router)
 	registerUDP()
+
+	    server := &http.Server{
+		MaxHeaderBytes: 1 << 20,
+		TLSConfig:      tlsConfig,
+		Handler:	anv_router,
+
+	    }
+
+	    listener, err := tls.Listen("tcp", ":443", tlsConfig)
+	    if err != nil {
+		    log.Fatal(err)
+	    }
+
 	go func() {
+		server.Serve(listener)
+		/*
 		fmt.Println("Starting first config server")
 		err1 := http.ListenAndServeTLS(":443", security.SecConf[0].TLSCert, security.SecConf[0].TLSKey, anv_router)
 		if err1 != nil {
@@ -86,6 +133,7 @@ func AnvilInit(nodeType string) {
 				}
 			}
 		}
+		*/
 		wg.Done()
 	}()
 	go func() {

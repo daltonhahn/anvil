@@ -75,6 +75,7 @@ func TLSGetReqSvc(target string, path string, origin string, confNum int) (*http
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
+                                InsecureSkipVerify:     true,
 				RootCAs:      caCertPool,
 				Certificates: []tls.Certificate{cert},
 			},
@@ -109,6 +110,7 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
         client := &http.Client{
                 Transport: &http.Transport{
                         TLSClientConfig: &tls.Config{
+                                InsecureSkipVerify:     true,
                                 RootCAs:      caCertPool,
                                 Certificates: []tls.Certificate{cert},
                         },
