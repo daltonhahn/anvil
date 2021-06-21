@@ -61,12 +61,11 @@ func AnvilInit(nodeType string) {
 		ClientAuth:		tls.RequireAndVerifyClientCert,
 		ClientCAs:		caCertPool,
 	}
-	tlsConfig.Certificates = make([]tls.Certificate, 1)
+	tlsConfig.Certificates = make([]tls.Certificate, 2)
 	tlsConfig.Certificates[0], err = tls.LoadX509KeyPair(security.SecConf[0].TLSCert, security.SecConf[0].TLSKey)
 	if err != nil {
 		log.Fatal(err)
 	}
-	/*
 	if len(security.SecConf) >= 2 {
 		caCert, err := ioutil.ReadFile(security.SecConf[1].CACert)
 		if err != nil {
@@ -78,7 +77,6 @@ func AnvilInit(nodeType string) {
 			log.Fatal(err)
 		}
 	}
-	*/
 	tlsConfig.BuildNameToCertificate()
 
 	hname, err := os.Hostname()
