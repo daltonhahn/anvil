@@ -5,7 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"fmt"
+	//"fmt"
 	"gopkg.in/yaml.v2"
 
 	"github.com/daltonhahn/anvil/service"
@@ -38,7 +38,7 @@ type SecConfig struct {
 func ReadSecConfig() {
 	yamlFile, err := ioutil.ReadFile("/root/anvil/config/test_config.yaml")
         if err != nil {
-		fmt.Println("Unable to read test_config")
+		//fmt.Println("Unable to read test_config")
                 log.Printf("Read file error #%v", err)
         }
         err = yaml.Unmarshal(yamlFile, &SecConf)
@@ -85,7 +85,7 @@ func TLSGetReq(target string, path string, origin string) (*http.Response,error)
 	ReadSecConfig()
 	res1, err1 := TLSGetReqSvc(target, path, origin, 0)
 	if err1 != nil {
-		fmt.Println("GET failed on config 1")
+		//fmt.Println("GET failed on config 1")
 		if len(SecConf) < 2 {
 			return &http.Response{},err1
 		} else {
@@ -107,7 +107,7 @@ func TLSPostReq(target string, path string, origin string, options string, body 
 	}
 	res1, err1 := TLSPostReqSvc(target, path, origin, options, string(b), 0)
 	if err1 != nil {
-		fmt.Println("POST failed on config 1")
+		//fmt.Println("POST failed on config 1")
 		if len(SecConf) < 2 {
 			return &http.Response{},err1
 		} else {

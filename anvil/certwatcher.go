@@ -85,7 +85,7 @@ func (cw *CertWatcher) load() error {
 	}
         tlsConfig.BuildNameToCertificate()
 
-	fmt.Printf("%v\n", tlsConfig.NameToCertificate)
+	//fmt.Printf("%v\n", tlsConfig.NameToCertificate)
 
 	cw.mu.Lock()
 	cw.conf = tlsConfig
