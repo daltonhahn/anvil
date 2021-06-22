@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"io/ioutil"
 	"log"
+	"fmt"
 
 
 	"github.com/fsnotify/fsnotify"
@@ -18,6 +19,7 @@ var tlsConfig *tls.Config
 type CertWatcher struct {
         mu       sync.RWMutex
         conf	 *tls.Config
+        keyPairs []tls.Certificate
         watcher  *fsnotify.Watcher
         watching chan bool
 }
@@ -26,6 +28,7 @@ func New() (*CertWatcher, error) {
         cw := &CertWatcher{
                 mu:		sync.RWMutex{},
 		conf:		tlsConfig,
+		keyPairs:	tlsConfig.Certificates,
         }
         return cw, nil
 }
@@ -47,6 +50,7 @@ func (cw *CertWatcher) Watch() error {
 }
 
 func (cw *CertWatcher) load() error {
+	fmt.Println("RELOADING TLS CONFIG")
 	security.ReadSecConfig()
 	caCert, err := ioutil.ReadFile(security.SecConf[0].CACert)
         if err != nil {
@@ -84,7 +88,10 @@ func (cw *CertWatcher) load() error {
 
 	cw.mu.Lock()
 	cw.conf = tlsConfig
+	cw.keyPairs = tlsConfig.Certificates
+	cw.conf.Certificates = cw.keyPairs
 	cw.mu.Unlock()
+	fmt.Println("SHOULD BE RELOADED NOW")
 
 	return err
 }
@@ -106,8 +113,16 @@ loop:
         cw.watcher.Close()
 }
 
-func (cw *CertWatcher) GetCertificate(hello *tls.ClientHelloInfo) (*tls.Config, error) {
+func (cw *CertWatcher) GetConfig(hello *tls.ClientHelloInfo) (*tls.Config, error) {
         cw.mu.RLock()
         defer cw.mu.RUnlock()
         return cw.conf, nil
 }
+
+/*
+func (cw *CertWatcher) GetCertificate(hello *tls.ClientHelloInfo) ([]tls.Certificate) {
+        cw.mu.RLock()
+        defer cw.mu.RUnlock()
+        return cw.keyPairs
+}
+*/
