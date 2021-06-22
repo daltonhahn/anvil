@@ -215,8 +215,8 @@ func rewriteYaml(indA int, indB int) {
         if err != nil {
                 log.Fatalf("Unmarshal: %v", err)
         }
-        fmt.Printf("%v\n", SecConf)
-        fmt.Printf("------\n")
+        //fmt.Printf("%v\n", SecConf)
+        //fmt.Printf("------\n")
 
         hname, _ := os.Hostname()
         listSecConf := []SecConfig{}
@@ -242,7 +242,7 @@ func rewriteYaml(indA int, indB int) {
                 if err != nil {
                         panic(err)
                 }
-                fmt.Printf("%v\n", string(yamlOut))
+                //fmt.Printf("%v\n", string(yamlOut))
         } else {
                 strA := strconv.Itoa(indA)
                 strB := strconv.Itoa(indB)
@@ -278,7 +278,7 @@ func rewriteYaml(indA int, indB int) {
                 if err != nil {
                         panic(err)
                 }
-                fmt.Printf("%v\n", string(yamlOut))
+                //fmt.Printf("%v\n", string(yamlOut))
         }
 	updateRunningConfig(string(yamlOut))
 }

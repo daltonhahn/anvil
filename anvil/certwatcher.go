@@ -6,7 +6,7 @@ import (
 	"crypto/x509"
 	"io/ioutil"
 	"log"
-	"fmt"
+	//"fmt"
 
 
 	"github.com/fsnotify/fsnotify"
@@ -49,7 +49,7 @@ func (cw *CertWatcher) Watch() error {
 }
 
 func (cw *CertWatcher) load() error {
-	fmt.Println("RELOADING TLS CONFIG")
+	//fmt.Println("RELOADING TLS CONFIG")
 	security.ReadSecConfig()
 
         caCertPool := x509.NewCertPool()
@@ -84,14 +84,20 @@ func (cw *CertWatcher) load() error {
         }
         tlsConfig.BuildNameToCertificate()
 
-	//fmt.Printf("%v\n", tlsConfig.NameToCertificate)
+	/*
+	fmt.Printf("%v\n", tlsConfig.Certificates)
+	fmt.Printf("----------\n")
+	fmt.Printf("%v\n", tlsConfig.Certificates[0])
+	fmt.Printf("----------\n")
+	fmt.Printf("%v\n", tlsConfig.Certificates[1])
+	*/
 
 	cw.mu.Lock()
 	cw.conf = tlsConfig
 	cw.keyPairs = tlsConfig.Certificates
 	cw.conf.Certificates = cw.keyPairs
 	cw.mu.Unlock()
-	fmt.Println("SHOULD BE RELOADED NOW")
+	//fmt.Println("SHOULD BE RELOADED NOW")
 
 	return err
 }
