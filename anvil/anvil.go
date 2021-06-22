@@ -104,12 +104,17 @@ func AnvilInit(nodeType string) {
 	registerSvcRoutes(svc_router)
 	registerUDP()
 
-	    server := &http.Server{
+	dump, err := os.OpenFile("/dev/null", os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Println(err)
+	}
+	nullLog := log.New(dump, "", log.LstdFlags)
+	server := &http.Server{
 		MaxHeaderBytes: 1 << 20,
 		TLSConfig:      tlsConfig,
 		Handler:	anv_router,
-
-	    }
+		ErrorLog:	nullLog,
+	}
 
 	    listener, err := tls.Listen("tcp", ":443", tlsConfig)
 	    if err != nil {
