@@ -168,6 +168,7 @@ func AdjustConfig() {
 
         cmpList := []int{}
         for key, list := range iterMap {
+		fmt.Println(key)
                 if key == "acls" {
                         cmpList = list
                 } else {
