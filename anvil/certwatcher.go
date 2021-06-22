@@ -28,7 +28,6 @@ func New() (*CertWatcher, error) {
         cw := &CertWatcher{
                 mu:		sync.RWMutex{},
 		conf:		tlsConfig,
-		keyPairs:	tlsConfig.Certificates,
         }
         return cw, nil
 }
