@@ -669,17 +669,40 @@ func startLeader() {
 					fmt.Println(err)
 				}
 
+				semaphore = make(chan struct{}, len(CM.PeerIds)+1)
+				for i:=0; i < len(CM.PeerIds)+1; i++ {
+					semaphore <- struct{}{}
+					if i == len(CM.PeerIds) {
+						fmt.Printf("Contacting: %v in order to notify of config rotation", hname)
+						_, err = security.TLSGetReq(hname, "/anvil/rotation/config", "")
+						if err != nil {
+							log.Println("Failed to adjust leader config")
+						}
+						<-semaphore
+					} else {
+						sendTarg := CM.PeerIds[i]
+						fmt.Printf("Contacting: %v in order to notify of config rotation", sendTarg)
+						_, err = security.TLSGetReq(sendTarg, "/anvil/rotation/config", "")
+						if err != nil {
+							log.Println("Failed to adjust quorum configs")
+						}
+						<-semaphore
+					}
+				}
+
+
 				semaphore = make(chan struct{}, len(clientList.Clients))
-				for _, ele := range clientList.Clients { // Range over the list of all clients in the Catalog
+				for _, ele := range clientList.Clients {
 					semaphore <- struct{}{}
                                         postVal = map[string]string{"iteration": strconv.Itoa(iteration), "prefix": ele}
                                         jsonDat, err = json.Marshal(postVal)
                                         if err != nil {
                                                 log.Fatalln(err)
                                         }
+					fmt.Printf("Contacting: %v in order to notify of available artifacts", ele)
                                         resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
                                         if err != nil || resp.StatusCode != http.StatusOK {
-                                                fmt.Printf("Failure to notify other Quorum members of CA artifacts\n")
+                                                fmt.Printf("Failure to notify all clients of available artifacts\n")
                                         }
 					defer resp.Body.Close()
 					_, err = ioutil.ReadAll(resp.Body)
@@ -688,25 +711,6 @@ func startLeader() {
 					}
 					<-semaphore
                                 }
-
-				semaphore = make(chan struct{}, len(CM.PeerIds)+1)
-				for i:=0; i < len(CM.PeerIds)+1; i++ {
-					semaphore <- struct{}{}
-					if i == len(CM.PeerIds) {
-						_, err = security.TLSGetReq(hname, "/anvil/rotation/config", "")
-						if err != nil {
-							log.Println("Failed to adjust leader config")
-						}
-						<-semaphore
-					} else {
-						sendTarg := CM.PeerIds[i]
-						_, err = security.TLSGetReq(sendTarg, "/anvil/rotation/config", "")
-						if err != nil {
-							log.Println("Failed to adjust quorum configs")
-						}
-						<-semaphore
-					}
-				}
 
 				iteration = iteration + 1
 			}

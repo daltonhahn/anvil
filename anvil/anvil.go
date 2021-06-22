@@ -126,7 +126,7 @@ func AnvilInit(nodeType string) {
 	nullLog := log.New(dump, "", log.LstdFlags)
 	server := &http.Server{
 		MaxHeaderBytes: 1 << 20,
-		TLSConfig:      tlsConfig,
+		TLSConfig:      cw.conf,
 		Handler:	anv_router,
 		ErrorLog:	nullLog,
 	}

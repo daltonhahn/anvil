@@ -17,14 +17,15 @@ var tlsConfig *tls.Config
 
 type CertWatcher struct {
         mu       sync.RWMutex
-        keyPairs []tls.Certificate
+        conf	 *tls.Config
         watcher  *fsnotify.Watcher
         watching chan bool
 }
 
 func New() (*CertWatcher, error) {
         cw := &CertWatcher{
-                mu:       sync.RWMutex{},
+                mu:		sync.RWMutex{},
+		conf:		tlsConfig,
         }
         return cw, nil
 }
@@ -81,11 +82,9 @@ func (cw *CertWatcher) load() error {
 	}
         tlsConfig.BuildNameToCertificate()
 
-	/*
 	cw.mu.Lock()
-	cw.keyPairs = tlsConfig.Certificates
+	cw.conf = tlsConfig
 	cw.mu.Unlock()
-	*/
 
 	return err
 }
@@ -107,8 +106,8 @@ loop:
         cw.watcher.Close()
 }
 
-func (cw *CertWatcher) GetCertificate(hello *tls.ClientHelloInfo) ([]tls.Certificate, error) {
+func (cw *CertWatcher) GetCertificate(hello *tls.ClientHelloInfo) (*tls.Config, error) {
         cw.mu.RLock()
         defer cw.mu.RUnlock()
-        return cw.keyPairs, nil
+        return cw.conf, nil
 }
