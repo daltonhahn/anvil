@@ -464,7 +464,7 @@ func startLeader() {
 		}
 	}()
 	go func() {
-		rotateTicker := time.NewTicker(1 * time.Minute)
+		rotateTicker := time.NewTicker(2 * time.Minute)
 		defer rotateTicker.Stop()
 		for {
 			CM.mu.Lock()
@@ -630,8 +630,6 @@ func startLeader() {
 					}
 				}
 
-				// COORDINATION AND GENERATION OF ALL ARTIFACTS COMPLETE, SINCE YOU ARE LEADER, INGEST THE FULL AND COMPILED
-				// ACLS.YAML FILE AT THE ROOT OF THE NEWLY MADE ARTIFACTS DIRECTORY FOR THIS ITERATION
 				aclEntries,_ := acl.ACLIngest("/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/acls.yaml")
 				for _, ele := range aclEntries {
 					postBody, _ := json.Marshal(ele)
