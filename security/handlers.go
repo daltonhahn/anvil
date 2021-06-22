@@ -51,7 +51,6 @@ func EncData(plaintext string) ([]byte, error) {
 	ReadSecConfig()
 	res1, err1 := EncDataSvc(plaintext, 0)
 	if err1 != nil {
-		fmt.Println("Failed to encrypt with config 1")
 		if len(SecConf) < 2 {
 			return []byte{}, err1
 		} else {
@@ -69,7 +68,6 @@ func DecData(input_ciphertext string) ([]byte,error) {
 	ReadSecConfig()
 	res1, err1 := DecDataSvc(input_ciphertext, 0)
 	if err1 != nil {
-		fmt.Println("Failed to decrypt with config 1")
 		if len(SecConf) < 2 {
 			return []byte{}, err1
 		} else {
@@ -87,7 +85,6 @@ func TLSGetReq(target string, path string, origin string) (*http.Response,error)
 	ReadSecConfig()
 	res1, err1 := TLSGetReqSvc(target, path, origin, 0)
 	if err1 != nil {
-		fmt.Println("Failed to GET REQ with config 1")
 		if len(SecConf) < 2 {
 			return &http.Response{},err1
 		} else {
@@ -109,7 +106,6 @@ func TLSPostReq(target string, path string, origin string, options string, body 
 	}
 	res1, err1 := TLSPostReqSvc(target, path, origin, options, string(b), 0)
 	if err1 != nil {
-		fmt.Println("Failed to POST REQ with config 1")
 		if len(SecConf) < 2 {
 			return &http.Response{},err1
 		} else {
