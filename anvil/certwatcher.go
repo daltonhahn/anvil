@@ -51,28 +51,14 @@ func (cw *CertWatcher) Watch() error {
 func (cw *CertWatcher) load() error {
 	fmt.Println("RELOADING TLS CONFIG")
 	security.ReadSecConfig()
-	caCert, err := ioutil.ReadFile(security.SecConf[0].CACert)
-        if err != nil {
-                log.Printf("Read file error #%v", err)
-        }
+
         caCertPool := x509.NewCertPool()
-        caCertPool.AppendCertsFromPEM(caCert)
         tlsConfig = &tls.Config{
 		ClientAuth:             tls.RequireAndVerifyClientCert,
                 ClientCAs:              caCertPool,
         }
-
         if len(security.SecConf) >= 2 {
                 tlsConfig.Certificates = make([]tls.Certificate, 2)
-        } else {
-                tlsConfig.Certificates = make([]tls.Certificate, 1)
-        }
-
-        tlsConfig.Certificates[0], err = tls.LoadX509KeyPair(security.SecConf[0].TLSCert, security.SecConf[0].TLSKey)
-        if err != nil {
-                log.Fatal(err)
-        }
-        if len(security.SecConf) >= 2 {
                 caCert, err := ioutil.ReadFile(security.SecConf[1].CACert)
                 if err != nil {
                         log.Printf("Read file error #%v", err)
@@ -82,7 +68,20 @@ func (cw *CertWatcher) load() error {
                 if err != nil {
                         log.Fatal(err)
                 }
-	}
+        } else {
+                tlsConfig.Certificates = make([]tls.Certificate, 1)
+        }
+
+	caCert, err := ioutil.ReadFile(security.SecConf[0].CACert)
+        if err != nil {
+                log.Printf("Read file error #%v", err)
+        }
+        caCertPool.AppendCertsFromPEM(caCert)
+
+        tlsConfig.Certificates[0], err = tls.LoadX509KeyPair(security.SecConf[0].TLSCert, security.SecConf[0].TLSKey)
+        if err != nil {
+                log.Fatal(err)
+        }
         tlsConfig.BuildNameToCertificate()
 
 	//fmt.Printf("%v\n", tlsConfig.NameToCertificate)
