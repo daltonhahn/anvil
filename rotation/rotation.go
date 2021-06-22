@@ -164,7 +164,7 @@ func CollectFiles(iter string, nodeName string) bool {
 
 func AdjustConfig() {
         iterMap := getDirMap()
-        fmt.Printf("%v\n", iterMap)
+        //fmt.Printf("%v\n", iterMap)
 
         cmpList := []int{}
         for key, list := range iterMap {
@@ -175,7 +175,7 @@ func AdjustConfig() {
                                 fmt.Println("We've got problems")
                         }
                 }
-                fmt.Printf("%v\n", list)
+                //fmt.Printf("%v\n", list)
         }
 
         if len(cmpList) < 2 {
