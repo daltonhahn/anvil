@@ -490,6 +490,7 @@ func startLeader() {
 					fmt.Printf("Failure to generate CA artifacts\n")
 					fmt.Println(err)
 				}
+				defer resp.Body.Close()
 
 				// Make gofunc()
 				for _, ele := range CM.PeerIds {
@@ -505,6 +506,7 @@ func startLeader() {
 					if err != nil || resp.StatusCode != http.StatusOK {
 						fmt.Printf("Failure to notify other Quorum members of CA artifacts\n")
 					}
+					defer resp.Body.Close()
 				}
 				var newMap AssignmentMap
 				fullMap := processManifest(newMap)
@@ -529,6 +531,7 @@ func startLeader() {
 						if err != nil || resp.StatusCode != http.StatusOK {
 							fmt.Printf("Failure to send generation assignment to self\n")
 						}
+						defer resp.Body.Close()
 						<-semaphore
 					} else {
 						splitMap[i].Iteration = iteration
@@ -544,6 +547,7 @@ func startLeader() {
 						if err != nil || resp.StatusCode != http.StatusOK {
 							fmt.Printf("Failure to send generation assignments to other quorum members\n")
 						}
+						defer resp.Body.Close()
 						<-semaphore
 					}
 				}
