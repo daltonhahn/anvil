@@ -100,6 +100,7 @@ func CheckHealth() {
 		resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
 		//resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
 		if err != nil {
+			fmt.Println("Unable to get my own catalog in check health")
 			log.Fatalln("Unable to get response")
 		}
 
@@ -134,6 +135,7 @@ func PropagateCatalog() {
 		resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
 		//resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
 		if err != nil {
+			fmt.Println("Unable to get my own catalog in gossip")
 			log.Fatalln("Unable to get response")
 		}
 		body, err := ioutil.ReadAll(resp.Body)

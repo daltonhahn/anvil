@@ -87,6 +87,7 @@ func Join(target string) {
 	resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
 	//resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
 	if err != nil {
+		fmt.Println("Unable to get my own catalog in commands Join")
 		log.Fatalln("Unable to get response")
 	}
 

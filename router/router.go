@@ -52,6 +52,7 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
 	resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
         if err != nil {
                 log.Println("Unable to get response")
+		fmt.Println("Unable to get my own catalog in RegisterNode Router")
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, string(""))
         }
@@ -283,6 +284,7 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 }
 
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Caught an outbound request")
 	var resp *http.Response
 	var err error
 	anv_catalog := catalog.GetCatalog()
@@ -296,6 +298,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Fprintf(w, "Bad Response")
 	}
+	fmt.Printf("\t POST REROUTING -- %v\n", resp.Body)
 	defer resp.Body.Close()
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
