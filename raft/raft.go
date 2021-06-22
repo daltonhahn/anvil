@@ -632,6 +632,22 @@ func startLeader() {
 
 				// COORDINATION AND GENERATION OF ALL ARTIFACTS COMPLETE, SINCE YOU ARE LEADER, INGEST THE FULL AND COMPILED
 				// ACLS.YAML FILE AT THE ROOT OF THE NEWLY MADE ARTIFACTS DIRECTORY FOR THIS ITERATION
+				aclEntries,_ := acl.ACLIngest("/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/acls.yaml")
+				for _, ele := range aclEntries {
+					postBody, _ := json.Marshal(ele)
+					responseBody := bytes.NewBuffer(postBody)
+					//resp, err := http.Post("http://"+hname+":443/anvil/raft/pushACL", "application/json", responseBody)
+					resp, err := security.TLSPostReq(hname, "/anvil/raft/pushACL", "", "application/json", responseBody)
+					if err != nil {
+						log.Fatalln("Unable to post content")
+					}
+					defer resp.Body.Close()
+					body, err := ioutil.ReadAll(resp.Body)
+					if err != nil {
+						log.Fatalln("Unable to read received content")
+					}
+					fmt.Println(string(body))
+				}
 
 				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
 				if err != nil {
