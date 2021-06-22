@@ -85,6 +85,8 @@ func (cw *CertWatcher) load() error {
 	}
         tlsConfig.BuildNameToCertificate()
 
+	fmt.Printf("%v\n", tlsConfig.NameToCertificate)
+
 	cw.mu.Lock()
 	cw.conf = tlsConfig
 	cw.keyPairs = tlsConfig.Certificates
@@ -119,7 +121,7 @@ func (cw *CertWatcher) GetConfig(hello *tls.ClientHelloInfo) (*tls.Config, error
 }
 
 /*
-func (cw *CertWatcher) GetCertificate(hello *tls.ClientHelloInfo) ([]tls.Certificate) {
+func (cw *CertWatcher) GetCertificate(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
         cw.mu.RLock()
         defer cw.mu.RUnlock()
         return cw.keyPairs

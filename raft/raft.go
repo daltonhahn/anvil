@@ -640,15 +640,14 @@ func startLeader() {
 					responseBody := bytes.NewBuffer(postBody)
 					//resp, err := http.Post("http://"+hname+":443/anvil/raft/pushACL", "application/json", responseBody)
 					resp, err := security.TLSPostReq(hname, "/anvil/raft/pushACL", "", "application/json", responseBody)
+					defer resp.Body.Close()
 					if err != nil {
 						log.Fatalln("Unable to post content")
 					}
-					defer resp.Body.Close()
-					body, err := ioutil.ReadAll(resp.Body)
+					_, err = ioutil.ReadAll(resp.Body)
 					if err != nil {
 						log.Fatalln("Unable to read received content")
 					}
-					fmt.Println(string(body))
 				}
 
 				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
