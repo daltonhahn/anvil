@@ -915,6 +915,7 @@ func lastLogIndexAndTerm() (int, int) {
 func processManifest(aMap AssignmentMap) (AssignmentMap) {
 	yamlFile, err := ioutil.ReadFile("./config/manifest.yaml")
         if err != nil {
+		fmt.Println("Manifest read fail")
                 log.Printf("Read file error #%v", err)
         }
         err = yaml.Unmarshal(yamlFile, &aMap)

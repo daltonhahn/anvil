@@ -6,6 +6,7 @@ import (
 	b64 "encoding/base64"
         "io/ioutil"
 	"log"
+	"fmt"
 
         "gopkg.in/yaml.v2"
 )
@@ -24,6 +25,7 @@ func ACLIngest(filepath string) ([]ACLEntry, error) {
 	var tempList []ACLEntry
 	yamlFile, err := ioutil.ReadFile(filepath)
 	if err != nil {
+		fmt.Println("Unable to read file for acl ingest")
 		log.Printf("Read file error #%v", err)
 	}
 	err = yaml.Unmarshal(yamlFile, &tempList)

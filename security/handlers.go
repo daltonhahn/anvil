@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"fmt"
 	"gopkg.in/yaml.v2"
 
 	"github.com/daltonhahn/anvil/service"
@@ -37,6 +38,7 @@ type SecConfig struct {
 func ReadSecConfig() {
 	yamlFile, err := ioutil.ReadFile("/root/anvil/config/test_config.yaml")
         if err != nil {
+		fmt.Println("Unable to read test_config")
                 log.Printf("Read file error #%v", err)
         }
         err = yaml.Unmarshal(yamlFile, &SecConf)

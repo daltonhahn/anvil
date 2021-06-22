@@ -11,6 +11,7 @@ import (
 	"sync"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 
 	"github.com/daltonhahn/anvil/network"
 	"github.com/daltonhahn/anvil/router"
@@ -24,6 +25,7 @@ import (
 func readEnvoyConfig() (*struct{Services []service.Service}, error) {
         yamlFile, err := ioutil.ReadFile("/root/anvil/config/services/sample-svc.yaml")
         if err != nil {
+		fmt.Println("Unable to read sample-svc.yaml")
                 log.Printf("Read file error #%v", err)
         }
 	var S_list struct {
@@ -52,6 +54,7 @@ func AnvilInit(nodeType string) {
 
 	caCert, err := ioutil.ReadFile(security.SecConf[0].CACert)
         if err != nil {
+		fmt.Println("Unable to read config 1 ca.crt")
                 log.Printf("Read file error #%v", err)
         }
         caCertPool := x509.NewCertPool()
@@ -74,6 +77,7 @@ func AnvilInit(nodeType string) {
 	if len(security.SecConf) >= 2 {
 		caCert, err := ioutil.ReadFile(security.SecConf[1].CACert)
 		if err != nil {
+			fmt.Println("Unable to read config 2 ca.crt")
 			log.Printf("Read file error #%v", err)
 		}
 		caCertPool.AppendCertsFromPEM(caCert)
@@ -106,6 +110,7 @@ func AnvilInit(nodeType string) {
 
 	dump, err := os.OpenFile("/dev/null", os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
+		log.Println("Failed to open dev null")
 		log.Println(err)
 	}
 	nullLog := log.New(dump, "", log.LstdFlags)

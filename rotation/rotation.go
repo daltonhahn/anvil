@@ -208,6 +208,7 @@ func updateRunningConfig(yamlOut string) {
 func rewriteYaml(indA int, indB int) {
         yamlFile, err := ioutil.ReadFile("/root/anvil/config/test_config.yaml")
         if err != nil {
+		fmt.Println("Unable to read test_config")
                 log.Printf("Read file error #%v", err)
         }
         err = yaml.Unmarshal(yamlFile, &SecConf)
@@ -332,6 +333,7 @@ func readACLFile(fpath string) []TokMap {
         retToks := []TokMap{}
         yamlFile, err := ioutil.ReadFile(fpath)
         if err != nil {
+		fmt.Println("Unable to read aclfile")
                 log.Printf("Read file error #%v", err)
         }
         err = yaml.Unmarshal(yamlFile, &retToks)
