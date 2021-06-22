@@ -698,9 +698,10 @@ func startLeader() {
                                         if err != nil {
                                                 log.Fatalln(err)
                                         }
-					fmt.Printf("Contacting: %v in order to notify of available artifacts", ele)
+					fmt.Printf("Contacting: %v in order to notify of available artifacts\n", ele)
                                         resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
                                         if err != nil || resp.StatusCode != http.StatusOK {
+						fmt.Printf("GOT A BAD RESPONSE CODE OR THE CONNECTION ERRORED OUT\n")
                                                 fmt.Printf("Failure to notify all clients of available artifacts\n")
                                         }
 					defer resp.Body.Close()

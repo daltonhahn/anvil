@@ -289,10 +289,14 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	var err error
 	anv_catalog := catalog.GetCatalog()
 	target := anv_catalog.GetSvcHost(r.Host)
+	fmt.Printf("Outbound request headed to %v\n", target)
 	target_uri := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
+	fmt.Printf("Outbound request for service %v\n", target_uri)
 	if (r.Method == "POST") {
+		fmt.Printf("\tOutbound request is a POST request\n")
 		resp, err = security.TLSPostReq(target, target_uri, strings.Split(r.RequestURI, "/")[2], r.Header.Get("Content-Type"), r.Body)
 	} else {
+		fmt.Printf("\tOutbound request is a GET request\n")
 		resp, err = security.TLSGetReq(target, target_uri, strings.Split(r.RequestURI, "/")[2])
 	}
 	if err != nil {
