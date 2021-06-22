@@ -717,11 +717,11 @@ func startLeader() {
                                         }
 					fmt.Printf("Contacting: %v in order to notify of available artifacts\n", ele)
                                         resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
+					defer resp.Body.Close()
                                         if err != nil || resp.StatusCode != http.StatusOK {
 						fmt.Printf("Rotation signal -- GOT A BAD RESPONSE CODE OR THE CONNECTION ERRORED OUT\n")
                                                 fmt.Printf("Failure to notify all clients of available artifacts\n")
                                         }
-					defer resp.Body.Close()
 					_, err = ioutil.ReadAll(resp.Body)
 					if err != nil {
 						fmt.Println("Bad Read")

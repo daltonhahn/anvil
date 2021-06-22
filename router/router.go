@@ -245,9 +245,11 @@ func TokenLookup(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleRotation(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Landed in Handle Rotation")
 	b, err := ioutil.ReadAll(r.Body)
         defer r.Body.Close()
         if err != nil {
+		fmt.Println("Got an error reading the post body of the request")
                 http.Error(w, err.Error(), 500)
                 return
         }
@@ -256,10 +258,14 @@ func HandleRotation(w http.ResponseWriter, r *http.Request) {
 		Prefix		string
 	}{}
 	err = json.Unmarshal(b, &collectTags)
+	if err != nil {
+		fmt.Println("Unable to unmarshal the data that was sent in this post request")
+	}
 	result := rotation.CollectFiles(collectTags.Iteration, collectTags.Prefix)
 	if result == true {
 		fmt.Fprintf(w, strconv.FormatBool(result))
 	} else {
+		fmt.Println("Unable to collect all the files or rotate my config correctly, returning error")
 		http.NotFound(w, r)
 	}
 }
