@@ -124,7 +124,7 @@ func CheckHealth() {
 }
 
 func PropagateCatalog() {
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 	for {
 		//Pull current catalog
 		hname, err := os.Hostname()
@@ -152,6 +152,6 @@ func PropagateCatalog() {
 			}
 			sendCatalogSync(receivedStuff.Nodes[target].Name, jsonData)
 		}
-		time.Sleep(10 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }
