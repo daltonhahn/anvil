@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"sync"
 	"crypto/tls"
-	"crypto/x509"
+	//"crypto/x509"
 	"fmt"
 
 	"github.com/daltonhahn/anvil/network"
@@ -60,6 +60,7 @@ func AnvilInit(nodeType string) {
 	//
 
 
+	/*
 	caCert, err := ioutil.ReadFile(security.SecConf[0].CACert)
         if err != nil {
 		fmt.Println("Unable to read config 1 ca.crt")
@@ -95,6 +96,7 @@ func AnvilInit(nodeType string) {
 		}
 	}
 	tlsConfig.BuildNameToCertificate()
+	*/
 
 	hname, err := os.Hostname()
 	if err != nil {

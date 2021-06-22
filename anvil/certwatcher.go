@@ -81,9 +81,11 @@ func (cw *CertWatcher) load() error {
 	}
         tlsConfig.BuildNameToCertificate()
 
+	/*
 	cw.mu.Lock()
 	cw.keyPairs = tlsConfig.Certificates
 	cw.mu.Unlock()
+	*/
 
 	return err
 }
