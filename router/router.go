@@ -51,7 +51,9 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
 	//resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
 	resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
         if err != nil {
-                log.Fatalln("Unable to get response")
+                log.Println("Unable to get response")
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, string(""))
         }
 
         body, err := ioutil.ReadAll(resp.Body)
