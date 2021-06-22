@@ -93,8 +93,7 @@ func AnvilInit(nodeType string) {
 	catalog.Register(hname, serviceMap, nodeType)
 
 	if nodeType == "server" {
-		CM := raft.NewConsensusModule(hname, []string{""})
-		fmt.Println(CM)
+		_ = raft.NewConsensusModule(hname, []string{""})
 	}
 
 	wg := new(sync.WaitGroup)
@@ -177,6 +176,7 @@ func registerRoutes(anv_router *mux.Router) {
 	anv_router.HandleFunc("/anvil/catalog/register", router.RegisterNode).Methods("POST")
 	anv_router.HandleFunc("/anvil/catalog/leader", router.GetCatalogLeader).Methods("GET")
 	anv_router.HandleFunc("/anvil/catalog", router.GetCatalog).Methods("GET")
+	anv_router.HandleFunc("/anvil/rotation/config", router.HandleConfigChange).Methods("GET")
 	anv_router.HandleFunc("/anvil/rotation", router.HandleRotation).Methods("POST")
 	anv_router.HandleFunc("/anvil/", router.Index).Methods("GET")
 	anv_router.PathPrefix("/service/{query}").HandlerFunc(router.RerouteService).Methods("GET","POST")

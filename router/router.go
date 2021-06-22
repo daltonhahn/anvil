@@ -261,6 +261,12 @@ func HandleRotation(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func HandleConfigChange(w http.ResponseWriter, r *http.Request) {
+	rotation.AdjustConfig()
+	fmt.Fprintf(w, "OK")
+}
+
+
 func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 	strIndex := mux.Vars(r)["index"]
 	index, _ := strconv.ParseInt(strIndex, 10, 64)

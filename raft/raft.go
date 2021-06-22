@@ -650,8 +650,6 @@ func startLeader() {
 				if err != nil {
 					fmt.Println(err)
 				}
-				fmt.Printf("%v\n", clientList)
-
 
 				semaphore = make(chan struct{}, len(clientList.Clients))
 				for _, ele := range clientList.Clients { // Range over the list of all clients in the Catalog
@@ -672,6 +670,25 @@ func startLeader() {
 					}
 					<-semaphore
                                 }
+
+				semaphore = make(chan struct{}, len(CM.PeerIds)+1)
+				for i:=0; i < len(CM.PeerIds)+1; i++ {
+					semaphore <- struct{}{}
+					if i == len(CM.PeerIds) {
+						_, err = security.TLSGetReq(hname, "/anvil/rotation/config", "")
+						if err != nil {
+							log.Println("Failed to adjust leader config")
+						}
+						<-semaphore
+					} else {
+						sendTarg := CM.PeerIds[i]
+						_, err = security.TLSGetReq(sendTarg, "/anvil/rotation/config", "")
+						if err != nil {
+							log.Println("Failed to adjust quorum configs")
+						}
+						<-semaphore
+					}
+				}
 
 				iteration = iteration + 1
 			}
