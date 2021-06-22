@@ -485,8 +485,10 @@ func startLeader() {
 					log.Fatalln(err)
 				}
 				//resp, err := security.TLSPostReq(hname, "/service/rotation/makeCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
+				fmt.Println("Contacting myself to generate CA documents")
 				resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
 				if err != nil || resp.StatusCode != http.StatusOK {
+					fmt.Printf("Make CA -- CONNECTION to self bad response or ERRORED OUT\n")
 					fmt.Printf("Failure to generate CA artifacts\n")
 					fmt.Println(err)
 				}
@@ -500,10 +502,12 @@ func startLeader() {
 						log.Fatalln(err)
 					}
 					//CM.PeerIds stores IP addresses, not node names, need to look up so that TLS req can be made properly and verified with cert
+					fmt.Println("Contacting quorum member to pull CA documents")
 					resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 					//resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 					//resp, err = http.Post("http://" + ele + ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
 					if err != nil || resp.StatusCode != http.StatusOK {
+						fmt.Printf("Pull CA -- CONNECTION to quorum member bad response or ERRORED OUT\n")
 						fmt.Printf("Failure to notify other Quorum members of CA artifacts\n")
 					}
 					defer resp.Body.Close()
@@ -527,8 +531,10 @@ func startLeader() {
 							log.Fatalln(err)
 						}
 						//resp, err = security.TLSPostReq(hname, "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
+						fmt.Println("Contacting myself with generation assignments")
 						resp, err = http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
 						if err != nil || resp.StatusCode != http.StatusOK {
+							fmt.Printf("Send Assignment -- CONNECTION to self bad response or ERRORED OUT\n")
 							fmt.Printf("Failure to send generation assignment to self\n")
 						}
 						defer resp.Body.Close()
@@ -542,9 +548,11 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln(err)
 						}
+						fmt.Println("Contacting quorum member with generation assignments")
 						resp, err = security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 						//resp, err = http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
 						if err != nil || resp.StatusCode != http.StatusOK {
+							fmt.Printf("Send Assignment -- CONNECTION to quorum member bad response or ERRORED OUT\n")
 							fmt.Printf("Failure to send generation assignments to other quorum members\n")
 						}
 						defer resp.Body.Close()
@@ -585,10 +593,12 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
+						fmt.Println("Contacting myself to collect artifacts")
 						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
 						defer resp.Body.Close()
 						_, err = ioutil.ReadAll(resp.Body)
 						if err != nil {
+							fmt.Printf("Collect Signal -- CONNECTION to self ERRORED OUT\n")
 							fmt.Println("Bad Read")
 						}
 						<-semaphore
@@ -624,10 +634,12 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
+						fmt.Println("Contacting quorum member to collect artifacts")
 						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
 						defer resp.Body.Close()
 						_, err = ioutil.ReadAll(resp.Body)
 						if err != nil {
+							fmt.Printf("Collect Signal -- CONNECTION to quorum member ERRORED OUT\n")
 							fmt.Println("Bad Read")
 						}
 						<-semaphore
@@ -639,9 +651,11 @@ func startLeader() {
 					postBody, _ := json.Marshal(ele)
 					responseBody := bytes.NewBuffer(postBody)
 					//resp, err := http.Post("http://"+hname+":443/anvil/raft/pushACL", "application/json", responseBody)
+					fmt.Println("Contacting self to add ACL items to raft")
 					resp, err := security.TLSPostReq(hname, "/anvil/raft/pushACL", "", "application/json", responseBody)
 					defer resp.Body.Close()
 					if err != nil {
+						fmt.Printf("PUSH ACL -- CONNECTION to self ERRORED OUT\n")
 						log.Fatalln("Unable to post content")
 					}
 					_, err = ioutil.ReadAll(resp.Body)
@@ -650,6 +664,7 @@ func startLeader() {
 					}
 				}
 
+				fmt.Println("Getting the catalog for myself")
 				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
 				if err != nil {
 					fmt.Println(err)
@@ -675,6 +690,7 @@ func startLeader() {
 						fmt.Printf("Contacting: %v in order to notify of config rotation", hname)
 						_, err = security.TLSGetReq(hname, "/anvil/rotation/config", "")
 						if err != nil {
+							fmt.Printf("Rotation signal -- CONNECTION to self ERRORED OUT\n")
 							log.Println("Failed to adjust leader config")
 						}
 						<-semaphore
@@ -683,6 +699,7 @@ func startLeader() {
 						fmt.Printf("Contacting: %v in order to notify of config rotation", sendTarg)
 						_, err = security.TLSGetReq(sendTarg, "/anvil/rotation/config", "")
 						if err != nil {
+							fmt.Printf("Rotation signal -- THE CONNECTION ERRORED OUT\n")
 							log.Println("Failed to adjust quorum configs")
 						}
 						<-semaphore
@@ -701,7 +718,7 @@ func startLeader() {
 					fmt.Printf("Contacting: %v in order to notify of available artifacts\n", ele)
                                         resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
                                         if err != nil || resp.StatusCode != http.StatusOK {
-						fmt.Printf("GOT A BAD RESPONSE CODE OR THE CONNECTION ERRORED OUT\n")
+						fmt.Printf("Rotation signal -- GOT A BAD RESPONSE CODE OR THE CONNECTION ERRORED OUT\n")
                                                 fmt.Printf("Failure to notify all clients of available artifacts\n")
                                         }
 					defer resp.Body.Close()
