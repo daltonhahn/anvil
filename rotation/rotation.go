@@ -166,12 +166,13 @@ func AdjustConfig() {
         iterMap := getDirMap()
         //fmt.Printf("%v\n", iterMap)
 
+	firstFlag := 0
         cmpList := []int{}
-        for key, list := range iterMap {
-		fmt.Println(key)
-                if key == "acls" {
-                        cmpList = list
-                } else {
+        for _, list := range iterMap {
+		if firstFlag == 0 {
+			cmpList = list
+			firstFlag = 1
+		} else {
                         if !reflect.DeepEqual(cmpList, list) {
                                 fmt.Println("We've got problems")
                         }
