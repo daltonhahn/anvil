@@ -52,6 +52,14 @@ func AnvilInit(nodeType string) {
         network.MakeIpTables()
 	security.ReadSecConfig()
 
+	//
+	cw, err := New()
+        if err := cw.Watch(); err != nil {
+                fmt.Println(err)
+        }
+	//
+
+
 	caCert, err := ioutil.ReadFile(security.SecConf[0].CACert)
         if err != nil {
 		fmt.Println("Unable to read config 1 ca.crt")
