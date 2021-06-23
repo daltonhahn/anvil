@@ -109,7 +109,6 @@ func AnvilInit(nodeType string) {
                 wg.Done()
         }()
         go cw.startNewServer(anv_router)
-        wg.Wait()
 
 	go func() {
 		log.Fatal(http.ListenAndServe(":444", svc_router))
