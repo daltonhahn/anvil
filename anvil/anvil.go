@@ -9,8 +9,10 @@ import (
 	"io/ioutil"
 	"gopkg.in/yaml.v2"
 	"sync"
-	"crypto/tls"
+	//"crypto/tls"
 	//"crypto/x509"
+	"context"
+	"time"
 	"fmt"
 
 	"github.com/daltonhahn/anvil/network"
@@ -52,52 +54,6 @@ func AnvilInit(nodeType string) {
         network.MakeIpTables()
 	security.ReadSecConfig()
 
-	//
-	cw, err := New()
-        if err := cw.Watch(); err != nil {
-                fmt.Println(err)
-        }
-	//
-
-
-	/*
-	caCert, err := ioutil.ReadFile(security.SecConf[0].CACert)
-        if err != nil {
-		fmt.Println("Unable to read config 1 ca.crt")
-                log.Printf("Read file error #%v", err)
-        }
-        caCertPool := x509.NewCertPool()
-        caCertPool.AppendCertsFromPEM(caCert)
-	tlsConfig := &tls.Config{
-		ClientAuth:		tls.RequireAndVerifyClientCert,
-		ClientCAs:		caCertPool,
-	}
-
-	if len(security.SecConf) >= 2 {
-		tlsConfig.Certificates = make([]tls.Certificate, 2)
-	} else {
-		tlsConfig.Certificates = make([]tls.Certificate, 1)
-	}
-
-	tlsConfig.Certificates[0], err = tls.LoadX509KeyPair(security.SecConf[0].TLSCert, security.SecConf[0].TLSKey)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(security.SecConf) >= 2 {
-		caCert, err := ioutil.ReadFile(security.SecConf[1].CACert)
-		if err != nil {
-			fmt.Println("Unable to read config 2 ca.crt")
-			log.Printf("Read file error #%v", err)
-		}
-		caCertPool.AppendCertsFromPEM(caCert)
-		tlsConfig.Certificates[1], err = tls.LoadX509KeyPair(security.SecConf[1].TLSCert, security.SecConf[1].TLSKey)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	tlsConfig.BuildNameToCertificate()
-	*/
-
 	hname, err := os.Hostname()
 	if err != nil {
 		log.Fatalln("Unable to get hostname")
@@ -118,6 +74,15 @@ func AnvilInit(nodeType string) {
 	registerSvcRoutes(svc_router)
 	registerUDP()
 
+	cw, err := New(anv_router)
+        if err != nil {
+                fmt.Println(err)
+        }
+        if err := cw.Watch(); err != nil {
+                fmt.Println(err)
+        }
+
+
 	/*dump, err := os.OpenFile("/dev/null", os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Println("Failed to open dev null")
@@ -125,40 +90,28 @@ func AnvilInit(nodeType string) {
 	}
 	*/
 	//nullLog := log.New(dump, "", log.LstdFlags)
-	server := &http.Server{
-		MaxHeaderBytes: 1 << 20,
-		TLSConfig:      cw.conf,
-		Handler:	anv_router,
-		//ErrorLog:	nullLog,
-	}
 
-	    listener, err := tls.Listen("tcp", ":443", tlsConfig)
-	    if err != nil {
-		    log.Fatal(err)
-	    }
+        go func() {
+                for {
+                        <-sigHandle
+                        fmt.Println("Restarting server")
+                        ctxShutDown, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+                        defer func() {
+                                cancel()
+                        }()
 
-	go func() {
-		server.Serve(listener)
-		/*
-		fmt.Println("Starting first config server")
-		err1 := http.ListenAndServeTLS(":443", security.SecConf[0].TLSCert, security.SecConf[0].TLSKey, anv_router)
-		if err1 != nil {
-			fmt.Println("Got an error on first config")
-			if len(security.SecConf) < 2 {
-				fmt.Println("Killing on first error")
-				log.Fatal(err1)
-			} else {
-				fmt.Println("Trying with second config")
-				err2 := http.ListenAndServeTLS(":443", security.SecConf[1].TLSCert, security.SecConf[1].TLSKey, anv_router)
-				if err2 != nil {
-					fmt.Println("Killing on second error")
-					log.Fatal(err2)
-				}
-			}
-		}
-		*/
-		wg.Done()
-	}()
+                        if err := server.Shutdown(ctxShutDown); err != nil {
+                                log.Fatalf("server Shutdown Failed:%+s", err)
+                        }
+
+                        log.Printf("server exited properly")
+                        go cw.startNewServer()
+                }
+                wg.Done()
+        }()
+        go cw.startNewServer()
+        wg.Wait()
+
 	go func() {
 		log.Fatal(http.ListenAndServe(":444", svc_router))
 		wg.Done()

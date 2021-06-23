@@ -683,6 +683,29 @@ func startLeader() {
 					fmt.Println(err)
 				}
 
+
+				semaphore = make(chan struct{}, len(clientList.Clients))
+				for _, ele := range clientList.Clients {
+					semaphore <- struct{}{}
+                                        postVal = map[string]string{"iteration": strconv.Itoa(iteration), "prefix": ele}
+                                        jsonDat, err = json.Marshal(postVal)
+                                        if err != nil {
+                                                log.Fatalln(err)
+                                        }
+					fmt.Printf("Contacting: %v in order to notify of available artifacts\n", ele)
+                                        resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
+					defer resp.Body.Close()
+                                        if err != nil || resp.StatusCode != http.StatusOK {
+						fmt.Printf("Rotation signal -- GOT A BAD RESPONSE CODE OR THE CONNECTION ERRORED OUT\n")
+                                                fmt.Printf("Failure to notify all clients of available artifacts\n")
+                                        }
+					_, err = ioutil.ReadAll(resp.Body)
+					if err != nil {
+						fmt.Println("Bad Read")
+					}
+					<-semaphore
+                                }
+
 				semaphore = make(chan struct{}, len(CM.PeerIds)+1)
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
 					semaphore <- struct{}{}
@@ -706,28 +729,6 @@ func startLeader() {
 					}
 				}
 
-
-				semaphore = make(chan struct{}, len(clientList.Clients))
-				for _, ele := range clientList.Clients {
-					semaphore <- struct{}{}
-                                        postVal = map[string]string{"iteration": strconv.Itoa(iteration), "prefix": ele}
-                                        jsonDat, err = json.Marshal(postVal)
-                                        if err != nil {
-                                                log.Fatalln(err)
-                                        }
-					fmt.Printf("Contacting: %v in order to notify of available artifacts\n", ele)
-                                        resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
-					defer resp.Body.Close()
-                                        if err != nil || resp.StatusCode != http.StatusOK {
-						fmt.Printf("Rotation signal -- GOT A BAD RESPONSE CODE OR THE CONNECTION ERRORED OUT\n")
-                                                fmt.Printf("Failure to notify all clients of available artifacts\n")
-                                        }
-					_, err = ioutil.ReadAll(resp.Body)
-					if err != nil {
-						fmt.Println("Bad Read")
-					}
-					<-semaphore
-                                }
 
 				iteration = iteration + 1
 			}
