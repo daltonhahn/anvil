@@ -24,6 +24,8 @@ import (
 	"github.com/daltonhahn/anvil/service"
 )
 
+var anv_router *mux.Router
+
 func readEnvoyConfig() (*struct{Services []service.Service}, error) {
         yamlFile, err := ioutil.ReadFile("/root/anvil/config/services/sample-svc.yaml")
         if err != nil {
@@ -74,7 +76,7 @@ func AnvilInit(nodeType string) {
 	registerSvcRoutes(svc_router)
 	registerUDP()
 
-	cw, err := New(anv_router)
+	cw, err := New()
         if err != nil {
                 fmt.Println(err)
         }

@@ -12,7 +12,6 @@ import (
 	//"context"
 	//"time"
 
-	"github.com/gorilla/mux"
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	"github.com/daltonhahn/anvil/security"
@@ -33,13 +32,11 @@ type CertWatcher struct {
 	caCerts		*x509.CertPool
 	watcher  *fsnotify.Watcher
 	watching chan bool
-	router		*mux.Router
 }
 
-func New(router *mux.Router) (*CertWatcher, error) {
+func New() (*CertWatcher, error) {
 	cw := &CertWatcher{
 		mu:       sync.RWMutex{},
-		router:	  router,
 	}
 	return cw, nil
 }
@@ -159,7 +156,7 @@ func (cw *CertWatcher) startNewServer() error {
 		MaxHeaderBytes: 1 << 20,
 		Addr: ":443",
 		TLSConfig: cw.GetConfig(),
-		Handler: cw.router,
+		Handler: anv_router,
 	}
 	fmt.Println("Starting up new server")
 	if err := server.ListenAndServeTLS("", ""); err != nil {
