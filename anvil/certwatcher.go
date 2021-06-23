@@ -12,6 +12,7 @@ import (
 	//"context"
 	//"time"
 
+	"github.com/gorilla/mux"
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	"github.com/daltonhahn/anvil/security"
@@ -151,7 +152,7 @@ func (cw *CertWatcher) GetConfig() (*tls.Config) {
 	return cw.conf
 }
 
-func (cw *CertWatcher) startNewServer() error {
+func (cw *CertWatcher) startNewServer(anv_router *mux.Router) error {
 	server = &http.Server{
 		MaxHeaderBytes: 1 << 20,
 		Addr: ":443",

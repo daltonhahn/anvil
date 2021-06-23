@@ -24,8 +24,6 @@ import (
 	"github.com/daltonhahn/anvil/service"
 )
 
-var anv_router *mux.Router
-
 func readEnvoyConfig() (*struct{Services []service.Service}, error) {
         yamlFile, err := ioutil.ReadFile("/root/anvil/config/services/sample-svc.yaml")
         if err != nil {
@@ -84,7 +82,6 @@ func AnvilInit(nodeType string) {
                 fmt.Println(err)
         }
 
-
 	/*dump, err := os.OpenFile("/dev/null", os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Println("Failed to open dev null")
@@ -107,11 +104,11 @@ func AnvilInit(nodeType string) {
                         }
 
                         log.Printf("server exited properly")
-                        go cw.startNewServer()
+                        go cw.startNewServer(anv_router)
                 }
                 wg.Done()
         }()
-        go cw.startNewServer()
+        go cw.startNewServer(anv_router)
         wg.Wait()
 
 	go func() {
