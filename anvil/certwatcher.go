@@ -60,8 +60,6 @@ func (cw *CertWatcher) Watch() error {
 }
 
 func (cw *CertWatcher) load() error {
-	fmt.Println("Landed in load()")
-
 	security.ReadSecConfig()
 	caCert, err := ioutil.ReadFile(security.SecConf[0].CACert)
         if err != nil {
@@ -95,18 +93,14 @@ func (cw *CertWatcher) load() error {
                 }
 	}
         tlsConfig.BuildNameToCertificate()
-	fmt.Println("Loaded certs")
 
 	cw.mu.Lock()
 	cw.keyPairs = tlsConfig.Certificates
 	cw.caCerts = caCertPool
 	cw.mu.Unlock()
-	fmt.Printf("certman: certificate and key loaded\n")
 	if initFlag == 0 {
-		fmt.Println("first initialization, resetting flag")
 		initFlag = 1
 	} else {
-		fmt.Println("other time, sending shutdown signal")
 		sigHandle <- struct{}{}
 	}
 	return err

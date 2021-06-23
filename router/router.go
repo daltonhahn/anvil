@@ -287,25 +287,19 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 }
 
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Caught an outbound request")
 	var resp *http.Response
 	var err error
 	anv_catalog := catalog.GetCatalog()
 	target := anv_catalog.GetSvcHost(r.Host)
-	fmt.Printf("Outbound request headed to %v\n", target)
 	target_uri := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
-	fmt.Printf("Outbound request for service %v\n", target_uri)
 	if (r.Method == "POST") {
-		fmt.Printf("\tOutbound request is a POST request\n")
 		resp, err = security.TLSPostReq(target, target_uri, strings.Split(r.RequestURI, "/")[2], r.Header.Get("Content-Type"), r.Body)
 	} else {
-		fmt.Printf("\tOutbound request is a GET request\n")
 		resp, err = security.TLSGetReq(target, target_uri, strings.Split(r.RequestURI, "/")[2])
 	}
 	if err != nil {
 		fmt.Fprintf(w, "Bad Response")
 	}
-	fmt.Printf("\t POST REROUTING -- %v\n", resp.Body)
 	defer resp.Body.Close()
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -316,7 +310,6 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("GOT A REROUTE SERVICE REQUEST")
         target_svc := strings.Split(r.RequestURI, "/")[2]
         tok_recv := r.Header["Authorization"][0]
         anv_catalog := catalog.GetCatalog()

@@ -198,13 +198,6 @@ func updateRunningConfig(yamlOut string) {
                 fmt.Println(err)
         }
 	defer f.Close()
-	// Adjusting the config file itself will solve all OUTBOUND PROBLEMS and
-	// a lot of the INBOUND decryption problems, but will not solve the
-	// ACTIVE TLS instance problem
-
-	// THIS FUNCTION SHOULD INTERRUPT AND ADJUST OR MODIFY THE EXISTING
-	// TLS CONFIG SO THAT WE CAN HANDLE NEW INCOMING REQUESTS
-
 }
 
 func rewriteYaml(indA int, indB int) {

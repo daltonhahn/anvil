@@ -593,7 +593,6 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
-						fmt.Println("Contacting myself to collect artifacts")
 						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
 						defer resp.Body.Close()
 						_, err = ioutil.ReadAll(resp.Body)
@@ -634,7 +633,6 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
-						fmt.Println("Contacting quorum member to collect artifacts")
 						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
 						defer resp.Body.Close()
 						_, err = ioutil.ReadAll(resp.Body)
@@ -651,7 +649,6 @@ func startLeader() {
 					postBody, _ := json.Marshal(ele)
 					responseBody := bytes.NewBuffer(postBody)
 					//resp, err := http.Post("http://"+hname+":443/anvil/raft/pushACL", "application/json", responseBody)
-					fmt.Println("Contacting self to add ACL items to raft")
 					resp, err := security.TLSPostReq(hname, "/anvil/raft/pushACL", "", "application/json", responseBody)
 					defer resp.Body.Close()
 					if err != nil {
@@ -664,7 +661,6 @@ func startLeader() {
 					}
 				}
 
-				fmt.Println("Getting the catalog for myself")
 				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
 				if err != nil {
 					fmt.Println(err)
@@ -692,7 +688,6 @@ func startLeader() {
                                         if err != nil {
                                                 log.Fatalln(err)
                                         }
-					fmt.Printf("Contacting: %v in order to notify of available artifacts\n", ele)
                                         resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
 					defer resp.Body.Close()
                                         if err != nil || resp.StatusCode != http.StatusOK {
@@ -710,7 +705,6 @@ func startLeader() {
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
 					semaphore <- struct{}{}
 					if i == len(CM.PeerIds) {
-						fmt.Printf("Contacting: %v in order to notify of config rotation", hname)
 						_, err = security.TLSGetReq(hname, "/anvil/rotation/config", "")
 						if err != nil {
 							fmt.Printf("Rotation signal -- CONNECTION to self ERRORED OUT\n")
@@ -719,7 +713,6 @@ func startLeader() {
 						<-semaphore
 					} else {
 						sendTarg := CM.PeerIds[i]
-						fmt.Printf("Contacting: %v in order to notify of config rotation", sendTarg)
 						_, err = security.TLSGetReq(sendTarg, "/anvil/rotation/config", "")
 						if err != nil {
 							fmt.Printf("Rotation signal -- THE CONNECTION ERRORED OUT\n")
