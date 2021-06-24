@@ -104,7 +104,7 @@ func AnvilInit(nodeType string) {
                         //if err := server.Shutdown(ctxShutDown); err != nil {
                                 log.Fatalf("server Shutdown Failed:%+s", err)
                         }
-			time.Sleep(1*time.Second)
+			time.Sleep(2*time.Second)
 
                         go cw.startNewServer(anv_router)
                 }
