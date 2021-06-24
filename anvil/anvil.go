@@ -94,7 +94,7 @@ func AnvilInit(nodeType string) {
                 for {
                         <-sigHandle
                         fmt.Println("Restarting server")
-                        ctxShutDown, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+                        ctxShutDown, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
                         defer func() {
                                 cancel()
                         }()
