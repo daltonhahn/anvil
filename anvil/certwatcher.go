@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 	"crypto/x509"
 	//"context"
-	//"time"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/fsnotify/fsnotify"
@@ -106,7 +106,8 @@ func (cw *CertWatcher) load() error {
 }
 
 func (cw *CertWatcher) run() {
-loop:
+	var timeBuff time.Time
+	loop:
 	for {
 		select {
 		case <-cw.watching:
@@ -114,13 +115,19 @@ loop:
 		case event := <-cw.watcher.Events:
 		//case <-cw.watcher.Events:
 			fmt.Printf("certman: watch event: %v\n", event)
-			if err := cw.load(); err != nil {
-				fmt.Printf("certman: can't load cert or key file: %v\n", err)
+			timeBuff = time.Now().Add(1*time.Second)
+			if time.Now().After(timeBuff) {
+				if err := cw.load(); err != nil {
+					fmt.Printf("certman: can't load cert or key file: %v\n", err)
+				}
+			} else {
+				break
 			}
 		case err := <-cw.watcher.Errors:
 			fmt.Printf("certman: error watching files: %v\n", err)
 		}
 	}
+	fmt.Println("Closing watcher")
 	cw.watcher.Close()
 }
 
