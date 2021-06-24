@@ -90,6 +90,7 @@ func AnvilInit(nodeType string) {
 	*/
 	//nullLog := log.New(dump, "", log.LstdFlags)
 
+	rotFlag := true
         go func() {
                 for {
                         <-sigHandle
@@ -103,12 +104,14 @@ func AnvilInit(nodeType string) {
 				log.Fatalf("server Shutdown Failed:%+s", err)
 			}
 			*/
-			if err := server.Close(); err != nil {
-				log.Fatalf("Server close failed:%+s", err)
+			if rotFlag == true {
+				if err := server.Close(); err != nil {
+					log.Fatalf("Server close failed:%+s", err)
+				}
+				time.Sleep(1*time.Second)
+				go cw.startNewServer(anv_router)
+				rotFlag = false
 			}
-			time.Sleep(1*time.Second)
-
-			go cw.startNewServer(anv_router)
                 }
                 wg.Done()
         }()
