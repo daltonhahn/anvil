@@ -115,11 +115,11 @@ func (cw *CertWatcher) run() {
 		case event := <-cw.watcher.Events:
 		//case <-cw.watcher.Events:
 			if time.Now().After(deadline) {
+				deadline = time.Now()
 				fmt.Printf("certman: watch event: %v\n", event)
 				if err := cw.load(); err != nil {
 					fmt.Printf("certman: can't load cert or key file: %v\n", err)
 				}
-				deadline = time.Now()
 			}
 		case err := <-cw.watcher.Errors:
 			fmt.Printf("certman: error watching files: %v\n", err)

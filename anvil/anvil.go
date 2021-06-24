@@ -93,15 +93,12 @@ func AnvilInit(nodeType string) {
         go func() {
                 for {
                         <-sigHandle
-			/*
-                        ctxShutDown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+                        ctxShutDown, cancel := context.WithDeadline(context.Background(), time.Now())
                         defer func() {
                                 cancel()
                         }()
-			*/
 
-			if err := server.Shutdown(context.Background()); err != nil {
-			//if err := server.Shutdown(ctxShutDown); err != nil {
+			if err := server.Shutdown(ctxShutDown); err != nil {
 				log.Fatalf("server Shutdown Failed:%+s", err)
 			}
 			time.Sleep(2*time.Second)
