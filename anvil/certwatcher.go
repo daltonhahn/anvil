@@ -53,7 +53,6 @@ func (cw *CertWatcher) Watch() error {
 	if err := cw.load(); err != nil {
 		fmt.Printf("certman: can't load cert or key file: %v\n", err)
 	}
-	fmt.Printf("watching for config change\n")
 	cw.watching = make(chan bool)
 	go cw.run()
 	return nil
@@ -121,7 +120,6 @@ loop:
 			fmt.Printf("certman: error watching files: %v\n", err)
 		}
 	}
-	fmt.Printf("certman: stopped watching\n")
 	cw.watcher.Close()
 }
 
@@ -153,7 +151,6 @@ func (cw *CertWatcher) startNewServer(anv_router *mux.Router) error {
 		TLSConfig: cw.GetConfig(),
 		Handler: anv_router,
 	}
-	fmt.Println("Starting up new server")
 	if err := server.ListenAndServeTLS("", ""); err != nil {
 		fmt.Println(err)
 	}
