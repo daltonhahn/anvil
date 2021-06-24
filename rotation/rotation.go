@@ -188,11 +188,13 @@ func AdjustConfig() {
 }
 
 func updateRunningConfig(yamlOut string) {
+	fmt.Println("Calling os.OpenFile on test_config.yaml")
 	f, err := os.OpenFile("/root/anvil/config/test_config.yaml", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		log.Fatal(err)
 	}
 	yamlOut = "---\n" + yamlOut
+	fmt.Println("Writing bytes to test_config.yaml")
 	_,err = f.Write([]byte(yamlOut))
         if err != nil {
                 fmt.Println(err)
@@ -201,11 +203,13 @@ func updateRunningConfig(yamlOut string) {
 }
 
 func rewriteYaml(indA int, indB int) {
+	fmt.Println("Calling readFile on original test_config.yaml")
         yamlFile, err := ioutil.ReadFile("/root/anvil/config/test_config.yaml")
         if err != nil {
 		fmt.Println("Unable to read test_config")
                 log.Printf("Read file error #%v", err)
         }
+	fmt.Println("Unmarshaling original test_config.yaml")
         err = yaml.Unmarshal(yamlFile, &SecConf)
         if err != nil {
                 log.Fatalf("Unmarshal: %v", err)
