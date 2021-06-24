@@ -93,6 +93,7 @@ func AnvilInit(nodeType string) {
         go func() {
                 for {
                         <-sigHandle
+			/*
                         ctxShutDown, cancel := context.WithTimeout(context.Background(), (10*time.Second))
                         defer func() {
                                 cancel()
@@ -101,7 +102,11 @@ func AnvilInit(nodeType string) {
 			if err := server.Shutdown(ctxShutDown); err != nil {
 				log.Fatalf("server Shutdown Failed:%+s", err)
 			}
-			time.Sleep(2*time.Second)
+			*/
+			if err := server.Close(); err != nil {
+				log.Fatalf("Server close failed:%+s", err)
+			}
+			time.Sleep(1*time.Second)
 
 			go cw.startNewServer(anv_router)
                 }
