@@ -721,6 +721,7 @@ func startLeader() {
 						<-semaphore
 					}
 				}
+
 				semaphore = make(chan struct{}, len(clientList.Clients))
                                 for _, ele := range clientList.Clients {
                                         semaphore <- struct{}{}
@@ -732,8 +733,6 @@ func startLeader() {
                                         }
                                         <-semaphore
                                 }
-
-
 				iteration = iteration + 1
 			}
 			<-rotateTicker.C
