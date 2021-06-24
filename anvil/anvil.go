@@ -93,7 +93,7 @@ func AnvilInit(nodeType string) {
         go func() {
                 for {
                         <-sigHandle
-                        ctxShutDown, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+                        ctxShutDown, cancel := context.WithTimeout(context.Background(), 3*time.Second)
                         defer func() {
                                 cancel()
                         }()
