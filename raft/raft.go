@@ -721,6 +721,17 @@ func startLeader() {
 						<-semaphore
 					}
 				}
+				semaphore = make(chan struct{}, len(clientList.Clients))
+                                for _, ele := range clientList.Clients {
+                                        semaphore <- struct{}{}
+                                        resp, err = security.TLSGetReq(ele, "/anvil/rotation/config", "")
+                                        defer resp.Body.Close()
+                                        if err != nil || resp.StatusCode != http.StatusOK {
+                                                fmt.Printf("Rotation signal -- GOT A BAD RESPONSE CODE OR THE CONNECTION ERRORED OUT\n")
+                                                fmt.Printf("Failure to notify all clients of available artifacts\n")
+                                        }
+                                        <-semaphore
+                                }
 
 
 				iteration = iteration + 1
