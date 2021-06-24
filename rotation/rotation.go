@@ -157,8 +157,6 @@ func CollectFiles(iter string, nodeName string) bool {
 	if err != nil  {
 		fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
-
-	AdjustConfig()
 	return true
 }
 
