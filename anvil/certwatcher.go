@@ -106,7 +106,9 @@ func (cw *CertWatcher) load() error {
 }
 
 func (cw *CertWatcher) run() {
-loop:
+	watcherTick := time.NewTicker(10*time.Second)
+	defer watcherTick.Stop()
+	loop:
 	for {
 		select {
 		case <-cw.watching:
@@ -114,13 +116,13 @@ loop:
 		case event := <-cw.watcher.Events:
 		//case <-cw.watcher.Events:
 			fmt.Printf("certman: watch event: %v\n", event)
-			time.Sleep(1*time.Second)
 			if err := cw.load(); err != nil {
 				fmt.Printf("certman: can't load cert or key file: %v\n", err)
 			}
 		case err := <-cw.watcher.Errors:
 			fmt.Printf("certman: error watching files: %v\n", err)
 		}
+		<-watcherTick.C
 	}
 	fmt.Println("Closing watcher")
 	cw.watcher.Close()
