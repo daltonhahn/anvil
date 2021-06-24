@@ -158,6 +158,7 @@ func (cw *CertWatcher) startNewServer(anv_router *mux.Router) error {
 		Handler: anv_router,
 	}
 	fmt.Println("Starting new server")
+	rotFlag = true
 	if err := server.ListenAndServeTLS("", ""); err != nil {
 		fmt.Println(err)
 	}

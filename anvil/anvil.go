@@ -24,6 +24,8 @@ import (
 	"github.com/daltonhahn/anvil/service"
 )
 
+var rotFlag bool
+
 func readEnvoyConfig() (*struct{Services []service.Service}, error) {
         yamlFile, err := ioutil.ReadFile("/root/anvil/config/services/sample-svc.yaml")
         if err != nil {
@@ -90,7 +92,7 @@ func AnvilInit(nodeType string) {
 	*/
 	//nullLog := log.New(dump, "", log.LstdFlags)
 
-	rotFlag := true
+	rotFlag = true
         go func() {
                 for {
                         <-sigHandle
@@ -105,12 +107,12 @@ func AnvilInit(nodeType string) {
 			}
 			*/
 			if rotFlag == true {
+				rotFlag = false
 				if err := server.Close(); err != nil {
 					log.Fatalf("Server close failed:%+s", err)
 				}
 				time.Sleep(1*time.Second)
 				go cw.startNewServer(anv_router)
-				rotFlag = false
 			}
                 }
                 wg.Done()
