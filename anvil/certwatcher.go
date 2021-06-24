@@ -111,8 +111,9 @@ loop:
 		select {
 		case <-cw.watching:
 			break loop
-		case event := <-cw.watcher.Events:
-			fmt.Printf("certman: watch event: %v\n", event)
+		//case event := <-cw.watcher.Events:
+		case <-cw.watcher.Events:
+			//fmt.Printf("certman: watch event: %v\n", event)
 			if err := cw.load(); err != nil {
 				fmt.Printf("certman: can't load cert or key file: %v\n", err)
 			}
