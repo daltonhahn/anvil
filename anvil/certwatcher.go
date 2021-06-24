@@ -157,6 +157,7 @@ func (cw *CertWatcher) startNewServer(anv_router *mux.Router) error {
 		TLSConfig: cw.GetConfig(),
 		Handler: anv_router,
 	}
+	fmt.Println("Starting new server")
 	if err := server.ListenAndServeTLS("", ""); err != nil {
 		fmt.Println(err)
 	}
