@@ -1,7 +1,6 @@
 ---
 - key: dW5pbmp5b1dNamxyRmRBVWxoT2tOY0VK
   cacert:
-  - /root/anvil/config/certs/0/ca.crt
   - /root/anvil/config/certs/0/server1.crt
   - /root/anvil/config/certs/0/server2.crt
   tlscert: /root/anvil/config/certs/0/server1.crt

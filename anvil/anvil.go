@@ -9,11 +9,8 @@ import (
 	"io/ioutil"
 	"gopkg.in/yaml.v2"
 	"sync"
-	//"crypto/tls"
-	//"crypto/x509"
 	"context"
 	"time"
-	"fmt"
 
 	"github.com/daltonhahn/anvil/network"
 	"github.com/daltonhahn/anvil/router"
@@ -31,7 +28,6 @@ var NodeType string
 func readEnvoyConfig() (*struct{Services []service.Service}, error) {
         yamlFile, err := ioutil.ReadFile("/root/anvil/config/services/sample-svc.yaml")
         if err != nil {
-		fmt.Println("Unable to read sample-svc.yaml")
                 log.Printf("Read file error #%v", err)
         }
 	var S_list struct {
@@ -81,10 +77,10 @@ func AnvilInit(nodeType string) {
 
 	cw, err := New()
         if err != nil {
-                fmt.Println(err)
+                log.Println(err)
         }
         if err := cw.Watch(); err != nil {
-                fmt.Println(err)
+                log.Println(err)
         }
 
 	/*dump, err := os.OpenFile("/dev/null", os.O_APPEND|os.O_WRONLY, 0644)
@@ -109,9 +105,6 @@ func AnvilInit(nodeType string) {
 				if err := server.Shutdown(ctxShutDown); err != nil {
 					log.Fatalf("server Shutdown Failed:%+s", err)
 				}
-				//if err := server.Close(); err != nil {
-				//	log.Fatalf("Server close failed:%+s", err)
-				//}
 				go cw.startNewServer(anv_router)
 			}
                 }

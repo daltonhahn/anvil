@@ -3,13 +3,10 @@ package anvil
 import (
 	"crypto/tls"
 	"sync"
-	//"os"
 	"log"
 	"net/http"
-	"fmt"
 	"io/ioutil"
 	"crypto/x509"
-	//"context"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -51,7 +48,7 @@ func (cw *CertWatcher) Watch() error {
 		return errors.Wrap(err, "certman: can't watch cert file")
 	}
 	if err := cw.load(); err != nil {
-		fmt.Printf("certman: can't load cert or key file: %v\n", err)
+		log.Printf("certman: can't load cert or key file: %v\n", err)
 	}
 	cw.watching = make(chan bool)
 	go cw.run()
@@ -61,27 +58,14 @@ func (cw *CertWatcher) Watch() error {
 func (cw *CertWatcher) load() error {
 	security.ReadSecConfig()
 	var err error
-	/*
-	caCert, err := ioutil.ReadFile(security.SecConf[0].CACert)
-	caCert1, err := ioutil.ReadFile("/root/anvil/config/certs/1/server1.crt")
-	caCert2, err := ioutil.ReadFile("/root/anvil/config/certs/1/server2.crt")
-	
-        if err != nil {
-                fmt.Println("Unable to read config 1 ca.crt")
-                log.Printf("Read file error #%v", err)
-        }
-	*/
         caCertPool := x509.NewCertPool()
 	for _, fp := range security.SecConf[0].CACert {
 		caCert, err := ioutil.ReadFile(fp)
 		if err != nil {
-			fmt.Println("Unable to read config 1 ca.crt")
 			log.Printf("Read file error #%v", err)
 		}
 		caCertPool.AppendCertsFromPEM(caCert)
 	}
-        //caCertPool.AppendCertsFromPEM(caCert1)
-	//caCertPool.AppendCertsFromPEM(caCert2)
 	tlsConfig = &tls.Config{}
 
         if len(security.SecConf) >= 2 {
@@ -98,20 +82,10 @@ func (cw *CertWatcher) load() error {
 		for _, fp := range security.SecConf[0].CACert {
 			caCert, err := ioutil.ReadFile(fp)
 			if err != nil {
-				fmt.Println("Unable to read config 1 ca.crt")
 				log.Printf("Read file error #%v", err)
 			}
 			caCertPool.AppendCertsFromPEM(caCert)
 		}
-
-		/*
-                caCert, err := ioutil.ReadFile(security.SecConf[1].CACert)
-                if err != nil {
-                        fmt.Println("Unable to read config 2 ca.crt")
-                        log.Printf("Read file error #%v", err)
-                }
-                caCertPool.AppendCertsFromPEM(caCert)
-		*/
                 tlsConfig.Certificates[1], err = tls.LoadX509KeyPair(security.SecConf[1].TLSCert, security.SecConf[1].TLSKey)
                 if err != nil {
                         log.Fatal(err)
@@ -138,20 +112,17 @@ func (cw *CertWatcher) run() {
 		select {
 		case <-cw.watching:
 			break loop
-		case event := <-cw.watcher.Events:
-		//case <-cw.watcher.Events:
+		case <-cw.watcher.Events:
 			if time.Now().After(deadline) {
 				deadline = time.Now()
-				fmt.Printf("certman: watch event: %v\n", event)
 				if err := cw.load(); err != nil {
-					fmt.Printf("certman: can't load cert or key file: %v\n", err)
+					log.Printf("certman: can't load cert or key file: %v\n", err)
 				}
 			}
 		case err := <-cw.watcher.Errors:
-			fmt.Printf("certman: error watching files: %v\n", err)
+			log.Printf("certman: error watching files: %v\n", err)
 		}
 	}
-	fmt.Println("Closing watcher")
 	cw.watcher.Close()
 }
 
@@ -183,10 +154,9 @@ func (cw *CertWatcher) startNewServer(anv_router *mux.Router) error {
 		TLSConfig: cw.GetConfig(),
 		Handler: anv_router,
 	}
-	fmt.Println("Starting new server")
 	rotFlag = true
 	if err := server.ListenAndServeTLS("", ""); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	return nil
 }

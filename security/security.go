@@ -8,9 +8,8 @@ import (
 	"crypto/x509"
 	"errors"
 	"io"
-	"fmt"
 	"io/ioutil"
-	//"log"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -66,20 +65,10 @@ func TLSGetReqSvc(target string, path string, origin string, confNum int) (*http
         for _, fp := range caCertPaths {
                 caCert, err := ioutil.ReadFile(fp)
                 if err != nil {
-                        //fmt.Println("Unable to read config 1 ca.crt")
-                        //log.Printf("Read file error #%v", err)
-			fmt.Println("Read file error in GET REQ SVC")
+			log.Println("Read file error in GET REQ SVC")
                 }
                 caCertPool.AppendCertsFromPEM(caCert)
         }
-	/*
-	caCert, err := ioutil.ReadFile(caCertPath)
-        if err != nil {
-                return &http.Response{}, errors.New("Unable to read CA")
-        }
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-	*/
 	cert,err := tls.LoadX509KeyPair(SecConf[confNum].TLSCert, SecConf[confNum].TLSKey)
         if err != nil {
                 return &http.Response{}, errors.New("Unable to read Cert+Key")
@@ -112,20 +101,10 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
         for _, fp := range caCertPaths {
                 caCert, err := ioutil.ReadFile(fp)
                 if err != nil {
-                        //fmt.Println("Unable to read config 1 ca.crt")
-                        //log.Printf("Read file error #%v", err)
-			fmt.Println("Read file error in POST REQ SVC")
+			log.Println("Read file error in POST REQ SVC")
                 }
                 caCertPool.AppendCertsFromPEM(caCert)
         }
-	/*
-        caCert, err := ioutil.ReadFile(caCertPath)
-        if err != nil {
-                return &http.Response{}, errors.New("Unable to read CA")
-        }
-        caCertPool := x509.NewCertPool()
-        caCertPool.AppendCertsFromPEM(caCert)
-	*/
         cert,err := tls.LoadX509KeyPair(SecConf[confNum].TLSCert, SecConf[confNum].TLSKey)
         if err != nil {
                 return &http.Response{}, errors.New("Unable to read Cert+Key")

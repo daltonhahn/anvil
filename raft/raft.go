@@ -267,7 +267,6 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 		if args.PrevLogIndex > len(CM.log) {
 			_, backlogEntries := BacklogRequest(args.LeaderId)
 			//Figure out a way to add these into your log and update the relevant values
-			dlog(fmt.Sprintf("Fast forwarding backlog"))
                         CM.log = append(CM.log[:CM.commitIndex], backlogEntries...)
 			CM.commitIndex = CM.commitIndex + len(backlogEntries)
 		}
@@ -296,9 +295,7 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 			// - newEntriesIndex points at the end of Entries, or an index where the
 			//   term mismatches with the corresponding log entry
 			if newEntriesIndex < len(args.Entries) {
-				dlog(fmt.Sprintf("... inserting entries %v from index %d", args.Entries[newEntriesIndex:], logInsertIndex))
 				CM.log = append(CM.log[:logInsertIndex], args.Entries[newEntriesIndex:]...)
-				dlog(fmt.Sprintf("... log is now: %v", CM.log))
 			}
 
 			// Set commit index.
@@ -486,8 +483,6 @@ func startLeader() {
 				//resp, err := security.TLSPostReq(hname, "/service/rotation/makeCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 				resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
 				if err != nil || resp.StatusCode != http.StatusOK {
-					fmt.Printf("Make CA -- CONNECTION to self bad response or ERRORED OUT\n")
-					fmt.Printf("Failure to generate CA artifacts\n")
 					fmt.Println(err)
 				}
 				defer resp.Body.Close()
@@ -516,7 +511,6 @@ func startLeader() {
 					//resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 					//resp, err = http.Post("http://" + ele + ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
 					if err != nil || resp.StatusCode != http.StatusOK {
-						fmt.Printf("Pull CA -- CONNECTION to quorum member bad response or ERRORED OUT\n")
 						fmt.Printf("Failure to notify other Quorum members of CA artifacts\n")
 					}
 					defer resp.Body.Close()
@@ -542,7 +536,6 @@ func startLeader() {
 						//resp, err = security.TLSPostReq(hname, "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 						resp, err = http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
 						if err != nil || resp.StatusCode != http.StatusOK {
-							fmt.Printf("Send Assignment -- CONNECTION to self bad response or ERRORED OUT\n")
 							fmt.Printf("Failure to send generation assignment to self\n")
 						}
 						defer resp.Body.Close()
@@ -559,7 +552,6 @@ func startLeader() {
 						resp, err = security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 						//resp, err = http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
 						if err != nil || resp.StatusCode != http.StatusOK {
-							fmt.Printf("Send Assignment -- CONNECTION to quorum member bad response or ERRORED OUT\n")
 							fmt.Printf("Failure to send generation assignments to other quorum members\n")
 						}
 						defer resp.Body.Close()
@@ -601,15 +593,12 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
-						fmt.Println("Sending collection signal to myself")
 						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
 						defer resp.Body.Close()
 						_, err = ioutil.ReadAll(resp.Body)
 						if err != nil {
-							fmt.Printf("Collect Signal -- CONNECTION to self ERRORED OUT\n")
 							fmt.Println("Bad Read")
 						}
-						fmt.Println("Done with self collection")
 						<-semaphore
 					} else {
 						var qMems []string
@@ -651,15 +640,12 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
-						fmt.Println("Collection signal to quorum member")
 						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
 						defer resp.Body.Close()
 						_, err = ioutil.ReadAll(resp.Body)
 						if err != nil {
-							fmt.Printf("Collect Signal -- CONNECTION to quorum member ERRORED OUT\n")
 							fmt.Println("Bad Read")
 						}
-						fmt.Println("Done with quorum member collection")
 						<-semaphore
 					}
 				}
@@ -669,18 +655,15 @@ func startLeader() {
 					postBody, _ := json.Marshal(ele)
 					responseBody := bytes.NewBuffer(postBody)
 					//resp, err := http.Post("http://"+hname+":443/anvil/raft/pushACL", "application/json", responseBody)
-					fmt.Println("Pushing on new acl entries to raft")
 					resp, err := security.TLSPostReq(hname, "/anvil/raft/pushACL", "", "application/json", responseBody)
 					defer resp.Body.Close()
 					if err != nil {
-						fmt.Printf("PUSH ACL -- CONNECTION to self ERRORED OUT\n")
 						log.Fatalln("Unable to post content")
 					}
 					_, err = ioutil.ReadAll(resp.Body)
 					if err != nil {
 						log.Fatalln("Unable to read received content")
 					}
-					fmt.Println("Done with new acl entries in raft")
 				}
 
 				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
@@ -715,18 +698,15 @@ func startLeader() {
                                         if err != nil {
                                                 log.Fatalln(err)
                                         }
-					fmt.Println("Telling client to rotate")
                                         resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
 					defer resp.Body.Close()
                                         if err != nil || resp.StatusCode != http.StatusOK {
-						fmt.Printf("Rotation signal -- GOT A BAD RESPONSE CODE OR THE CONNECTION ERRORED OUT\n")
                                                 fmt.Printf("Failure to notify all clients of available artifacts\n")
                                         }
 					_, err = ioutil.ReadAll(resp.Body)
 					if err != nil {
 						fmt.Println("Bad Read")
 					}
-					fmt.Println("Done with clients rotating")
 					<-semaphore
                                 }
 
@@ -736,7 +716,6 @@ func startLeader() {
 					if i == len(CM.PeerIds) {
 						_, err = security.TLSGetReq(hname, "/anvil/rotation/config", "")
 						if err != nil {
-							fmt.Printf("Rotation signal -- CONNECTION to self ERRORED OUT\n")
 							log.Println("Failed to adjust leader config")
 						}
 						<-semaphore
@@ -744,7 +723,6 @@ func startLeader() {
 						sendTarg := CM.PeerIds[i]
 						_, err = security.TLSGetReq(sendTarg, "/anvil/rotation/config", "")
 						if err != nil {
-							fmt.Printf("Rotation signal -- THE CONNECTION ERRORED OUT\n")
 							log.Println("Failed to adjust quorum configs")
 						}
 						<-semaphore
@@ -757,7 +735,6 @@ func startLeader() {
                                         resp, err = security.TLSGetReq(ele, "/anvil/rotation/config", "")
                                         defer resp.Body.Close()
                                         if err != nil || resp.StatusCode != http.StatusOK {
-                                                fmt.Printf("Rotation signal -- GOT A BAD RESPONSE CODE OR THE CONNECTION ERRORED OUT\n")
                                                 fmt.Printf("Failure to notify all clients of available artifacts\n")
                                         }
                                         <-semaphore
@@ -974,7 +951,6 @@ func lastLogIndexAndTerm() (int, int) {
 func processManifest(aMap AssignmentMap) (AssignmentMap) {
 	yamlFile, err := ioutil.ReadFile("./config/manifest.yaml")
         if err != nil {
-		fmt.Println("Manifest read fail")
                 log.Printf("Read file error #%v", err)
         }
         err = yaml.Unmarshal(yamlFile, &aMap)

@@ -1,7 +1,6 @@
 package rotation
 
 import (
-	"fmt"
 	"os"
 	"io"
 	"io/ioutil"
@@ -59,16 +58,16 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 
 	out, err := os.Create("/root/anvil/config/gossip/"+iter+"/"+fMess.FilePath)
 	if err != nil  {
-		fmt.Printf("FAILURE OPENING FILE\n")
+		log.Printf("FAILURE OPENING FILE\n")
 	}
 	defer out.Close()
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		fmt.Errorf("bad status: %s", resp.Status)
+		log.Printf("bad status: %s", resp.Status)
 	}
 	_, err = io.Copy(out, resp.Body)
 	if err != nil  {
-		fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
 
 	fMess = &FPMess{FilePath: nodeName+"/acl.yaml"}
@@ -81,16 +80,16 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 
 	out, err = os.Create("/root/anvil/config/acls/"+iter+"/acl.yaml")
 	if err != nil  {
-		fmt.Printf("FAILURE OPENING FILE\n")
+		log.Printf("FAILURE OPENING FILE\n")
 	}
 	defer out.Close()
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		fmt.Errorf("bad status: %s", resp.Status)
+		log.Printf("bad status: %s", resp.Status)
 	}
 	_, err = io.Copy(out, resp.Body)
 	if err != nil  {
-		fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
 
 	fMess = &FPMess{FilePath: nodeName+"/"+nodeName+".key"}
@@ -103,16 +102,16 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 
 	out, err = os.Create("/root/anvil/config/certs/"+iter+"/"+nodeName+".key")
 	if err != nil  {
-		fmt.Printf("FAILURE OPENING FILE\n")
+		log.Printf("FAILURE OPENING FILE\n")
 	}
 	defer out.Close()
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		fmt.Errorf("bad status: %s", resp.Status)
+		log.Printf("bad status: %s", resp.Status)
 	}
 	_, err = io.Copy(out, resp.Body)
 	if err != nil  {
-		fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
 
 	fMess = &FPMess{FilePath: nodeName+"/"+nodeName+".crt"}
@@ -125,38 +124,16 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 
 	out, err = os.Create("/root/anvil/config/certs/"+iter+"/"+nodeName+".crt")
 	if err != nil  {
-		fmt.Printf("FAILURE OPENING FILE\n")
+		log.Printf("FAILURE OPENING FILE\n")
 	}
 	defer out.Close()
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		fmt.Errorf("bad status: %s", resp.Status)
+		log.Printf("bad status: %s", resp.Status)
 	}
 	_, err = io.Copy(out, resp.Body)
 	if err != nil  {
-		fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
-	}
-
-	fMess = &FPMess{FilePath: nodeName+"/ca.crt"}
-	jsonData, err = json.Marshal(fMess)
-	if err != nil {
-		log.Fatalln("Unable to marshal JSON")
-	}
-	postVal = bytes.NewBuffer(jsonData)
-	resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
-
-	out, err = os.Create("/root/anvil/config/certs/"+iter+"/ca.crt")
-	if err != nil  {
-		fmt.Printf("FAILURE OPENING FILE\n")
-	}
-	defer out.Close()
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		fmt.Errorf("bad status: %s", resp.Status)
-	}
-	_, err = io.Copy(out, resp.Body)
-	if err != nil  {
-		fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
 
 	for _, ele := range qMems {
@@ -170,16 +147,16 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 
 		out, err = os.Create("/root/anvil/config/certs/"+iter+"/"+ele+".crt")
 		if err != nil  {
-			fmt.Printf("FAILURE OPENING FILE\n")
+			log.Printf("FAILURE OPENING FILE\n")
 		}
 		defer out.Close()
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
-			fmt.Errorf("bad status: %s", resp.Status)
+			log.Printf("bad status: %s", resp.Status)
 		}
 		_, err = io.Copy(out, resp.Body)
 		if err != nil  {
-			fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+			log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 		}
 	}
 	return true
@@ -187,7 +164,6 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 
 func AdjustConfig() {
         iterMap := getDirMap()
-        //fmt.Printf("%v\n", iterMap)
 
 	firstFlag := 0
         cmpList := []int{}
@@ -197,10 +173,9 @@ func AdjustConfig() {
 			firstFlag = 1
 		} else {
                         if !reflect.DeepEqual(cmpList, list) {
-                                fmt.Println("We've got problems")
+                                log.Println("We've got problems")
                         }
                 }
-                //fmt.Printf("%v\n", list)
         }
 
         if len(cmpList) < 2 {
@@ -211,34 +186,27 @@ func AdjustConfig() {
 }
 
 func updateRunningConfig(yamlOut string) {
-	fmt.Println("Calling os.OpenFile on test_config.yaml")
 	f, err := os.OpenFile("/root/anvil/config/test_config.yaml", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		log.Fatal(err)
 	}
 	yamlOut = "---\n" + yamlOut
-	fmt.Println("Writing bytes to test_config.yaml")
 	_,err = f.Write([]byte(yamlOut))
         if err != nil {
-                fmt.Println(err)
+                log.Println(err)
         }
 	defer f.Close()
 }
 
 func rewriteYaml(indA int, indB int) {
-	fmt.Println("Calling readFile on original test_config.yaml")
         yamlFile, err := ioutil.ReadFile("/root/anvil/config/test_config.yaml")
         if err != nil {
-		fmt.Println("Unable to read test_config")
                 log.Printf("Read file error #%v", err)
         }
-	fmt.Println("Unmarshaling original test_config.yaml")
         err = yaml.Unmarshal(yamlFile, &SecConf)
         if err != nil {
                 log.Fatalf("Unmarshal: %v", err)
         }
-        //fmt.Printf("%v\n", SecConf)
-        //fmt.Printf("------\n")
 
         hname, _ := os.Hostname()
         listSecConf := []SecConfig{}
@@ -267,7 +235,6 @@ func rewriteYaml(indA int, indB int) {
                 if err != nil {
                         panic(err)
                 }
-                //fmt.Printf("%v\n", string(yamlOut))
         } else {
                 strA := strconv.Itoa(indA)
                 strB := strconv.Itoa(indB)
@@ -309,7 +276,6 @@ func rewriteYaml(indA int, indB int) {
                 if err != nil {
                         panic(err)
                 }
-                //fmt.Printf("%v\n", string(yamlOut))
         }
 	updateRunningConfig(string(yamlOut))
 }
@@ -333,7 +299,7 @@ func getDirMap() map[string][]int {
                 if f.IsDir() {
                         val, err := strconv.Atoi(f.Name())
                         if err != nil {
-                                fmt.Println("Unable to convert")
+                                log.Println("Unable to convert")
                         }
                         iterMap["acls"] = append(iterMap["acls"], val)
                 }
@@ -342,7 +308,7 @@ func getDirMap() map[string][]int {
                 if f.IsDir() {
                         val, err := strconv.Atoi(f.Name())
                         if err != nil {
-                                fmt.Println("Unable to convert")
+                                log.Println("Unable to convert")
                         }
                         iterMap["gossip"] = append(iterMap["gossip"], val)
                 }
@@ -351,7 +317,7 @@ func getDirMap() map[string][]int {
                 if f.IsDir() {
                         val, err := strconv.Atoi(f.Name())
                         if err != nil {
-                                fmt.Println("Unable to convert")
+                                log.Println("Unable to convert")
                         }
                         iterMap["certs"] = append(iterMap["certs"], val)
                 }
@@ -364,7 +330,6 @@ func readACLFile(fpath string) []TokMap {
         retToks := []TokMap{}
         yamlFile, err := ioutil.ReadFile(fpath)
         if err != nil {
-		fmt.Println("Unable to read aclfile")
                 log.Printf("Read file error #%v", err)
         }
         err = yaml.Unmarshal(yamlFile, &retToks)
@@ -375,34 +340,28 @@ func readACLFile(fpath string) []TokMap {
 }
 
 func processCAs(iter int) []string {
-	if (iter == 0) {
-		return []string{"/root/anvil/config/certs/0/ca.crt"}
-	} else {
-		hname, _ := os.Hostname()
-		topLvl, err := ioutil.ReadDir("/root/anvil/config/certs/"+strconv.Itoa(iter))
-		if err != nil {
-			log.Println(err)
-		}
-		var retList []string
-		for _, f := range topLvl {
-			if f.Name() != "ca.crt" && !strings.Contains(f.Name(), ".key") {
-				retList = append(retList, ("/root/anvil/config/certs/"+strconv.Itoa(iter)+"/"+f.Name()))
-			}
-		}
-		retList = append(retList, "/root/anvil/config/certs/"+strconv.Itoa(iter)+"/ca.crt")
-		if err != nil {
-			log.Fatalln("Unable to get hostname")
-		}
-		resp, err := security.TLSGetReq(hname, "/anvil/type", "")
-		if err != nil {
-			log.Fatalln("Unable to retrieve node type")
-		}
-		body, err := ioutil.ReadAll(resp.Body)
-		nodeType := string(body)
-		fmt.Println(nodeType)
-		if nodeType == "server" {
-			retList = append(retList, "/root/anvil/config/certs/"+strconv.Itoa(iter)+"/"+hname+".crt")
-		}
-		return retList
+	hname, _ := os.Hostname()
+	topLvl, err := ioutil.ReadDir("/root/anvil/config/certs/"+strconv.Itoa(iter))
+	if err != nil {
+		log.Println(err)
 	}
+	var retList []string
+	for _, f := range topLvl {
+		if !strings.Contains(f.Name(), ".key") {
+			retList = append(retList, ("/root/anvil/config/certs/"+strconv.Itoa(iter)+"/"+f.Name()))
+		}
+	}
+	if err != nil {
+		log.Fatalln("Unable to get hostname")
+	}
+	resp, err := security.TLSGetReq(hname, "/anvil/type", "")
+	if err != nil {
+		log.Fatalln("Unable to retrieve node type")
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	nodeType := string(body)
+	if nodeType == "server" {
+		retList = append(retList, "/root/anvil/config/certs/"+strconv.Itoa(iter)+"/"+hname+".crt")
+	}
+	return retList
 }
