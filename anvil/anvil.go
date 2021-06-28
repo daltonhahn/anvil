@@ -98,7 +98,7 @@ func AnvilInit(nodeType string) {
                         <-sigHandle
 			if rotFlag == true {
 				rotFlag = false
-				ctxShutDown, cancel := context.WithTimeout(context.Background(), (11*time.Second))
+				ctxShutDown, cancel := context.WithTimeout(context.Background(), (1*time.Second))
 				defer func() {
 					cancel()
 				}()
