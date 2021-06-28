@@ -599,7 +599,8 @@ func startLeader() {
 						collectMap := struct {
 							Targets         []string
 							Iteration       string
-						}{Targets: targets, Iteration: strconv.Itoa(iteration)}
+							QuorumMems	[]string
+						}{Targets: targets, Iteration: strconv.Itoa(iteration), QuorumMems: CM.PeerIds}
 
 						jsonData, err := json.Marshal(collectMap)
 						if err != nil {
@@ -614,7 +615,14 @@ func startLeader() {
 						}
 						<-semaphore
 					} else {
+						var qMems []string
 						sendTarg := CM.PeerIds[i]
+						for _, ele := range CM.PeerIds {
+							if ele != sendTarg {
+								qMems = append(qMems, ele)
+							}
+						}
+						qMems = append(qMems, hname)
 						var targets []string
 						copy(targets, CM.PeerIds[:0])
 						hostAddr, err := net.LookupIP(hname)
@@ -639,7 +647,8 @@ func startLeader() {
 						collectMap := struct {
 							Targets         []string
 							Iteration       string
-						}{Targets: targets, Iteration: strconv.Itoa(iteration)}
+							QuorumMems	[]string
+						}{Targets: targets, Iteration: strconv.Itoa(iteration), QuorumMems: qMems}
 
 						jsonData, err := json.Marshal(collectMap)
 						if err != nil {
