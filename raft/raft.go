@@ -165,10 +165,10 @@ func Submit(command acl.ACLEntry) bool {
 	CM.mu.Lock()
 	defer CM.mu.Unlock()
 
-	dlog(fmt.Sprintf("Submit received by %v: %v", CM.state, command))
+	//dlog(fmt.Sprintf("Submit received by %v: %v", CM.state, command))
 	if CM.state == Leader {
 		CM.log = append(CM.log, LogEntry{ACLObj: command, Term: CM.currentTerm})
-		dlog(fmt.Sprintf("... log=%v", CM.log))
+		//dlog(fmt.Sprintf("... log=%v", CM.log))
 		CM.currentTerm += 1
 		return true
 	}
@@ -733,6 +733,7 @@ func startLeader() {
                                         }
                                         <-semaphore
                                 }
+
 				iteration = iteration + 1
 			}
 			<-rotateTicker.C

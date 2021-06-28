@@ -8,7 +8,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"io"
-	//"fmt"
+	"fmt"
 	"io/ioutil"
 	//"log"
 	"net/http"
@@ -61,13 +61,25 @@ func DecDataSvc(input_ciphertext string, confNum int) ([]byte,error) {
 }
 
 func TLSGetReqSvc(target string, path string, origin string, confNum int) (*http.Response,error) {
-	caCertPath := SecConf[confNum].CACert
+	caCertPaths := SecConf[confNum].CACert
+	caCertPool := x509.NewCertPool()
+        for _, fp := range caCertPaths {
+                caCert, err := ioutil.ReadFile(fp)
+                if err != nil {
+                        //fmt.Println("Unable to read config 1 ca.crt")
+                        //log.Printf("Read file error #%v", err)
+			fmt.Println("Read file error in GET REQ SVC")
+                }
+                caCertPool.AppendCertsFromPEM(caCert)
+        }
+	/*
 	caCert, err := ioutil.ReadFile(caCertPath)
         if err != nil {
                 return &http.Response{}, errors.New("Unable to read CA")
         }
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
+	*/
 	cert,err := tls.LoadX509KeyPair(SecConf[confNum].TLSCert, SecConf[confNum].TLSKey)
         if err != nil {
                 return &http.Response{}, errors.New("Unable to read Cert+Key")
@@ -76,7 +88,6 @@ func TLSGetReqSvc(target string, path string, origin string, confNum int) (*http
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-                                InsecureSkipVerify:     true,
 				RootCAs:      caCertPool,
 				Certificates: []tls.Certificate{cert},
 			},
@@ -96,13 +107,25 @@ func TLSGetReqSvc(target string, path string, origin string, confNum int) (*http
 }
 
 func TLSPostReqSvc(target string, path string, origin string, options string, body string, confNum int) (*http.Response, error) {
-        caCertPath := SecConf[confNum].CACert
+        caCertPaths := SecConf[confNum].CACert
+	caCertPool := x509.NewCertPool()
+        for _, fp := range caCertPaths {
+                caCert, err := ioutil.ReadFile(fp)
+                if err != nil {
+                        //fmt.Println("Unable to read config 1 ca.crt")
+                        //log.Printf("Read file error #%v", err)
+			fmt.Println("Read file error in POST REQ SVC")
+                }
+                caCertPool.AppendCertsFromPEM(caCert)
+        }
+	/*
         caCert, err := ioutil.ReadFile(caCertPath)
         if err != nil {
                 return &http.Response{}, errors.New("Unable to read CA")
         }
         caCertPool := x509.NewCertPool()
         caCertPool.AppendCertsFromPEM(caCert)
+	*/
         cert,err := tls.LoadX509KeyPair(SecConf[confNum].TLSCert, SecConf[confNum].TLSKey)
         if err != nil {
                 return &http.Response{}, errors.New("Unable to read Cert+Key")
@@ -111,7 +134,6 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
         client := &http.Client{
                 Transport: &http.Transport{
                         TLSClientConfig: &tls.Config{
-                                InsecureSkipVerify:     true,
                                 RootCAs:      caCertPool,
                                 Certificates: []tls.Certificate{cert},
                         },

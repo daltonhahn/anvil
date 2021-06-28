@@ -28,7 +28,7 @@ type TokMap struct {
 
 type SecConfig struct {
 	Key	string		`yaml:"key,omitempty"`
-	CACert	string		`yaml:"cacert,omitempty"`
+	CACert	[]string	`yaml:"cacert,omitempty"`
 	TLSCert	string		`yaml:"tlscert,omitempty"`
 	TLSKey	string		`yaml:"tlskey,omitempty"`
 	Tokens	[]TokMap	`yaml:"tokens,omitempty"`

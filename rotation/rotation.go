@@ -20,7 +20,7 @@ import (
 
 type SecConfig struct {
         Key     string          `yaml:"key,omitempty"`
-        CACert  string          `yaml:"cacert,omitempty"`
+        CACert  []string          `yaml:"cacert,omitempty"`
         TLSCert string          `yaml:"tlscert,omitempty"`
         TLSKey  string          `yaml:"tlskey,omitempty"`
         Tokens  []TokMap        `yaml:"tokens,omitempty"`
@@ -228,7 +228,7 @@ func rewriteYaml(indA int, indB int) {
                 tokMap := readACLFile("/root/anvil/config/acls/0/test.yaml")
                 tmpSecConf := SecConfig {
                         Key: gKey,
-                        CACert: "/root/anvil/config/certs/0/ca.crt",
+                        CACert: []string{"/root/anvil/config/certs/0/ca.crt"},
                         TLSCert: "/root/anvil/config/certs/0/"+hname+".crt",
                         TLSKey: "/root/anvil/config/certs/0/"+hname+".key",
                         Tokens: tokMap,
@@ -253,7 +253,7 @@ func rewriteYaml(indA int, indB int) {
 		gKeyA := string(b)
                 sConfA := SecConfig {
                         Key: gKeyA,
-                        CACert: "/root/anvil/config/certs/"+strA+"/ca.crt",
+                        CACert: []string{"/root/anvil/config/certs/"+strA+"/ca.crt"},
                         TLSCert: "/root/anvil/config/certs/"+strA+"/"+hname+".crt",
                         TLSKey: "/root/anvil/config/certs/"+strA+"/"+hname+".key",
                         Tokens: tMapA,
@@ -265,7 +265,7 @@ func rewriteYaml(indA int, indB int) {
 		gKeyB := string(b)
                 sConfB := SecConfig {
                         Key: gKeyB,
-                        CACert: "/root/anvil/config/certs/"+strB+"/ca.crt",
+                        CACert: []string{"/root/anvil/config/certs/"+strB+"/ca.crt"},
                         TLSCert: "/root/anvil/config/certs/"+strB+"/"+hname+".crt",
                         TLSKey: "/root/anvil/config/certs/"+strB+"/"+hname+".key",
                         Tokens: tMapB,
