@@ -496,7 +496,18 @@ func startLeader() {
 
 				// Make gofunc()
 				for _, ele := range CM.PeerIds {
-					postVal = map[string]string{"iteration": strconv.Itoa(iteration), "prefix": ele}
+					var qMems []string
+					for _, mem := range CM.PeerIds {
+						if mem != ele {
+							qMems = append(qMems, mem)
+						}
+					}
+					postVal := struct {
+						Iteration	string
+						Prefix		string
+						QuorumMems	[]string
+					}{Iteration: strconv.Itoa(iteration), Prefix: ele, QuorumMems: qMems}
+
 					jsonDat, err = json.Marshal(postVal)
 					if err != nil {
 						log.Fatalln(err)
@@ -683,7 +694,12 @@ func startLeader() {
 				semaphore = make(chan struct{}, len(clientList.Clients))
 				for _, ele := range clientList.Clients {
 					semaphore <- struct{}{}
-                                        postVal = map[string]string{"iteration": strconv.Itoa(iteration), "prefix": ele}
+                                        //postVal = map[string]string{"iteration": strconv.Itoa(iteration), "prefix": ele}
+					postVal := struct {
+						Iteration	string
+						Prefix		string
+						QuorumMems	[]string
+					}{Iteration: strconv.Itoa(iteration), Prefix: ele, QuorumMems: append(CM.PeerIds, hname)}
                                         jsonDat, err = json.Marshal(postVal)
                                         if err != nil {
                                                 log.Fatalln(err)
@@ -963,6 +979,7 @@ func splitAssignments(numPeers int, aMap AssignmentMap) ([]AssignmentMap) {
 	svcQuantity := float64(len(aMap.SvcMap)) / float64(numPeers)
 	for i:=0; i < numPeers; i++ {
 		var tMap AssignmentMap
+		tMap.Quorum = aMap.Quorum
 		tMap.Nodes = aMap.Nodes[int(lastNode):int(lastNode+nodeQuantity)]
 		tMap.SvcMap = aMap.SvcMap[int(lastSvc):int(lastSvc+svcQuantity)]
 		lastNode = lastNode+nodeQuantity

@@ -253,12 +253,13 @@ func HandleRotation(w http.ResponseWriter, r *http.Request) {
 	collectTags := struct {
 		Iteration	string
 		Prefix		string
+		QuorumMems	[]string
 	}{}
 	err = json.Unmarshal(b, &collectTags)
 	if err != nil {
 		fmt.Println("Unable to unmarshal the data that was sent in this post request")
 	}
-	result := rotation.CollectFiles(collectTags.Iteration, collectTags.Prefix)
+	result := rotation.CollectFiles(collectTags.Iteration, collectTags.Prefix, collectTags.QuorumMems)
 	if result == true {
 		fmt.Fprintf(w, strconv.FormatBool(result))
 	} else {

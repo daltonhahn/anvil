@@ -12,6 +12,7 @@ import (
 	"net/http"
         "gopkg.in/yaml.v2"
         "strconv"
+	"strings"
         "reflect"
 
 	"github.com/daltonhahn/anvil/security"
@@ -37,7 +38,7 @@ type FPMess struct {
         FilePath        string
 }
 
-func CollectFiles(iter string, nodeName string) bool {
+func CollectFiles(iter string, nodeName string, qMems []string) bool {
 	newpath := filepath.Join("/root/anvil/", "config/gossip", iter)
         os.MkdirAll(newpath, os.ModePerm)
         newpath = filepath.Join("/root/anvil/", "config/acls", iter)
@@ -157,6 +158,30 @@ func CollectFiles(iter string, nodeName string) bool {
 	if err != nil  {
 		fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
+
+	for _, ele := range qMems {
+		fMess = &FPMess{FilePath: nodeName+"/"+ele+".crt"}
+		jsonData, err = json.Marshal(fMess)
+		if err != nil {
+			log.Fatalln("Unable to marshal JSON")
+		}
+		postVal = bytes.NewBuffer(jsonData)
+		resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+
+		out, err = os.Create("/root/anvil/config/certs/"+iter+"/"+ele+".crt")
+		if err != nil  {
+			fmt.Printf("FAILURE OPENING FILE\n")
+		}
+		defer out.Close()
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			fmt.Errorf("bad status: %s", resp.Status)
+		}
+		_, err = io.Copy(out, resp.Body)
+		if err != nil  {
+			fmt.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
+		}
+	}
 	return true
 }
 
@@ -225,10 +250,13 @@ func rewriteYaml(indA int, indB int) {
 			panic(err)
 		}
 		gKey := string(b)
+
+		caList := processCAs(0)
+
                 tokMap := readACLFile("/root/anvil/config/acls/0/test.yaml")
                 tmpSecConf := SecConfig {
                         Key: gKey,
-                        CACert: []string{"/root/anvil/config/certs/0/ca.crt"},
+                        CACert: caList,
                         TLSCert: "/root/anvil/config/certs/0/"+hname+".crt",
                         TLSKey: "/root/anvil/config/certs/0/"+hname+".key",
                         Tokens: tokMap,
@@ -251,9 +279,12 @@ func rewriteYaml(indA int, indB int) {
 			panic(err)
 		}
 		gKeyA := string(b)
+
+		caListA := processCAs(indA)
+
                 sConfA := SecConfig {
                         Key: gKeyA,
-                        CACert: []string{"/root/anvil/config/certs/"+strA+"/ca.crt"},
+                        CACert: caListA,
                         TLSCert: "/root/anvil/config/certs/"+strA+"/"+hname+".crt",
                         TLSKey: "/root/anvil/config/certs/"+strA+"/"+hname+".key",
                         Tokens: tMapA,
@@ -263,9 +294,12 @@ func rewriteYaml(indA int, indB int) {
 			panic(err)
 		}
 		gKeyB := string(b)
+
+		caListB := processCAs(indB)
+
                 sConfB := SecConfig {
                         Key: gKeyB,
-                        CACert: []string{"/root/anvil/config/certs/"+strB+"/ca.crt"},
+                        CACert: caListB,
                         TLSCert: "/root/anvil/config/certs/"+strB+"/"+hname+".crt",
                         TLSKey: "/root/anvil/config/certs/"+strB+"/"+hname+".key",
                         Tokens: tMapB,
@@ -338,4 +372,24 @@ func readACLFile(fpath string) []TokMap {
                 log.Fatalf("Unmarshal: %v", err)
         }
         return retToks
+}
+
+func processCAs(iter int) []string {
+	if (iter == 0) {
+		return []string{"/root/anvil/config/certs/0/ca.crt"}
+	} else {
+		hname, _ := os.Hostname()
+		topLvl, err := ioutil.ReadDir("/root/anvil/config/certs/"+strconv.Itoa(iter))
+		if err != nil {
+			log.Println(err)
+		}
+		var retList []string
+		for _, f := range topLvl {
+			if f.Name() != "ca.crt" && f.Name() != hname+".crt" && !strings.Contains(f.Name(), ".key") {
+				retList = append(retList, f.Name())
+			}
+		}
+		retList = append(retList, "ca.crt")
+		return retList
+	}
 }
