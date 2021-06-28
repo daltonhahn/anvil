@@ -502,6 +502,7 @@ func startLeader() {
 							qMems = append(qMems, mem)
 						}
 					}
+					qMems = append(qMems, hname)
 					postVal := struct {
 						Iteration	string
 						Prefix		string
