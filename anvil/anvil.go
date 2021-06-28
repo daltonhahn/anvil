@@ -11,7 +11,7 @@ import (
 	"sync"
 	//"crypto/tls"
 	//"crypto/x509"
-	//"context"
+	"context"
 	"time"
 	"fmt"
 
@@ -96,22 +96,19 @@ func AnvilInit(nodeType string) {
         go func() {
                 for {
                         <-sigHandle
-			/*
-                        ctxShutDown, cancel := context.WithTimeout(context.Background(), (10*time.Second))
-                        defer func() {
-                                cancel()
-                        }()
-
-			if err := server.Shutdown(ctxShutDown); err != nil {
-				log.Fatalf("server Shutdown Failed:%+s", err)
-			}
-			*/
 			if rotFlag == true {
 				rotFlag = false
-				if err := server.Close(); err != nil {
-					log.Fatalf("Server close failed:%+s", err)
+				ctxShutDown, cancel := context.WithTimeout(context.Background(), (11*time.Second))
+				defer func() {
+					cancel()
+				}()
+
+				if err := server.Shutdown(ctxShutDown); err != nil {
+					log.Fatalf("server Shutdown Failed:%+s", err)
 				}
-				time.Sleep(1*time.Second)
+				//if err := server.Close(); err != nil {
+				//	log.Fatalf("Server close failed:%+s", err)
+				//}
 				go cw.startNewServer(anv_router)
 			}
                 }

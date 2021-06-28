@@ -473,7 +473,6 @@ func startLeader() {
 				return
 			}
 			CM.mu.Unlock()
-			fmt.Println("If I'm not leader I shouldn't be here")
 			if CM.currentTerm > 1 {
 				hname, err := os.Hostname()
 				if err != nil {
@@ -485,7 +484,6 @@ func startLeader() {
 					log.Fatalln(err)
 				}
 				//resp, err := security.TLSPostReq(hname, "/service/rotation/makeCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
-				fmt.Println("Contacting myself to generate CA documents")
 				resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
 				if err != nil || resp.StatusCode != http.StatusOK {
 					fmt.Printf("Make CA -- CONNECTION to self bad response or ERRORED OUT\n")
@@ -514,7 +512,6 @@ func startLeader() {
 						log.Fatalln(err)
 					}
 					//CM.PeerIds stores IP addresses, not node names, need to look up so that TLS req can be made properly and verified with cert
-					fmt.Println("Contacting quorum member to pull CA documents")
 					resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 					//resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 					//resp, err = http.Post("http://" + ele + ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
@@ -543,7 +540,6 @@ func startLeader() {
 							log.Fatalln(err)
 						}
 						//resp, err = security.TLSPostReq(hname, "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
-						fmt.Println("Contacting myself with generation assignments")
 						resp, err = http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
 						if err != nil || resp.StatusCode != http.StatusOK {
 							fmt.Printf("Send Assignment -- CONNECTION to self bad response or ERRORED OUT\n")
@@ -560,7 +556,6 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln(err)
 						}
-						fmt.Println("Contacting quorum member with generation assignments")
 						resp, err = security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 						//resp, err = http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
 						if err != nil || resp.StatusCode != http.StatusOK {
@@ -763,7 +758,7 @@ func startLeader() {
 				iteration = iteration + 1
 			}
 			<-rotateTicker.C
-			fmt.Println("Finished rotate loop, changing iteration, adding time")
+			fmt.Println("Rotating . . .")
 		}
 	}()
 }
