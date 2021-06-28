@@ -70,11 +70,11 @@ func Submit(filepath string) {
 			log.Fatalln("Unable to post content")
 		}
 		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
+		_, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
 			log.Fatalln("Unable to read received content")
 		}
-		fmt.Println(string(body))
+		//fmt.Println(string(body))
         }
 }
 

@@ -146,6 +146,17 @@ func RaftPeers(w http.ResponseWriter, r *http.Request) {
 	raft.GetPeers()
 }
 
+func GetType(w http.ResponseWriter, r *http.Request) {
+	anv_catalog := catalog.GetCatalog()
+	hname, _ := os.Hostname()
+	nodeType := anv_catalog.GetNodeType(hname)
+	if nodeType == "server" || nodeType == "leader" {
+		fmt.Fprint(w, "server")
+	} else {
+		fmt.Fprint(w, "client")
+	}
+}
+
 func RequestVote(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
         defer r.Body.Close()

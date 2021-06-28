@@ -601,6 +601,7 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
+						fmt.Println("Sending collection signal to myself")
 						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
 						defer resp.Body.Close()
 						_, err = ioutil.ReadAll(resp.Body)
@@ -608,6 +609,7 @@ func startLeader() {
 							fmt.Printf("Collect Signal -- CONNECTION to self ERRORED OUT\n")
 							fmt.Println("Bad Read")
 						}
+						fmt.Println("Done with self collection")
 						<-semaphore
 					} else {
 						var qMems []string
@@ -649,6 +651,7 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
+						fmt.Println("Collection signal to quorum member")
 						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
 						defer resp.Body.Close()
 						_, err = ioutil.ReadAll(resp.Body)
@@ -656,6 +659,7 @@ func startLeader() {
 							fmt.Printf("Collect Signal -- CONNECTION to quorum member ERRORED OUT\n")
 							fmt.Println("Bad Read")
 						}
+						fmt.Println("Done with quorum member collection")
 						<-semaphore
 					}
 				}
@@ -665,6 +669,7 @@ func startLeader() {
 					postBody, _ := json.Marshal(ele)
 					responseBody := bytes.NewBuffer(postBody)
 					//resp, err := http.Post("http://"+hname+":443/anvil/raft/pushACL", "application/json", responseBody)
+					fmt.Println("Pushing on new acl entries to raft")
 					resp, err := security.TLSPostReq(hname, "/anvil/raft/pushACL", "", "application/json", responseBody)
 					defer resp.Body.Close()
 					if err != nil {
@@ -675,6 +680,7 @@ func startLeader() {
 					if err != nil {
 						log.Fatalln("Unable to read received content")
 					}
+					fmt.Println("Done with new acl entries in raft")
 				}
 
 				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
@@ -709,6 +715,7 @@ func startLeader() {
                                         if err != nil {
                                                 log.Fatalln(err)
                                         }
+					fmt.Println("Telling client to rotate")
                                         resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
 					defer resp.Body.Close()
                                         if err != nil || resp.StatusCode != http.StatusOK {
@@ -719,6 +726,7 @@ func startLeader() {
 					if err != nil {
 						fmt.Println("Bad Read")
 					}
+					fmt.Println("Done with clients rotating")
 					<-semaphore
                                 }
 

@@ -26,6 +26,8 @@ import (
 
 var rotFlag bool
 
+var NodeType string
+
 func readEnvoyConfig() (*struct{Services []service.Service}, error) {
         yamlFile, err := ioutil.ReadFile("/root/anvil/config/services/sample-svc.yaml")
         if err != nil {
@@ -63,6 +65,7 @@ func AnvilInit(nodeType string) {
 	network.SetHosts(hname)
 	serviceMap := SetServiceList()
 	catalog.Register(hname, serviceMap, nodeType)
+	NodeType = nodeType
 
 	if nodeType == "server" {
 		_ = raft.NewConsensusModule(hname, []string{""})
@@ -156,6 +159,7 @@ func registerRoutes(anv_router *mux.Router) {
 	anv_router.HandleFunc("/anvil/catalog", router.GetCatalog).Methods("GET")
 	anv_router.HandleFunc("/anvil/rotation/config", router.HandleConfigChange).Methods("GET")
 	anv_router.HandleFunc("/anvil/rotation", router.HandleRotation).Methods("POST")
+	anv_router.HandleFunc("/anvil/type", router.GetType).Methods("GET")
 	anv_router.HandleFunc("/anvil/", router.Index).Methods("GET")
 	anv_router.PathPrefix("/service/{query}").HandlerFunc(router.RerouteService).Methods("GET","POST")
 }

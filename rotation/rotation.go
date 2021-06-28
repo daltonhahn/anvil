@@ -385,11 +385,24 @@ func processCAs(iter int) []string {
 		}
 		var retList []string
 		for _, f := range topLvl {
-			if f.Name() != "ca.crt" && f.Name() != hname+".crt" && !strings.Contains(f.Name(), ".key") {
+			if f.Name() != "ca.crt" && !strings.Contains(f.Name(), ".key") {
 				retList = append(retList, ("/root/anvil/config/certs/"+strconv.Itoa(iter)+"/"+f.Name()))
 			}
 		}
 		retList = append(retList, "/root/anvil/config/certs/"+strconv.Itoa(iter)+"/ca.crt")
+		if err != nil {
+			log.Fatalln("Unable to get hostname")
+		}
+		resp, err := security.TLSGetReq(hname, "/anvil/type", "")
+		if err != nil {
+			log.Fatalln("Unable to retrieve node type")
+		}
+		body, err := ioutil.ReadAll(resp.Body)
+		nodeType := string(body)
+		fmt.Println(nodeType)
+		if nodeType == "server" {
+			retList = append(retList, "/root/anvil/config/certs/"+strconv.Itoa(iter)+"/"+hname+".crt")
+		}
 		return retList
 	}
 }
