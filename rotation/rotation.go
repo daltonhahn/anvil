@@ -181,7 +181,16 @@ func AdjustConfig() {
         if len(cmpList) < 2 {
                 rewriteYaml(cmpList[0], 0)
         } else {
-                rewriteYaml(cmpList[len(cmpList)-1], cmpList[len(cmpList)-2])
+		maxValA := 0
+		maxValB := 0
+		for _, val := range cmpList {
+			if val > maxValA && val > maxValB {
+				maxValA = val
+			} else if val <= maxValA && val > maxValB {
+				maxValB = val
+			}
+		}
+                rewriteYaml(maxValA, maxValB)
         }
 }
 

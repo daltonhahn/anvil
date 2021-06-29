@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"crypto/x509"
 	"time"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/fsnotify/fsnotify"
@@ -148,11 +149,18 @@ func (cw *CertWatcher) GetConfig() (*tls.Config) {
 }
 
 func (cw *CertWatcher) startNewServer(anv_router *mux.Router) error {
+        dump, err := os.OpenFile("/dev/null", os.O_APPEND|os.O_WRONLY, 0644)
+        if err != nil {
+                log.Println("Failed to open dev null")
+                log.Println(err)
+        }
+        nullLog := log.New(dump, "", log.LstdFlags)
 	server = &http.Server{
 		MaxHeaderBytes: 1 << 20,
 		Addr: ":443",
 		TLSConfig: cw.GetConfig(),
 		Handler: anv_router,
+		ErrorLog: nullLog,
 	}
 	rotFlag = true
 	if err := server.ListenAndServeTLS("", ""); err != nil {

@@ -82,15 +82,6 @@ func AnvilInit(nodeType string) {
         if err := cw.Watch(); err != nil {
                 log.Println(err)
         }
-
-	/*dump, err := os.OpenFile("/dev/null", os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Println("Failed to open dev null")
-		log.Println(err)
-	}
-	*/
-	//nullLog := log.New(dump, "", log.LstdFlags)
-
 	rotFlag = true
         go func() {
                 for {
