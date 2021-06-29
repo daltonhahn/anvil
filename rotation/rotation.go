@@ -185,6 +185,7 @@ func AdjustConfig() {
 		maxValB := 0
 		for _, val := range cmpList {
 			if val > maxValA && val > maxValB {
+				maxValB = maxValA
 				maxValA = val
 			} else if val <= maxValA && val > maxValB {
 				maxValB = val
