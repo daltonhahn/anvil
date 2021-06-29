@@ -347,7 +347,7 @@ func processCAs(iter int) []string {
 	}
 	var retList []string
 	for _, f := range topLvl {
-		if !strings.Contains(f.Name(), ".key") {
+		if !strings.Contains(f.Name(), ".key") && f.Name() != hname+".crt" {
 			retList = append(retList, ("/root/anvil/config/certs/"+strconv.Itoa(iter)+"/"+f.Name()))
 		}
 	}
