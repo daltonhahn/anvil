@@ -202,7 +202,6 @@ func RequestVote(args RequestVoteArgs) RequestVoteReply {
 		dlog("... term out of date in RequestVote")
 		leader := getLeader(CM.id)
 		UpdateLeader(CM.id, leader)
-		fmt.Println("Becoming follower because args.Term received higher than mine")
 		becomeFollower(args.Term)
 	}
 
@@ -248,7 +247,6 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 	if args.Term > CM.currentTerm {
 		dlog("... term out of date in AppendEntries")
 		UpdateLeader(CM.id, args.LeaderId)
-		fmt.Println("Becoming follower because args.Term received higher than mine 2")
 		becomeFollower(args.Term)
 	}
 
@@ -256,7 +254,6 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 	if args.Term == CM.currentTerm {
 		if CM.state != Follower && args.LeaderId != CM.id {
 			UpdateLeader(CM.id, args.LeaderId)
-			fmt.Println("Becoming follower because args.Term is the same as my term and I'm not a follower")
 			becomeFollower(args.Term)
 		}
 		CM.electionResetEvent = time.Now()
@@ -362,7 +359,7 @@ func startElection() {
 	savedCurrentTerm := CM.currentTerm
 	CM.electionResetEvent = time.Now()
 	CM.votedFor = CM.id
-	dlog(fmt.Sprintf("becomes Candidate (currentTerm=%d); log=%v", savedCurrentTerm, CM.log))
+	dlog(fmt.Sprintf("becomes Candidate (currentTerm=%d)", savedCurrentTerm))
 
 	var votesReceived int32 = 1
 
@@ -400,7 +397,6 @@ func startElection() {
 						dlog("term out of date in RequestVoteReply")
 						leader := getLeader(CM.id)
 						UpdateLeader(CM.id, leader)
-						fmt.Println("Becoming follower because reply.Term higher than my saved CurrentTerm")
 						becomeFollower(reply.Term)
 						return
 					} else if reply.Term == savedCurrentTerm {
@@ -421,7 +417,7 @@ func startElection() {
 }
 
 func becomeFollower(term int) {
-	dlog(fmt.Sprintf("becomes Follower with term=%d; log=%v", term, CM.log))
+	dlog(fmt.Sprintf("becomes Follower with term=%d", term))
 	CM.state = Follower
 	CM.currentTerm = term
 	CM.votedFor = ""
@@ -432,7 +428,7 @@ func becomeFollower(term int) {
 
 func startLeader() {
 	CM.state = Leader
-	dlog(fmt.Sprintf("becomes Leader; term=%d, log=%v", CM.currentTerm, CM.log))
+	dlog(fmt.Sprintf("becomes Leader; term=%d", CM.currentTerm))
 
 	UpdateLeader(CM.id, CM.id)
 	if len(CM.PeerIds) == 0 {
@@ -795,7 +791,6 @@ func leaderSendHeartbeats() {
 						dlog(fmt.Sprintf("term out of date in heartbeat reply"))
 						leader := getLeader(CM.id)
 						UpdateLeader(CM.id, leader)
-						fmt.Println("Becoming follower because reply.Term higher than my saved CurrentTerm or I have term vars set to 0")
 						becomeFollower(reply.Term)
 						return
 					}
