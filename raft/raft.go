@@ -603,6 +603,9 @@ func startLeader() {
 						}
 						fmt.Println("Sending collection signal to myself")
 						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
+						if err != nil {
+							fmt.Println(err)
+						}
 						defer resp.Body.Close()
 						_, err = ioutil.ReadAll(resp.Body)
 						if err != nil {
@@ -672,10 +675,10 @@ func startLeader() {
 					//resp, err := http.Post("http://"+hname+":443/anvil/raft/pushACL", "application/json", responseBody)
 					fmt.Println("Ingesting the acls file into raft")
 					resp, err := security.TLSPostReq(hname, "/anvil/raft/pushACL", "", "application/json", responseBody)
-					defer resp.Body.Close()
 					if err != nil {
 						log.Fatalln("Unable to post content")
 					}
+					defer resp.Body.Close()
 					_, err = ioutil.ReadAll(resp.Body)
 					if err != nil {
 						log.Fatalln("Unable to read received content")
@@ -717,10 +720,10 @@ func startLeader() {
                                         }
 					fmt.Println("Notifying client to pull rotation artifacts")
                                         resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
-					defer resp.Body.Close()
                                         if err != nil || resp.StatusCode != http.StatusOK {
                                                 fmt.Printf("Failure to notify all clients of available artifacts\n")
                                         }
+					defer resp.Body.Close()
 					_, err = ioutil.ReadAll(resp.Body)
 					if err != nil {
 						fmt.Println("Bad Read")
@@ -759,11 +762,11 @@ func startLeader() {
                                         semaphore <- struct{}{}
 					fmt.Println("Telling client to adjust config")
                                         resp, err = security.TLSGetReq(ele, "/anvil/rotation/config", "")
-                                        defer resp.Body.Close()
                                         if err != nil || resp.StatusCode != http.StatusOK {
 						fmt.Println(err)
                                                 fmt.Printf("Failure to notify all clients of available artifacts\n")
                                         }
+                                        defer resp.Body.Close()
 					fmt.Println(" --- Done telling client to change config")
                                         <-semaphore
                                 }
