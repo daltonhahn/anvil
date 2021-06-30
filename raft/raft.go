@@ -441,7 +441,7 @@ func startLeader() {
 	}
 
 	go func() {
-		ticker := time.NewTicker(1 * time.Second)
+		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
 
 		for {
@@ -457,7 +457,7 @@ func startLeader() {
 		}
 	}()
 	go func() {
-		rotateTicker := time.NewTicker(1 * time.Minute)
+		rotateTicker := time.NewTicker(5 * time.Minute)
 		defer rotateTicker.Stop()
 		for {
 			CM.mu.Lock()
