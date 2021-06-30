@@ -319,13 +319,10 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("LANDED IN REROUTE SERVICE")
         target_svc := strings.Split(r.RequestURI, "/")[2]
         tok_recv := r.Header["Authorization"][0]
-        fmt.Println("GOT THIS TOKEN: ", tok_recv)
         anv_catalog := catalog.GetCatalog()
         verifier := anv_catalog.GetQuorumMem()
-        fmt.Println("USING THIS VERIFIER: ", verifier)
         var resp *http.Response
         var err error
         postBody, _ := json.Marshal(tok_recv)
@@ -340,7 +337,6 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
                 log.Fatalln("Unable to read received content")
         }
         approval, _ := strconv.ParseBool(string(body))
-        fmt.Println("APPROVED?: ", approval)
         if (approval) {
                 target_port := anv_catalog.GetSvcPort(strings.Split(r.RequestURI, "/")[2])
                 rem_path := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
