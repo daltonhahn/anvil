@@ -86,12 +86,14 @@ func TLSGetReq(target string, path string, origin string) (*http.Response,error)
 	res1, err1 := TLSGetReqSvc(target, path, origin, 0)
 	if err1 != nil {
 		fmt.Println("GET failed on config 1")
+		fmt.Println(err1)
 		if len(SecConf) < 2 {
 			return &http.Response{},err1
 		} else {
 			res2, err2 := TLSGetReqSvc(target, path, origin, 1)
 			if err2 != nil {
 				fmt.Println("GET failed on config 2")
+				fmt.Println(err2)
 				return &http.Response{},err2
 			}
 			return res2, nil
@@ -121,6 +123,7 @@ func TLSPostReq(target string, path string, origin string, options string, body 
 	res1, err1 := TLSPostReqSvc(target, path, origin, options, string(b), 0)
 	if err1 != nil {
 		fmt.Println("POST failed on config 1")
+		fmt.Println(err1)
 		/*
 		if path == "/anvil/rotation" {
 			fmt.Println("Got an error from the first config request")
@@ -137,7 +140,8 @@ func TLSPostReq(target string, path string, origin string, options string, body 
 			*/
 			res2, err2 := TLSPostReqSvc(target, path, origin, options, string(b), 1)
 			if err2 != nil {
-				fmt.Println("POST failed on config 1")
+				fmt.Println("POST failed on config 2")
+				fmt.Println(err2)
 				/*
 				if path == "/anvil/rotation" {
 					fmt.Println("Got an error from the second config request")
