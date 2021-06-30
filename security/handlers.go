@@ -85,6 +85,7 @@ func TLSGetReq(target string, path string, origin string) (*http.Response,error)
 	ReadSecConfig()
 	res1, err1 := TLSGetReqSvc(target, path, origin, 0)
 	if err1 != nil {
+		fmt.Printf("%v\n", res1)
 		fmt.Println("GET failed on config 1")
 		fmt.Println(err1)
 		if len(SecConf) < 2 {
@@ -92,6 +93,7 @@ func TLSGetReq(target string, path string, origin string) (*http.Response,error)
 		} else {
 			res2, err2 := TLSGetReqSvc(target, path, origin, 1)
 			if err2 != nil {
+				fmt.Printf("%v\n", res1)
 				fmt.Println("GET failed on config 2")
 				fmt.Println(err2)
 				return &http.Response{},err2
@@ -104,49 +106,23 @@ func TLSGetReq(target string, path string, origin string) (*http.Response,error)
 
 func TLSPostReq(target string, path string, origin string, options string, body io.Reader) (*http.Response, error) {
 	ReadSecConfig()
-
-	/*
-	if path == "/anvil/rotation" {
-		fmt.Println("Making POST req")
-	}
-	*/
-
 	b, err := ioutil.ReadAll(body)
 	if err != nil {
 		log.Println("Body read failure")
 	}
-	/*
-	if path == "/anvil/rotation" {
-		fmt.Println("Read body bytes and making request with config 1")
-	}
-	*/
 	res1, err1 := TLSPostReqSvc(target, path, origin, options, string(b), 0)
 	if err1 != nil {
-		fmt.Println("POST failed on config 1")
+		fmt.Printf("%v\n", res1)
 		fmt.Println(err1)
-		/*
-		if path == "/anvil/rotation" {
-			fmt.Println("Got an error from the first config request")
-		}
-		*/
-		//fmt.Println("POST failed on config 1")
+		fmt.Println("POST failed on config 1")
 		if len(SecConf) < 2 {
 			return &http.Response{},err1
 		} else {
-			/*
-			if path == "/anvil/rotation" {
-				fmt.Println("Read body bytes and making request with config 1")
-			}
-			*/
 			res2, err2 := TLSPostReqSvc(target, path, origin, options, string(b), 1)
 			if err2 != nil {
-				fmt.Println("POST failed on config 2")
+				fmt.Printf("%v\n", res2)
 				fmt.Println(err2)
-				/*
-				if path == "/anvil/rotation" {
-					fmt.Println("Got an error from the second config request")
-				}
-				*/
+				fmt.Println("POST failed on config 2")
 				return &http.Response{},err2
 			}
 			return res2, nil
