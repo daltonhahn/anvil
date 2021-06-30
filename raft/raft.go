@@ -477,12 +477,10 @@ func startLeader() {
 					log.Fatalln(err)
 				}
 				//resp, err := security.TLSPostReq(hname, "/service/rotation/makeCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
-				fmt.Println("Sending makeCA signal to myself")
 				resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
 				if err != nil || resp.StatusCode != http.StatusOK {
 					fmt.Println(err)
 				}
-				fmt.Println(" --- Done with makeCA")
 				defer resp.Body.Close()
 
 				// Make gofunc()
@@ -505,7 +503,6 @@ func startLeader() {
 						log.Fatalln(err)
 					}
 					//CM.PeerIds stores IP addresses, not node names, need to look up so that TLS req can be made properly and verified with cert
-					fmt.Println("Sending pullCA signal to quorum member")
 					resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 					//resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 					//resp, err = http.Post("http://" + ele + ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
@@ -514,7 +511,6 @@ func startLeader() {
 						fmt.Printf("Failure to notify other Quorum members of CA artifacts\n")
 					}
 					defer resp.Body.Close()
-					fmt.Println(" --- Done with pullCA")
 				}
 				var newMap AssignmentMap
 				fullMap := processManifest(newMap)
@@ -535,14 +531,12 @@ func startLeader() {
 							log.Fatalln(err)
 						}
 						//resp, err = security.TLSPostReq(hname, "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
-						fmt.Println("Sending assignment to myself")
 						resp, err = http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
 						if err != nil || resp.StatusCode != http.StatusOK {
 							fmt.Println(err)
 							fmt.Printf("Failure to send generation assignment to self\n")
 						}
 						defer resp.Body.Close()
-						fmt.Println(" --- Done sending assignment to self")
 						<-semaphore
 					} else {
 						splitMap[i].Iteration = iteration
@@ -553,7 +547,6 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln(err)
 						}
-						fmt.Println("Sending assignment to quorum member")
 						resp, err = security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 						//resp, err = http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
 						if err != nil || resp.StatusCode != http.StatusOK {
@@ -561,7 +554,6 @@ func startLeader() {
 							fmt.Printf("Failure to send generation assignments to other quorum members\n")
 						}
 						defer resp.Body.Close()
-						fmt.Println(" --- Done sending assignment to quorum member")
 						<-semaphore
 					}
 				}
@@ -601,14 +593,12 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
-						fmt.Println("Sending collection signal to myself")
 						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
 						defer resp.Body.Close()
 						_, err = ioutil.ReadAll(resp.Body)
 						if err != nil {
 							fmt.Println("Bad Read")
 						}
-						fmt.Println(" --- Done sending collection signal to myself")
 						<-semaphore
 					} else {
 						var qMems []string
@@ -650,7 +640,6 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
-						fmt.Println("Sending collection signal to quorum member")
 						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
 						if err != nil {
 							fmt.Println(err)
@@ -660,7 +649,6 @@ func startLeader() {
 						if err != nil {
 							fmt.Println("Bad Read")
 						}
-						fmt.Println(" --- Done sending collection signal to quorum member")
 						<-semaphore
 					}
 				}
@@ -670,7 +658,6 @@ func startLeader() {
 					postBody, _ := json.Marshal(ele)
 					responseBody := bytes.NewBuffer(postBody)
 					//resp, err := http.Post("http://"+hname+":443/anvil/raft/pushACL", "application/json", responseBody)
-					fmt.Println("Ingesting the acls file into raft")
 					resp, err := security.TLSPostReq(hname, "/anvil/raft/pushACL", "", "application/json", responseBody)
 					defer resp.Body.Close()
 					if err != nil {
@@ -680,7 +667,6 @@ func startLeader() {
 					if err != nil {
 						log.Fatalln("Unable to read received content")
 					}
-					fmt.Println(" --- Done ingesting the acls file into raft")
 				}
 
 				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
@@ -715,7 +701,6 @@ func startLeader() {
                                         if err != nil {
                                                 log.Fatalln(err)
                                         }
-					fmt.Println("Notifying client to pull rotation artifacts")
                                         resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
 					defer resp.Body.Close()
                                         if err != nil || resp.StatusCode != http.StatusOK {
@@ -725,7 +710,6 @@ func startLeader() {
 					if err != nil {
 						fmt.Println("Bad Read")
 					}
-					fmt.Println(" --- Done notifying client to pull rotation artifacts")
 					<-semaphore
                                 }
 
@@ -733,23 +717,19 @@ func startLeader() {
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
 					semaphore <- struct{}{}
 					if i == len(CM.PeerIds) {
-						fmt.Println("Telling myself to change my config")
 						_, err = security.TLSGetReq(hname, "/anvil/rotation/config", "")
 						if err != nil {
 							fmt.Println(err)
 							log.Println("Failed to adjust leader config")
 						}
-						fmt.Println(" --- Done telling myself to change my config")
 						<-semaphore
 					} else {
 						sendTarg := CM.PeerIds[i]
-						fmt.Println("Telling quorum member to change config")
 						_, err = security.TLSGetReq(sendTarg, "/anvil/rotation/config", "")
 						if err != nil {
 							fmt.Println(err)
 							log.Println("Failed to adjust quorum configs")
 						}
-						fmt.Println(" --- Done telling quorum member to change config")
 						<-semaphore
 					}
 				}
@@ -757,14 +737,12 @@ func startLeader() {
 				semaphore = make(chan struct{}, len(clientList.Clients))
                                 for _, ele := range clientList.Clients {
                                         semaphore <- struct{}{}
-					fmt.Println("Telling client to adjust config")
                                         resp, err = security.TLSGetReq(ele, "/anvil/rotation/config", "")
                                         defer resp.Body.Close()
                                         if err != nil || resp.StatusCode != http.StatusOK {
 						fmt.Println(err)
                                                 fmt.Printf("Failure to notify all clients of available artifacts\n")
                                         }
-					fmt.Println(" --- Done telling client to change config")
                                         <-semaphore
                                 }
 

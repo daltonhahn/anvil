@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"fmt"
 	"gopkg.in/yaml.v2"
 
 	"github.com/daltonhahn/anvil/service"
@@ -85,17 +84,11 @@ func TLSGetReq(target string, path string, origin string) (*http.Response,error)
 	ReadSecConfig()
 	res1, err1 := TLSGetReqSvc(target, path, origin, 0)
 	if err1 != nil {
-		fmt.Printf("%v\n", res1)
-		fmt.Println("GET failed on config 1")
-		fmt.Println(err1)
 		if len(SecConf) < 2 {
 			return &http.Response{},err1
 		} else {
 			res2, err2 := TLSGetReqSvc(target, path, origin, 1)
 			if err2 != nil {
-				fmt.Printf("%v\n", res1)
-				fmt.Println("GET failed on config 2")
-				fmt.Println(err2)
 				return &http.Response{},err2
 			}
 			return res2, nil
@@ -112,17 +105,11 @@ func TLSPostReq(target string, path string, origin string, options string, body 
 	}
 	res1, err1 := TLSPostReqSvc(target, path, origin, options, string(b), 0)
 	if err1 != nil {
-		fmt.Printf("%v\n", res1)
-		fmt.Println(err1)
-		fmt.Println("POST failed on config 1")
 		if len(SecConf) < 2 {
 			return &http.Response{},err1
 		} else {
 			res2, err2 := TLSPostReqSvc(target, path, origin, options, string(b), 1)
 			if err2 != nil {
-				fmt.Printf("%v\n", res2)
-				fmt.Println(err2)
-				fmt.Println("POST failed on config 2")
 				return &http.Response{},err2
 			}
 			return res2, nil

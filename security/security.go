@@ -12,7 +12,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"fmt"
 )
 
 func EncDataSvc(plaintext string, confNum int) ([]byte,error) {
@@ -72,7 +71,6 @@ func TLSGetReqSvc(target string, path string, origin string, confNum int) (*http
         }
 	cert,err := tls.LoadX509KeyPair(SecConf[confNum].TLSCert, SecConf[confNum].TLSKey)
         if err != nil {
-		fmt.Println(err)
                 return &http.Response{}, errors.New("Unable to read Cert+Key")
         }
 
@@ -109,7 +107,6 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
         }
         cert,err := tls.LoadX509KeyPair(SecConf[confNum].TLSCert, SecConf[confNum].TLSKey)
         if err != nil {
-		fmt.Println(err)
                 return &http.Response{}, errors.New("Unable to read Cert+Key")
         }
 
