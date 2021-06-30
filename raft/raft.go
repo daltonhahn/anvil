@@ -652,6 +652,9 @@ func startLeader() {
 						}
 						fmt.Println("Sending collection signal to quorum member")
 						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
+						if err != nil {
+							fmt.Println(err)
+						}
 						defer resp.Body.Close()
 						_, err = ioutil.ReadAll(resp.Body)
 						if err != nil {
