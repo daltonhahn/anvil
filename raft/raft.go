@@ -485,6 +485,7 @@ func startLeader() {
 				fmt.Println(" --- Done with makeCA")
 				defer func() {
 					if err := resp.Body.Close(); err != nil {
+						fmt.Println("FAILURE TO CLOSE RESP BODY")
 						fmt.Println(err)
 					}
 				}()
@@ -519,6 +520,7 @@ func startLeader() {
 					}
 					defer func() {
 						if err := resp.Body.Close(); err != nil {
+							fmt.Println("FAILURE TO CLOSE RESP BODY")
 							fmt.Println(err)
 						}
 					}()
@@ -551,6 +553,7 @@ func startLeader() {
 						}
 						defer func() {
 							if err := resp.Body.Close(); err != nil {
+								fmt.Println("FAILURE TO CLOSE RESP BODY")
 								fmt.Println(err)
 							}
 						}()
@@ -574,6 +577,7 @@ func startLeader() {
 						}
 						defer func() {
 							if err := resp.Body.Close(); err != nil {
+								fmt.Println("FAILURE TO CLOSE RESP BODY")
 								fmt.Println(err)
 							}
 						}()
@@ -592,6 +596,7 @@ func startLeader() {
 						}
 						defer func() {
 							if err := resp.Body.Close(); err != nil {
+								fmt.Println("FAILURE TO CLOSE RESP BODY")
 								fmt.Println(err)
 							}
 						}()
@@ -628,6 +633,7 @@ func startLeader() {
 						}
 						defer func() {
 							if err := resp.Body.Close(); err != nil {
+								fmt.Println("FAILURE TO CLOSE RESP BODY")
 								fmt.Println(err)
 							}
 						}()
@@ -685,6 +691,7 @@ func startLeader() {
 						}
 						defer func() {
 							if err := resp.Body.Close(); err != nil {
+								fmt.Println("FAILURE TO CLOSE RESP BODY")
 								fmt.Println(err)
 							}
 						}()
@@ -710,6 +717,7 @@ func startLeader() {
 					}
 					defer func() {
 						if err := resp.Body.Close(); err != nil {
+							fmt.Println("FAILURE TO CLOSE RESP BODY")
 							fmt.Println(err)
 						}
 					}()
@@ -727,6 +735,7 @@ func startLeader() {
 				}
 				defer func() {
 					if err := resp.Body.Close(); err != nil {
+						fmt.Println("FAILURE TO CLOSE RESP BODY")
 						fmt.Println(err)
 					}
 				}()
@@ -765,6 +774,7 @@ func startLeader() {
                                         }
 					defer func() {
 						if err := resp.Body.Close(); err != nil {
+							fmt.Println("FAILURE TO CLOSE RESP BODY")
 							fmt.Println(err)
 						}
 					}()
@@ -812,6 +822,7 @@ func startLeader() {
                                         }
 					defer func() {
 						if err := resp.Body.Close(); err != nil {
+							fmt.Println("FAILURE TO CLOSE RESP BODY")
 							fmt.Println(err)
 						}
 					}()
@@ -923,6 +934,7 @@ func getLeader(target string) (string) {
         }
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
+			fmt.Println("FAILURE TO CLOSE RESP BODY")
 			fmt.Println(err)
 		}
 	}()
@@ -943,6 +955,7 @@ func UpdateLeader(target string, newLeader string) {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
+			fmt.Println("FAILURE TO CLOSE RESP BODY")
 			fmt.Println(err)
 		}
 	}()
@@ -959,6 +972,7 @@ func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntrie
         }
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
+			fmt.Println("FAILURE TO CLOSE RESP BODY")
 			fmt.Println(err)
 		}
 	}()
@@ -1011,6 +1025,7 @@ func SendVoteReq(target string, args RequestVoteArgs) (error, RequestVoteReply) 
         }
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
+			fmt.Println("FAILURE TO CLOSE RESP BODY")
 			fmt.Println(err)
 		}
 	}()
