@@ -483,7 +483,11 @@ func startLeader() {
 					fmt.Println(err)
 				}
 				fmt.Println(" --- Done with makeCA")
-				defer resp.Body.Close()
+				defer func() {
+					if err := resp.Body.Close(); err != nil {
+						fmt.Println(err)
+					}
+				}()
 
 				// Make gofunc()
 				for _, ele := range CM.PeerIds {
@@ -513,7 +517,11 @@ func startLeader() {
 						fmt.Println(err)
 						fmt.Printf("Failure to notify other Quorum members of CA artifacts\n")
 					}
-					defer resp.Body.Close()
+					defer func() {
+						if err := resp.Body.Close(); err != nil {
+							fmt.Println(err)
+						}
+					}()
 					fmt.Println(" --- Done with pullCA")
 				}
 				var newMap AssignmentMap
@@ -541,7 +549,11 @@ func startLeader() {
 							fmt.Println(err)
 							fmt.Printf("Failure to send generation assignment to self\n")
 						}
-						defer resp.Body.Close()
+						defer func() {
+							if err := resp.Body.Close(); err != nil {
+								fmt.Println(err)
+							}
+						}()
 						fmt.Println(" --- Done sending assignment to self")
 						<-semaphore
 					} else {
@@ -560,7 +572,11 @@ func startLeader() {
 							fmt.Println(err)
 							fmt.Printf("Failure to send generation assignments to other quorum members\n")
 						}
-						defer resp.Body.Close()
+						defer func() {
+							if err := resp.Body.Close(); err != nil {
+								fmt.Println(err)
+							}
+						}()
 						fmt.Println(" --- Done sending assignment to quorum member")
 						<-semaphore
 					}
@@ -574,7 +590,11 @@ func startLeader() {
 						if err != nil {
 							fmt.Println(err)
 						}
-						defer resp.Body.Close()
+						defer func() {
+							if err := resp.Body.Close(); err != nil {
+								fmt.Println(err)
+							}
+						}()
 						var temptargets []string
 						err = json.Unmarshal(b, &temptargets)
 						if err != nil {
@@ -606,7 +626,11 @@ func startLeader() {
 							fmt.Println(resp.StatusCode)
 							fmt.Println(err)
 						}
-						defer resp.Body.Close()
+						defer func() {
+							if err := resp.Body.Close(); err != nil {
+								fmt.Println(err)
+							}
+						}()
 						_, err = ioutil.ReadAll(resp.Body)
 						if err != nil {
 							fmt.Println("Bad Read")
@@ -659,7 +683,11 @@ func startLeader() {
 							fmt.Println(resp.StatusCode)
 							fmt.Println(err)
 						}
-						defer resp.Body.Close()
+						defer func() {
+							if err := resp.Body.Close(); err != nil {
+								fmt.Println(err)
+							}
+						}()
 						_, err = ioutil.ReadAll(resp.Body)
 						if err != nil {
 							fmt.Println("Bad Read")
@@ -680,7 +708,11 @@ func startLeader() {
 						fmt.Println(resp.StatusCode)
 						log.Fatalln("Unable to post content")
 					}
-					defer resp.Body.Close()
+					defer func() {
+						if err := resp.Body.Close(); err != nil {
+							fmt.Println(err)
+						}
+					}()
 					_, err = ioutil.ReadAll(resp.Body)
 					if err != nil {
 						log.Fatalln("Unable to read received content")
@@ -693,7 +725,11 @@ func startLeader() {
 					fmt.Println(resp.StatusCode)
 					fmt.Println(err)
 				}
-				defer resp.Body.Close()
+				defer func() {
+					if err := resp.Body.Close(); err != nil {
+						fmt.Println(err)
+					}
+				}()
 
 				b, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
@@ -727,7 +763,11 @@ func startLeader() {
 						fmt.Println(resp.StatusCode)
                                                 fmt.Printf("Failure to notify all clients of available artifacts\n")
                                         }
-					defer resp.Body.Close()
+					defer func() {
+						if err := resp.Body.Close(); err != nil {
+							fmt.Println(err)
+						}
+					}()
 					_, err = ioutil.ReadAll(resp.Body)
 					if err != nil {
 						fmt.Println("Bad Read")
@@ -770,7 +810,11 @@ func startLeader() {
 						fmt.Println(err)
                                                 fmt.Printf("Failure to notify all clients of available artifacts\n")
                                         }
-                                        defer resp.Body.Close()
+					defer func() {
+						if err := resp.Body.Close(); err != nil {
+							fmt.Println(err)
+						}
+					}()
 					fmt.Println(" --- Done telling client to change config")
                                         <-semaphore
                                 }
@@ -877,7 +921,11 @@ func getLeader(target string) (string) {
         if err != nil {
                 return ""
         }
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Println(err)
+		}
+	}()
 	return string(body)
 }
 
@@ -893,7 +941,11 @@ func UpdateLeader(target string, newLeader string) {
 	if err != nil {
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Println(err)
+		}
+	}()
 	return
 }
 
@@ -905,7 +957,11 @@ func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntrie
         if err != nil {
 		return errors.New("No HTTP response"), AppendEntriesReply{}
         }
-        defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Println(err)
+		}
+	}()
 
         b, err := ioutil.ReadAll(resp.Body)
         if err != nil {
@@ -953,7 +1009,11 @@ func SendVoteReq(target string, args RequestVoteArgs) (error, RequestVoteReply) 
         if err != nil {
 		return errors.New("No HTTP response"), RequestVoteReply{}
         }
-        defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Println(err)
+		}
+	}()
 
         b, err := ioutil.ReadAll(resp.Body)
         if err != nil {
