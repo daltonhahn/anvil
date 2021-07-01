@@ -602,7 +602,8 @@ func startLeader() {
 						}
 						fmt.Println("Sending collection signal to myself")
 						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
-						if err != nil {
+						if err != nil || resp.StatusCode != http.StatusOK {
+							fmt.Println(resp.StatusCode)
 							fmt.Println(err)
 						}
 						defer resp.Body.Close()
@@ -654,7 +655,8 @@ func startLeader() {
 						}
 						fmt.Println("Sending collection signal to quorum member")
 						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
-						if err != nil {
+						if err != nil || resp.StatusCode != http.StatusOK {
+							fmt.Println(resp.StatusCode)
 							fmt.Println(err)
 						}
 						defer resp.Body.Close()
@@ -674,7 +676,8 @@ func startLeader() {
 					//resp, err := http.Post("http://"+hname+":443/anvil/raft/pushACL", "application/json", responseBody)
 					fmt.Println("Ingesting the acls file into raft")
 					resp, err := security.TLSPostReq(hname, "/anvil/raft/pushACL", "", "application/json", responseBody)
-					if err != nil {
+					if err != nil || resp.StatusCode != http.StatusOK {
+						fmt.Println(resp.StatusCode)
 						log.Fatalln("Unable to post content")
 					}
 					defer resp.Body.Close()
@@ -686,7 +689,8 @@ func startLeader() {
 				}
 
 				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
-				if err != nil {
+				if err != nil || resp.StatusCode != http.StatusOK {
+					fmt.Println(resp.StatusCode)
 					fmt.Println(err)
 				}
 				defer resp.Body.Close()
@@ -720,6 +724,7 @@ func startLeader() {
 					fmt.Println("Notifying client to pull rotation artifacts")
                                         resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
                                         if err != nil || resp.StatusCode != http.StatusOK {
+						fmt.Println(resp.StatusCode)
                                                 fmt.Printf("Failure to notify all clients of available artifacts\n")
                                         }
 					defer resp.Body.Close()
