@@ -95,8 +95,8 @@ func NewConsensusModule(id string, peerIds []string) *ConsensusModule {
 	CM.PeerIds= peerIds
 	CM.state = Follower
 	CM.votedFor = ""
-	CM.nextIndex = make(map[int]int)
-	CM.matchIndex = make(map[int]int)
+	CM.nextIndex = make(map[int]int, 5000)
+	CM.matchIndex = make(map[int]int, 5000)
 	CM.commitIndex = -1
 	CM.lastApplied = -1
 	iteration = 1
@@ -844,10 +844,10 @@ func leaderSendHeartbeats() {
 	savedCurrentTerm := CM.currentTerm
 	CM.mu.Unlock()
 	if CM.nextIndex == nil {
-		CM.nextIndex = make(map[int]int)
+		CM.nextIndex = make(map[int]int, 5000)
 	}
 	if CM.matchIndex == nil {
-		CM.matchIndex = make(map[int]int)
+		CM.matchIndex = make(map[int]int, 5000)
 	}
 	var ni int
 
