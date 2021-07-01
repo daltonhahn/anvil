@@ -566,7 +566,6 @@ func startLeader() {
 					}
 				}
 
-				time.Sleep(20*time.Second)
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
 					semaphore <- struct{}{}
 					if i == len(CM.PeerIds) {
