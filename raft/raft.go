@@ -101,7 +101,6 @@ func NewConsensusModule(id string, peerIds []string) *ConsensusModule {
 	CM.commitIndex = -1
 	CM.lastApplied = -1
 	iteration = 1
-	CM.aclBounds = []int{0,0}
 
 	go func() {
 		CM.mu.Lock()
@@ -431,6 +430,8 @@ func becomeFollower(term int) {
 func startLeader() {
 	CM.state = Leader
 	dlog(fmt.Sprintf("becomes Leader; term=%d", CM.currentTerm))
+	CM.aclBounds[0] = 0
+	CM.aclBounds[1] = 0
 
 	UpdateLeader(CM.id, CM.id)
 	if len(CM.PeerIds) == 0 {
