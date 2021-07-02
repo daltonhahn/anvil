@@ -704,7 +704,6 @@ func startLeader() {
 					}
 				}
 
-				CM.mu.Lock()
 				aclEntries,_ := acl.ACLIngest("/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/acls.yaml")
 				for _, ele := range aclEntries {
 					postBody, _ := json.Marshal(ele)
@@ -728,7 +727,6 @@ func startLeader() {
 					}
 					fmt.Println(" --- Done ingesting the acls file into raft")
 				}
-				CM.mu.Unlock()
 
 				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
 				if err != nil || resp.StatusCode != http.StatusOK {
@@ -860,12 +858,18 @@ func leaderSendHeartbeats() {
 					return
 				}
 				CM.mu.Lock()
+				fmt.Printf("LOG LENGTH/CAPACITY: %v // %v\n", cap(CM.log), len(CM.log))
+				fmt.Printf("Ind val: %v\n", ind)
+				fmt.Printf("NI: %v\n", CM.nextIndex[ind])
 				ni = CM.nextIndex[ind]
 				prevLogIndex := ni - 1
+				fmt.Printf("PREVLOGIND: %v\n", prevLogIndex)
 				prevLogTerm := -1
 				if prevLogIndex >= 0 {
+					fmt.Printf("---PREVLOGTERM: %v\n", CM.log[prevLogIndex].Term)
 					prevLogTerm = CM.log[prevLogIndex].Term
 				}
+				fmt.Printf("Num log entries: %v\n", CM.log[ni:])
 				entries := CM.log[ni:]
 
 				args := AppendEntriesArgs{
