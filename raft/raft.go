@@ -95,12 +95,11 @@ func NewConsensusModule(id string, peerIds []string) *ConsensusModule {
 	CM.PeerIds= peerIds
 	CM.state = Follower
 	CM.votedFor = ""
-	CM.nextIndex = make(map[int]int, 5000)
-	CM.matchIndex = make(map[int]int, 5000)
+	CM.nextIndex = make(map[int]int)
+	CM.matchIndex = make(map[int]int)
 	CM.commitIndex = -1
 	CM.lastApplied = -1
 	iteration = 1
-	CM.log = make([]LogEntry, 5000)
 
 	go func() {
 		CM.mu.Lock()
@@ -466,9 +465,8 @@ func startLeader() {
 				CM.mu.Unlock()
 				return
 			}
-			CM.mu.Unlock()
+			defer CM.mu.Unlock()
 			if CM.currentTerm > 1 {
-				fmt.Printf("CAPACITY OF LOG IS: %v\n", cap(CM.log))
 				hname, err := os.Hostname()
 				if err != nil {
 					log.Fatalln("Unable to get hostname")
@@ -845,10 +843,10 @@ func leaderSendHeartbeats() {
 	savedCurrentTerm := CM.currentTerm
 	CM.mu.Unlock()
 	if CM.nextIndex == nil {
-		CM.nextIndex = make(map[int]int, 5000)
+		CM.nextIndex = make(map[int]int)
 	}
 	if CM.matchIndex == nil {
-		CM.matchIndex = make(map[int]int, 5000)
+		CM.matchIndex = make(map[int]int)
 	}
 	var ni int
 
