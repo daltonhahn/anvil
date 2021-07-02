@@ -430,6 +430,7 @@ func becomeFollower(term int) {
 func startLeader() {
 	CM.state = Leader
 	dlog(fmt.Sprintf("becomes Leader; term=%d", CM.currentTerm))
+	CM.aclBounds = make([]int, 2)
 	CM.aclBounds[0] = 0
 	CM.aclBounds[1] = 0
 
