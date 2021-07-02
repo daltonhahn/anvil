@@ -101,7 +101,7 @@ func NewConsensusModule(id string, peerIds []string) *ConsensusModule {
 	CM.commitIndex = -1
 	CM.lastApplied = -1
 	iteration = 1
-	CM.aclBounds = make([]int, 2)
+	CM.aclBounds = []int{0,0}
 
 	go func() {
 		CM.mu.Lock()
