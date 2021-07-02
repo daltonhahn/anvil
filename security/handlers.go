@@ -3,6 +3,9 @@ package security
 import (
 	"net/http"
 	"io"
+	"os"
+	"time"
+
 	"io/ioutil"
 	"log"
 	"gopkg.in/yaml.v2"
@@ -81,6 +84,9 @@ func DecData(input_ciphertext string) ([]byte,error) {
 }
 
 func TLSGetReq(target string, path string, origin string) (*http.Response,error) {
+	if HTTPStat() == false {
+		time.Sleep(1*time.Second)
+	}
 	ReadSecConfig()
 	res1, err1 := TLSGetReqSvc(target, path, origin, 0)
 	if err1 != nil {
@@ -98,6 +104,9 @@ func TLSGetReq(target string, path string, origin string) (*http.Response,error)
 }
 
 func TLSPostReq(target string, path string, origin string, options string, body io.Reader) (*http.Response, error) {
+	if HTTPStat() == false {
+		time.Sleep(1*time.Second)
+	}
 	ReadSecConfig()
 	b, err := ioutil.ReadAll(body)
 	if err != nil {
@@ -116,4 +125,13 @@ func TLSPostReq(target string, path string, origin string, options string, body 
 		}
 	}
 	return res1, nil
+}
+
+func HTTPStat() bool {
+        hname, _ := os.Hostname()
+        resp, err := TLSGetReq(hname, "/anvil/", "")
+        if err != nil || resp.StatusCode != http.StatusOK {
+                return false
+        }
+        return true
 }

@@ -483,12 +483,10 @@ func startLeader() {
 					log.Fatalln(err)
 				}
 				//resp, err := security.TLSPostReq(hname, "/service/rotation/makeCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
-				fmt.Println("Sending makeCA signal to myself")
 				resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
 				if err != nil || resp.StatusCode != http.StatusOK {
 					fmt.Println(err)
 				}
-				fmt.Println(" --- Done with makeCA")
 				defer func() {
 					if err := resp.Body.Close(); err != nil {
 						fmt.Println("FAILURE TO CLOSE RESP BODY")
@@ -516,7 +514,6 @@ func startLeader() {
 						log.Fatalln(err)
 					}
 					//CM.PeerIds stores IP addresses, not node names, need to look up so that TLS req can be made properly and verified with cert
-					fmt.Println("Sending pullCA signal to quorum member")
 					resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 					//resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 					//resp, err = http.Post("http://" + ele + ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
@@ -530,7 +527,6 @@ func startLeader() {
 							fmt.Println(err)
 						}
 					}()
-					fmt.Println(" --- Done with pullCA")
 				}
 				var newMap AssignmentMap
 				fullMap := processManifest(newMap)
@@ -551,7 +547,6 @@ func startLeader() {
 							log.Fatalln(err)
 						}
 						//resp, err = security.TLSPostReq(hname, "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
-						fmt.Println("Sending assignment to myself")
 						resp, err = http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
 						if err != nil || resp.StatusCode != http.StatusOK {
 							fmt.Println(err)
@@ -563,7 +558,6 @@ func startLeader() {
 								fmt.Println(err)
 							}
 						}()
-						fmt.Println(" --- Done sending assignment to self")
 						<-semaphore
 					} else {
 						splitMap[i].Iteration = iteration
@@ -574,7 +568,6 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln(err)
 						}
-						fmt.Println("Sending assignment to quorum member")
 						resp, err = security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 						//resp, err = http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
 						if err != nil || resp.StatusCode != http.StatusOK {
@@ -587,7 +580,6 @@ func startLeader() {
 								fmt.Println(err)
 							}
 						}()
-						fmt.Println(" --- Done sending assignment to quorum member")
 						<-semaphore
 					}
 				}
@@ -631,7 +623,6 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
-						fmt.Println("Sending collection signal to myself")
 						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
 						if err != nil || resp.StatusCode != http.StatusOK {
 							fmt.Println(resp.StatusCode)
@@ -647,7 +638,6 @@ func startLeader() {
 						if err != nil {
 							fmt.Println("Bad Read")
 						}
-						fmt.Println(" --- Done sending collection signal to myself")
 						<-semaphore
 					} else {
 						var qMems []string
@@ -689,7 +679,6 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
-						fmt.Println("Sending collection signal to quorum member")
 						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
 						if err != nil || resp.StatusCode != http.StatusOK {
 							fmt.Println(resp.StatusCode)
@@ -705,22 +694,18 @@ func startLeader() {
 						if err != nil {
 							fmt.Println("Bad Read")
 						}
-						fmt.Println(" --- Done sending collection signal to quorum member")
 						<-semaphore
 					}
 				}
 
-				fmt.Println("LOG LEN: ", len(CM.log))
 				if CM.aclBounds[0] != 0 && CM.aclBounds[1] != 0 {
 					CM.log = CM.log[CM.aclBounds[1]:]
 				}
-				fmt.Println("LOG LEN AFTER TRIM: ", len(CM.log))
 				aclEntries,_ := acl.ACLIngest("/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/acls.yaml")
 				for _, ele := range aclEntries {
 					postBody, _ := json.Marshal(ele)
 					responseBody := bytes.NewBuffer(postBody)
 					//resp, err := http.Post("http://"+hname+":443/anvil/raft/pushACL", "application/json", responseBody)
-					fmt.Println("Ingesting the acls file into raft")
 					resp, err := security.TLSPostReq(hname, "/anvil/raft/pushACL", "", "application/json", responseBody)
 					if err != nil || resp.StatusCode != http.StatusOK {
 						fmt.Println(resp.StatusCode)
@@ -736,23 +721,18 @@ func startLeader() {
 					if err != nil {
 						log.Fatalln("Unable to read received content")
 					}
-					fmt.Println(" --- Done ingesting the acls file into raft")
 				}
 				// Once new ACLs pushed on
 				if CM.aclBounds[0] == 0 && CM.aclBounds[1] == 0 {
-					fmt.Println("both 0, setting [0]")
 					CM.aclBounds[0] = len(CM.log)
 				} else if CM.aclBounds[0] != 0 && CM.aclBounds[1] == 0 {
-					fmt.Println("[1] is 0, setting [1] to [0] and [0] to len")
 					CM.aclBounds[1] = CM.aclBounds[0]
 					CM.aclBounds[0] = len(CM.log)
 				} else if CM.aclBounds[0] != 0 && CM.aclBounds[1] != 0 {
-					fmt.Println("both not 0, setting [1] to diff and [0] to len")
 					tempBounds := CM.aclBounds[1]
 					CM.aclBounds[1] = CM.aclBounds[0] - tempBounds
 					CM.aclBounds[0] = len(CM.log)
 				}
-				fmt.Printf("BOUND 0: %v ----- BOUND 1: %v\n", CM.aclBounds[0], CM.aclBounds[1])
 
 				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
 				if err != nil || resp.StatusCode != http.StatusOK {
@@ -792,7 +772,6 @@ func startLeader() {
                                         if err != nil {
                                                 log.Fatalln(err)
                                         }
-					fmt.Println("Notifying client to pull rotation artifacts")
                                         resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
                                         if err != nil || resp.StatusCode != http.StatusOK {
 						fmt.Println(resp.StatusCode)
@@ -808,7 +787,6 @@ func startLeader() {
 					if err != nil {
 						fmt.Println("Bad Read")
 					}
-					fmt.Println(" --- Done notifying client to pull rotation artifacts")
 					<-semaphore
                                 }
 
@@ -816,23 +794,19 @@ func startLeader() {
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
 					semaphore <- struct{}{}
 					if i == len(CM.PeerIds) {
-						fmt.Println("Telling myself to change my config")
 						_, err = security.TLSGetReq(hname, "/anvil/rotation/config", "")
 						if err != nil {
 							fmt.Println(err)
 							log.Println("Failed to adjust leader config")
 						}
-						fmt.Println(" --- Done telling myself to change my config")
 						<-semaphore
 					} else {
 						sendTarg := CM.PeerIds[i]
-						fmt.Println("Telling quorum member to change config")
 						_, err = security.TLSGetReq(sendTarg, "/anvil/rotation/config", "")
 						if err != nil {
 							fmt.Println(err)
 							log.Println("Failed to adjust quorum configs")
 						}
-						fmt.Println(" --- Done telling quorum member to change config")
 						<-semaphore
 					}
 				}
@@ -840,7 +814,6 @@ func startLeader() {
 				semaphore = make(chan struct{}, len(clientList.Clients))
                                 for _, ele := range clientList.Clients {
                                         semaphore <- struct{}{}
-					fmt.Println("Telling client to adjust config")
                                         resp, err = security.TLSGetReq(ele, "/anvil/rotation/config", "")
                                         if err != nil || resp.StatusCode != http.StatusOK {
 						fmt.Println(err)
@@ -852,7 +825,6 @@ func startLeader() {
 							fmt.Println(err)
 						}
 					}()
-					fmt.Println(" --- Done telling client to change config")
                                         <-semaphore
                                 }
 				iteration = iteration + 1
