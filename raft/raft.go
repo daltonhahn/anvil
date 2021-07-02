@@ -468,6 +468,7 @@ func startLeader() {
 			}
 			CM.mu.Unlock()
 			if CM.currentTerm > 1 {
+				fmt.Printf("CAPACITY OF LOG IS: %v\n", cap(CM.log))
 				hname, err := os.Hostname()
 				if err != nil {
 					log.Fatalln("Unable to get hostname")
@@ -864,9 +865,6 @@ func leaderSendHeartbeats() {
 				prevLogIndex := ni - 1
 				prevLogTerm := -1
 				if prevLogIndex >= 0 {
-					fmt.Println(" ------ ", len(CM.log))
-					fmt.Println(" ------ PrevLogInd: ", prevLogIndex)
-					fmt.Println(" ------ Term Num: ", CM.log[prevLogIndex].Term)
 					prevLogTerm = CM.log[prevLogIndex].Term
 				}
 				entries := CM.log[ni:]
