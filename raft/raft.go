@@ -83,6 +83,7 @@ type ConsensusModule struct {
 	nextIndex	map[int]int
 	matchIndex	map[int]int
 	iteration	int
+	aclBounds	[]int
 }
 
 
@@ -100,6 +101,7 @@ func NewConsensusModule(id string, peerIds []string) *ConsensusModule {
 	CM.commitIndex = -1
 	CM.lastApplied = -1
 	iteration = 1
+	CM.aclBounds = make([]int, 2)
 
 	go func() {
 		CM.mu.Lock()
@@ -704,6 +706,11 @@ func startLeader() {
 					}
 				}
 
+				fmt.Println("LOG LEN: ", len(CM.log))
+				if CM.aclBounds[0] != 0 && CM.aclBounds[1] != 0 {
+					CM.log = CM.log[CM.aclBounds[1]:]
+				}
+				fmt.Println("LOG LEN AFTER TRIM: ", len(CM.log))
 				aclEntries,_ := acl.ACLIngest("/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/acls.yaml")
 				for _, ele := range aclEntries {
 					postBody, _ := json.Marshal(ele)
@@ -727,6 +734,18 @@ func startLeader() {
 					}
 					fmt.Println(" --- Done ingesting the acls file into raft")
 				}
+				// Once new ACLs pushed on
+				if CM.aclBounds[0] == 0 && CM.aclBounds[1] == 0 {
+					CM.aclBounds[0] = len(CM.log)
+				} else if CM.aclBounds[0] != 0 && CM.aclBounds[1] == 0 {
+					CM.aclBounds[1] = CM.aclBounds[0]
+					CM.aclBounds[0] = len(CM.log)
+				} else if CM.aclBounds[0] != 0 && CM.aclBounds[1] != 0 {
+					tempBounds := CM.aclBounds[1]
+					CM.aclBounds[1] = CM.aclBounds[0] - tempBounds
+					CM.aclBounds[0] = len(CM.log)
+				}
+				fmt.Printf("BOUND 0: %v ----- BOUND 1: %v\n", CM.aclBounds[0], CM.aclBounds[1])
 
 				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
 				if err != nil || resp.StatusCode != http.StatusOK {
