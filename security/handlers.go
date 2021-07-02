@@ -129,9 +129,12 @@ func TLSPostReq(target string, path string, origin string, options string, body 
 
 func HTTPStat() bool {
         hname, _ := os.Hostname()
-        resp, err := TLSGetReq(hname, "/anvil/", "")
+        resp, err := TLSGetReqSvc(hname, "/anvil/", "", 0)
         if err != nil || resp.StatusCode != http.StatusOK {
-                return false
+		resp, err := TLSGetReqSvc(hname, "/anvil/", "", 1)
+		if err != nil || resp.StatusCode != http.StatusOK {
+			return false
+		}
         }
         return true
 }
