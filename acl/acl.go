@@ -11,8 +11,6 @@ import (
         "gopkg.in/yaml.v2"
 )
 
-var aclList []ACLEntry
-
 type ACLEntry struct {
 	Name		string		`yaml:"name,omitempty"`
 	TokenValue	string		`yaml:"val,omitempty"`
@@ -33,6 +31,7 @@ func ACLIngest(filepath string) ([]ACLEntry, error) {
 		log.Fatalf("Unmarshal: %v", err)
 	}
 
+	var retList []ACLEntry
 	for _,ele := range tempList {
 		tokVal := ele.TokenValue
 		if len(tokVal) == 0 {
@@ -40,10 +39,10 @@ func ACLIngest(filepath string) ([]ACLEntry, error) {
 		}
 		createTime := time.Now()
 		expTime := time.Now().Add(24*time.Hour)
-		aclList = append(aclList, ACLEntry{Name: ele.Name, TokenValue: tokVal, CreationTime: createTime,
+		retList = append(retList, ACLEntry{Name: ele.Name, TokenValue: tokVal, CreationTime: createTime,
 				ExpirationTime: expTime, ServiceList: ele.ServiceList})
 	}
-	return aclList, nil
+	return retList, nil
 }
 
 const charset = "abcdefghijklmnopqrstuvwxyz" +
