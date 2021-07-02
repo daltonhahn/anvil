@@ -736,11 +736,14 @@ func startLeader() {
 				}
 				// Once new ACLs pushed on
 				if CM.aclBounds[0] == 0 && CM.aclBounds[1] == 0 {
+					fmt.Println("both 0, setting [0]")
 					CM.aclBounds[0] = len(CM.log)
 				} else if CM.aclBounds[0] != 0 && CM.aclBounds[1] == 0 {
+					fmt.Println("[1] is 0, setting [1] to [0] and [0] to len")
 					CM.aclBounds[1] = CM.aclBounds[0]
 					CM.aclBounds[0] = len(CM.log)
 				} else if CM.aclBounds[0] != 0 && CM.aclBounds[1] != 0 {
+					fmt.Println("both not 0, setting [1] to diff and [0] to len")
 					tempBounds := CM.aclBounds[1]
 					CM.aclBounds[1] = CM.aclBounds[0] - tempBounds
 					CM.aclBounds[0] = len(CM.log)
@@ -877,18 +880,12 @@ func leaderSendHeartbeats() {
 					return
 				}
 				CM.mu.Lock()
-				fmt.Printf("LOG LENGTH/CAPACITY: %v // %v\n", cap(CM.log), len(CM.log))
-				fmt.Printf("Ind val: %v\n", ind)
-				fmt.Printf("NI: %v\n", CM.nextIndex[ind])
 				ni = CM.nextIndex[ind]
 				prevLogIndex := ni - 1
-				fmt.Printf("PREVLOGIND: %v\n", prevLogIndex)
 				prevLogTerm := -1
 				if prevLogIndex >= 0 {
-					fmt.Printf("---PREVLOGTERM: %v\n", CM.log[prevLogIndex].Term)
 					prevLogTerm = CM.log[prevLogIndex].Term
 				}
-				fmt.Printf("Num log entries: %v\n", CM.log[ni:])
 				entries := CM.log[ni:]
 
 				args := AppendEntriesArgs{
