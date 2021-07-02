@@ -465,7 +465,6 @@ func startLeader() {
 				CM.mu.Unlock()
 				return
 			}
-			defer CM.mu.Unlock()
 			if CM.currentTerm > 1 {
 				hname, err := os.Hostname()
 				if err != nil {
@@ -829,8 +828,8 @@ func startLeader() {
 					fmt.Println(" --- Done telling client to change config")
                                         <-semaphore
                                 }
-
 				iteration = iteration + 1
+				CM.mu.Unlock()
 			}
 			<-rotateTicker.C
 			fmt.Println("Rotating . . .")
