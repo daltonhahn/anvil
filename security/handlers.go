@@ -128,13 +128,16 @@ func TLSPostReq(target string, path string, origin string, options string, body 
 }
 
 func HTTPStat() bool {
+	ReadSecConfig()
         hname, _ := os.Hostname()
         resp, err := TLSGetReqSvc(hname, "/anvil/", "", 0)
-        if err != nil || resp.StatusCode != http.StatusOK {
+        if err != nil || resp.StatusCode != http.StatusOK && len(SecConf) > 1 {
 		resp, err := TLSGetReqSvc(hname, "/anvil/", "", 1)
 		if err != nil || resp.StatusCode != http.StatusOK {
 			return false
 		}
-        }
+        } else {
+		return false
+	}
         return true
 }
