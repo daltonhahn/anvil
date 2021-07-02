@@ -431,8 +431,6 @@ func startLeader() {
 	CM.state = Leader
 	dlog(fmt.Sprintf("becomes Leader; term=%d", CM.currentTerm))
 	CM.aclBounds = make([]int, 2)
-	CM.aclBounds[0] = 0
-	CM.aclBounds[1] = 0
 
 	UpdateLeader(CM.id, CM.id)
 	if len(CM.PeerIds) == 0 {
@@ -471,6 +469,10 @@ func startLeader() {
 			}
 			CM.mu.Unlock()
 			if CM.currentTerm > 1 {
+				if CM.aclBounds[0] == 0 {
+					CM.aclBounds[0] = len(CM.log)
+				}
+
 				hname, err := os.Hostname()
 				if err != nil {
 					log.Fatalln("Unable to get hostname")
