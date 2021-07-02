@@ -3,8 +3,6 @@ package security
 import (
 	"net/http"
 	"io"
-	"os"
-	"time"
 
 	"io/ioutil"
 	"log"
@@ -84,9 +82,6 @@ func DecData(input_ciphertext string) ([]byte,error) {
 }
 
 func TLSGetReq(target string, path string, origin string) (*http.Response,error) {
-	if HTTPStat() == false {
-		time.Sleep(1*time.Second)
-	}
 	ReadSecConfig()
 	res1, err1 := TLSGetReqSvc(target, path, origin, 0)
 	if err1 != nil {
@@ -104,9 +99,6 @@ func TLSGetReq(target string, path string, origin string) (*http.Response,error)
 }
 
 func TLSPostReq(target string, path string, origin string, options string, body io.Reader) (*http.Response, error) {
-	if HTTPStat() == false {
-		time.Sleep(1*time.Second)
-	}
 	ReadSecConfig()
 	b, err := ioutil.ReadAll(body)
 	if err != nil {
@@ -125,19 +117,4 @@ func TLSPostReq(target string, path string, origin string, options string, body 
 		}
 	}
 	return res1, nil
-}
-
-func HTTPStat() bool {
-	ReadSecConfig()
-        hname, _ := os.Hostname()
-        resp, err := TLSGetReqSvc(hname, "/anvil/", "", 0)
-        if err != nil || resp.StatusCode != http.StatusOK && len(SecConf) > 1 {
-		resp, err := TLSGetReqSvc(hname, "/anvil/", "", 1)
-		if err != nil || resp.StatusCode != http.StatusOK {
-			return false
-		}
-        } else {
-		return false
-	}
-        return true
 }
