@@ -465,6 +465,7 @@ func startLeader() {
 				CM.mu.Unlock()
 				return
 			}
+			CM.mu.Unlock()
 			if CM.currentTerm > 1 {
 				hname, err := os.Hostname()
 				if err != nil {
@@ -703,6 +704,7 @@ func startLeader() {
 					}
 				}
 
+				CM.mu.Lock()
 				aclEntries,_ := acl.ACLIngest("/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/acls.yaml")
 				for _, ele := range aclEntries {
 					postBody, _ := json.Marshal(ele)
@@ -726,6 +728,7 @@ func startLeader() {
 					}
 					fmt.Println(" --- Done ingesting the acls file into raft")
 				}
+				CM.mu.Unlock()
 
 				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
 				if err != nil || resp.StatusCode != http.StatusOK {
@@ -829,7 +832,6 @@ func startLeader() {
                                         <-semaphore
                                 }
 				iteration = iteration + 1
-				CM.mu.Unlock()
 			}
 			<-rotateTicker.C
 			fmt.Println("Rotating . . .")
