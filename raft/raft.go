@@ -830,7 +830,7 @@ func startLeader() {
 				iteration = iteration + 1
 			}
 			<-rotateTicker.C
-			fmt.Println("Rotating . . .")
+			fmt.Printf("Rotating at %v . . .\n", time.Now())
 		}
 	}()
 }
