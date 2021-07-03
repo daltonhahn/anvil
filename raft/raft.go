@@ -505,7 +505,6 @@ func startLeader() {
 						}
 					},
 				)
-				time.Sleep(2*time.Second)
 
 				//resp, err := security.TLSPostReq(hname, "/service/rotation/makeCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 				//resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
@@ -542,14 +541,16 @@ func startLeader() {
 						log.Fatalln(err)
 					}
 
-					fmt.Println(" ----- PullCA ----- ")
+					fmt.Printf(" ----- PullCA: %v ----- \n", ele)
 					err = retry.Do(
 						func() error {
 							resp, err := security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 							if err != nil || resp.StatusCode != http.StatusOK {
 								if err == nil {
+									fmt.Printf("\t\t%v\n", resp.StatusCode)
 									return errors.New("BAD STATUS CODE FROM SERVER")
 								} else {
+									fmt.Printf("\t\t%v\n", err)
 									return err
 								}
 							} else {
