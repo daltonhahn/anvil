@@ -1,7 +1,6 @@
 package anvil
 
 import (
-	"fmt"
 	"crypto/tls"
 	"sync"
 	"log"
@@ -81,7 +80,7 @@ func (cw *CertWatcher) load() error {
                 log.Fatal(err)
         }
         if len(security.SecConf) >= 2 {
-		for _, fp := range security.SecConf[0].CACert {
+		for _, fp := range security.SecConf[1].CACert {
 			caCert, err := ioutil.ReadFile(fp)
 			if err != nil {
 				log.Printf("Read file error #%v", err)
@@ -156,8 +155,6 @@ func (cw *CertWatcher) startNewServer(anv_router *mux.Router) error {
                 log.Println(err)
         }
         nullLog := log.New(dump, "", log.LstdFlags)
-	fmt.Printf("%v\n",cw.caCerts)
-	fmt.Printf("%v\n",cw.keyPairs)
 	server = &http.Server{
 		MaxHeaderBytes: 1 << 20,
 		Addr: ":443",
