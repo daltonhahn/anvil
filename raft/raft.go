@@ -485,6 +485,7 @@ func startLeader() {
 				//resp, err := security.TLSPostReq(hname, "/service/rotation/makeCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 				resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
 				if err != nil || resp.StatusCode != http.StatusOK {
+					fmt.Println(resp.StatusCode)
 					fmt.Println(err)
 				}
 				defer func() {
@@ -518,6 +519,7 @@ func startLeader() {
 					//resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 					//resp, err = http.Post("http://" + ele + ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
 					if err != nil || resp.StatusCode != http.StatusOK {
+						fmt.Println(resp.StatusCode)
 						fmt.Println(err)
 						fmt.Printf("Failure to notify other Quorum members of CA artifacts\n")
 					}
@@ -549,6 +551,7 @@ func startLeader() {
 						//resp, err = security.TLSPostReq(hname, "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 						resp, err = http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
 						if err != nil || resp.StatusCode != http.StatusOK {
+							fmt.Println(resp.StatusCode)
 							fmt.Println(err)
 							fmt.Printf("Failure to send generation assignment to self\n")
 						}
@@ -571,6 +574,7 @@ func startLeader() {
 						resp, err = security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 						//resp, err = http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
 						if err != nil || resp.StatusCode != http.StatusOK {
+							fmt.Println(resp.StatusCode)
 							fmt.Println(err)
 							fmt.Printf("Failure to send generation assignments to other quorum members\n")
 						}
