@@ -319,6 +319,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Landed in Reroute service")
         target_svc := strings.Split(r.RequestURI, "/")[2]
         tok_recv := r.Header["Authorization"][0]
         anv_catalog := catalog.GetCatalog()
@@ -337,6 +338,7 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
                 log.Fatalln("Unable to read received content")
         }
         approval, _ := strconv.ParseBool(string(body))
+	fmt.Println("\t REQUEST WAS APPROVED?: ", approval)
         if (approval) {
                 target_port := anv_catalog.GetSvcPort(strings.Split(r.RequestURI, "/")[2])
                 rem_path := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
