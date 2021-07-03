@@ -20,6 +20,7 @@ import (
 	"github.com/daltonhahn/anvil/acl"
 	"github.com/daltonhahn/anvil/security"
 	"gopkg.in/yaml.v2"
+	"github.com/avast/retry-go/v3"
 )
 
 type AssignmentMap struct {
@@ -482,8 +483,30 @@ func startLeader() {
 				if err != nil {
 					log.Fatalln(err)
 				}
+				var body []byte
+				err = retry.Do(
+					func() error {
+						resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
+						if err != nil || resp.StatusCode != http.StatusOK {
+							if err == nil {
+								return errors.New("BAD STATUS CODE FROM SERVER")
+							} else {
+								return err
+							}
+						} else {
+							defer resp.Body.Close()
+							body, err = ioutil.ReadAll(resp.Body)
+							if err != nil {
+								return err
+							}
+							return nil
+						}
+					},
+				)
+
 				//resp, err := security.TLSPostReq(hname, "/service/rotation/makeCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
-				resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
+				//resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
+				/*
 				if err != nil || resp.StatusCode != http.StatusOK {
 					fmt.Println(resp.StatusCode)
 					fmt.Println(err)
@@ -494,6 +517,7 @@ func startLeader() {
 						fmt.Println(err)
 					}
 				}()
+				*/
 
 				// Make gofunc()
 				for _, ele := range CM.PeerIds {
@@ -514,10 +538,31 @@ func startLeader() {
 					if err != nil {
 						log.Fatalln(err)
 					}
+
+					err = retry.Do(
+						func() error {
+							resp, err := security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
+							if err != nil || resp.StatusCode != http.StatusOK {
+								if err == nil {
+									return errors.New("BAD STATUS CODE FROM SERVER")
+								} else {
+									return err
+								}
+							} else {
+								defer resp.Body.Close()
+								body, err = ioutil.ReadAll(resp.Body)
+								if err != nil {
+									return err
+								}
+								return nil
+							}
+						},
+					)
+
 					//CM.PeerIds stores IP addresses, not node names, need to look up so that TLS req can be made properly and verified with cert
-					resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 					//resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 					//resp, err = http.Post("http://" + ele + ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
+					/*
 					if err != nil || resp.StatusCode != http.StatusOK {
 						fmt.Println(resp.StatusCode)
 						fmt.Println(err)
@@ -529,6 +574,7 @@ func startLeader() {
 							fmt.Println(err)
 						}
 					}()
+					*/
 				}
 				var newMap AssignmentMap
 				fullMap := processManifest(newMap)
@@ -548,8 +594,30 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln(err)
 						}
+
+						err = retry.Do(
+							func() error {
+								resp, err := http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
+								if err != nil || resp.StatusCode != http.StatusOK {
+									if err == nil {
+										return errors.New("BAD STATUS CODE FROM SERVER")
+									} else {
+										return err
+									}
+								} else {
+									defer resp.Body.Close()
+									body, err = ioutil.ReadAll(resp.Body)
+									if err != nil {
+										return err
+									}
+									return nil
+								}
+							},
+						)
+
 						//resp, err = security.TLSPostReq(hname, "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
-						resp, err = http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
+						//resp, err = http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
+						/*
 						if err != nil || resp.StatusCode != http.StatusOK {
 							fmt.Println(resp.StatusCode)
 							fmt.Println(err)
@@ -561,6 +629,7 @@ func startLeader() {
 								fmt.Println(err)
 							}
 						}()
+						*/
 						<-semaphore
 					} else {
 						splitMap[i].Iteration = iteration
@@ -571,8 +640,30 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln(err)
 						}
-						resp, err = security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
+
+						err = retry.Do(
+							func() error {
+								resp, err := security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
+								if err != nil || resp.StatusCode != http.StatusOK {
+									if err == nil {
+										return errors.New("BAD STATUS CODE FROM SERVER")
+									} else {
+										return err
+									}
+								} else {
+									defer resp.Body.Close()
+									body, err = ioutil.ReadAll(resp.Body)
+									if err != nil {
+										return err
+									}
+									return nil
+								}
+							},
+						)
+
+						//resp, err = security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 						//resp, err = http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
+						/*
 						if err != nil || resp.StatusCode != http.StatusOK {
 							fmt.Println(resp.StatusCode)
 							fmt.Println(err)
@@ -584,6 +675,7 @@ func startLeader() {
 								fmt.Println(err)
 							}
 						}()
+						*/
 						<-semaphore
 					}
 				}
@@ -591,6 +683,27 @@ func startLeader() {
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
 					semaphore <- struct{}{}
 					if i == len(CM.PeerIds) {
+						err = retry.Do(
+							func() error {
+								resp, err := security.TLSGetReq(hname, "/anvil/raft/peerList", "")
+								if err != nil || resp.StatusCode != http.StatusOK {
+									if err == nil {
+										return errors.New("BAD STATUS CODE FROM SERVER")
+									} else {
+										return err
+									}
+								} else {
+									defer resp.Body.Close()
+									body, err = ioutil.ReadAll(resp.Body)
+									if err != nil {
+										return err
+									}
+									return nil
+								}
+							},
+						)
+
+						/*
 						resp, err := security.TLSGetReq(hname, "/anvil/raft/peerList", "")
 						b, err := ioutil.ReadAll(resp.Body)
 						if err != nil {
@@ -602,8 +715,9 @@ func startLeader() {
 								fmt.Println(err)
 							}
 						}()
+						*/
 						var temptargets []string
-						err = json.Unmarshal(b, &temptargets)
+						err = json.Unmarshal(body, &temptargets)
 						if err != nil {
 							log.Println(err)
 						}
@@ -627,6 +741,29 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
+
+						err = retry.Do(
+							func() error {
+								resp, err := http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
+								if err != nil || resp.StatusCode != http.StatusOK {
+									if err == nil {
+										return errors.New("BAD STATUS CODE FROM SERVER")
+									} else {
+										return err
+									}
+								} else {
+									defer resp.Body.Close()
+									body, err = ioutil.ReadAll(resp.Body)
+									if err != nil {
+										return err
+									}
+									return nil
+								}
+							},
+						)
+
+
+						/*
 						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
 						if err != nil || resp.StatusCode != http.StatusOK {
 							fmt.Println(resp.StatusCode)
@@ -642,6 +779,7 @@ func startLeader() {
 						if err != nil {
 							fmt.Println("Bad Read")
 						}
+						*/
 						<-semaphore
 					} else {
 						var qMems []string
@@ -683,6 +821,28 @@ func startLeader() {
 						if err != nil {
 							log.Fatalln("Unable to marshal JSON")
 						}
+
+						err = retry.Do(
+							func() error {
+								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
+								if err != nil || resp.StatusCode != http.StatusOK {
+									if err == nil {
+										return errors.New("BAD STATUS CODE FROM SERVER")
+									} else {
+										return err
+									}
+								} else {
+									defer resp.Body.Close()
+									body, err = ioutil.ReadAll(resp.Body)
+									if err != nil {
+										return err
+									}
+									return nil
+								}
+							},
+						)
+
+						/*
 						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
 						if err != nil || resp.StatusCode != http.StatusOK {
 							fmt.Println(resp.StatusCode)
@@ -698,6 +858,7 @@ func startLeader() {
 						if err != nil {
 							fmt.Println("Bad Read")
 						}
+						*/
 						<-semaphore
 					}
 				}
@@ -738,6 +899,27 @@ func startLeader() {
 					CM.aclBounds[0] = len(CM.log)
 				}
 
+				err = retry.Do(
+                                        func() error {
+						resp, err := security.TLSGetReq(hname, "/anvil/catalog/clients", "")
+						if err != nil || resp.StatusCode != http.StatusOK {
+							if err == nil {
+								return errors.New("BAD STATUS CODE FROM SERVER")
+							} else {
+								return err
+							}
+						} else {
+							defer resp.Body.Close()
+							body, err = ioutil.ReadAll(resp.Body)
+							if err != nil {
+								return err
+							}
+							return nil
+						}
+					},
+				)
+
+				/*
 				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
 				if err != nil || resp.StatusCode != http.StatusOK {
 					fmt.Println(resp.StatusCode)
@@ -754,10 +936,11 @@ func startLeader() {
 				if err != nil {
 					fmt.Println(err)
 				}
+				*/
 				clientList := struct {
 					Clients		[]string
 				}{}
-				err = json.Unmarshal(b, &clientList)
+				err = json.Unmarshal(body, &clientList)
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -776,6 +959,29 @@ func startLeader() {
                                         if err != nil {
                                                 log.Fatalln(err)
                                         }
+
+					err = retry.Do(
+						func() error {
+							resp, err := security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
+							if err != nil || resp.StatusCode != http.StatusOK {
+								if err == nil {
+									return errors.New("BAD STATUS CODE FROM SERVER")
+								} else {
+									return err
+								}
+							} else {
+								defer resp.Body.Close()
+								body, err = ioutil.ReadAll(resp.Body)
+								if err != nil {
+									return err
+								}
+								return nil
+							}
+						},
+					)
+
+
+					/*
                                         resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
                                         if err != nil || resp.StatusCode != http.StatusOK {
 						fmt.Println(resp.StatusCode)
@@ -791,6 +997,7 @@ func startLeader() {
 					if err != nil {
 						fmt.Println("Bad Read")
 					}
+					*/
 					<-semaphore
                                 }
 
@@ -798,19 +1005,63 @@ func startLeader() {
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
 					semaphore <- struct{}{}
 					if i == len(CM.PeerIds) {
+						_ = retry.Do(
+							func() error {
+								resp, err := security.TLSGetReq(hname, "/anvil/rotation/config", "")
+								if err != nil || resp.StatusCode != http.StatusOK {
+									if err == nil {
+										return errors.New("BAD STATUS CODE FROM SERVER")
+									} else {
+										return err
+									}
+								} else {
+									defer resp.Body.Close()
+									body, err = ioutil.ReadAll(resp.Body)
+									if err != nil {
+										return err
+									}
+									return nil
+								}
+							},
+						)
+
+						/*
 						_, err = security.TLSGetReq(hname, "/anvil/rotation/config", "")
 						if err != nil {
 							fmt.Println(err)
 							log.Println("Failed to adjust leader config")
 						}
+						*/
 						<-semaphore
 					} else {
 						sendTarg := CM.PeerIds[i]
+						err = retry.Do(
+							func() error {
+								resp, err := security.TLSGetReq(sendTarg, "/anvil/rotation/config", "")
+								if err != nil || resp.StatusCode != http.StatusOK {
+									if err == nil {
+										return errors.New("BAD STATUS CODE FROM SERVER")
+									} else {
+										return err
+									}
+								} else {
+									defer resp.Body.Close()
+									body, err = ioutil.ReadAll(resp.Body)
+									if err != nil {
+										return err
+									}
+									return nil
+								}
+							},
+						)
+
+						/*
 						_, err = security.TLSGetReq(sendTarg, "/anvil/rotation/config", "")
 						if err != nil {
 							fmt.Println(err)
 							log.Println("Failed to adjust quorum configs")
 						}
+						*/
 						<-semaphore
 					}
 				}
@@ -818,7 +1069,28 @@ func startLeader() {
 				semaphore = make(chan struct{}, len(clientList.Clients))
                                 for _, ele := range clientList.Clients {
                                         semaphore <- struct{}{}
-                                        resp, err = security.TLSGetReq(ele, "/anvil/rotation/config", "")
+					err = retry.Do(
+						func() error {
+							resp, err := security.TLSGetReq(ele, "/anvil/rotation/config", "")
+							if err != nil || resp.StatusCode != http.StatusOK {
+								if err == nil {
+									return errors.New("BAD STATUS CODE FROM SERVER")
+								} else {
+									return err
+								}
+							} else {
+								defer resp.Body.Close()
+								body, err = ioutil.ReadAll(resp.Body)
+								if err != nil {
+									return err
+								}
+								return nil
+							}
+						},
+					)
+
+					/*
+					resp, err = security.TLSGetReq(ele, "/anvil/rotation/config", "")
                                         if err != nil || resp.StatusCode != http.StatusOK {
 						fmt.Println(err)
                                                 fmt.Printf("Failure to notify all clients of available artifacts\n")
@@ -829,6 +1101,7 @@ func startLeader() {
 							fmt.Println(err)
 						}
 					}()
+					*/
                                         <-semaphore
                                 }
 				iteration = iteration + 1
