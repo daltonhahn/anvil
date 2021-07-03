@@ -1,6 +1,7 @@
 package anvil
 
 import (
+	"fmt"
 	"crypto/tls"
 	"sync"
 	"log"
@@ -155,6 +156,8 @@ func (cw *CertWatcher) startNewServer(anv_router *mux.Router) error {
                 log.Println(err)
         }
         nullLog := log.New(dump, "", log.LstdFlags)
+	fmt.Printf("%v\n",cw.caCerts)
+	fmt.Printf("%v\n",cw.keyPairs)
 	server = &http.Server{
 		MaxHeaderBytes: 1 << 20,
 		Addr: ":443",
