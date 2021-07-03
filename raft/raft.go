@@ -505,6 +505,7 @@ func startLeader() {
 						}
 					},
 				)
+				time.Sleep(2*time.Second)
 
 				//resp, err := security.TLSPostReq(hname, "/service/rotation/makeCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 				//resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
