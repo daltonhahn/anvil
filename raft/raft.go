@@ -131,7 +131,8 @@ func TokenLookup(token string, targetSvc string, requestTime time.Time) bool {
 	if bounds[2] == 0 {
 		bounds[2] = len(log)
 	}
-	for _, ele := range log[bounds[0]:bounds[2]+1] {
+	//for _, ele := range log[bounds[0]:bounds[2]+1] {
+	for _, ele := range log[bounds[0]:] {
 		if ele.ACLObj.TokenValue == token {
 			for _,svc := range ele.ACLObj.ServiceList {
 				if svc == targetSvc && requestTime.Before(ele.ACLObj.ExpirationTime) {
@@ -465,7 +466,7 @@ func startLeader() {
 		}
 	}()
 	go func() {
-		rotateTicker := time.NewTicker(2 * time.Minute)
+		rotateTicker := time.NewTicker(5 * time.Minute)
 		defer rotateTicker.Stop()
 		for {
 			CM.mu.Lock()
