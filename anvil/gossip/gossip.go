@@ -8,13 +8,15 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
-	//"net/http"
+	"net/http"
 	"math/rand"
 //	"strings"
+	"errors"
 
 	"github.com/daltonhahn/anvil/security"
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/service"
+	"github.com/avast/retry-go/v3"
 )
 
 type Message struct {
@@ -97,13 +99,35 @@ func CheckHealth() {
 		if err != nil {
 			log.Fatalln("Unable to get hostname")
 		}
-		resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
+		var body []byte
+		err = retry.Do(
+			func() error {
+				resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
+				if err != nil || resp.StatusCode != http.StatusOK {
+					if err == nil {
+						return errors.New("BAD STATUS CODE FROM SERVER")
+					} else {
+						return err
+					}
+				} else {
+					defer resp.Body.Close()
+					body, err = ioutil.ReadAll(resp.Body)
+					if err != nil {
+						return err
+					}
+					return nil
+				}
+			},
+		)
+		//resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
 		//resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
+		/*
 		if err != nil {
 			log.Fatalln("Unable to get response")
 		}
 
 		body, err := ioutil.ReadAll(resp.Body)
+		*/
 		var receivedStuff Message
 
 		err = json.Unmarshal(body, &receivedStuff)
@@ -131,12 +155,34 @@ func PropagateCatalog() {
 		if err != nil {
 			log.Fatalln("Unable to get hostname")
 		}
-		resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
+		var body []byte
+		err = retry.Do(
+			func() error {
+				resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
+				if err != nil || resp.StatusCode != http.StatusOK {
+					if err == nil {
+						return errors.New("BAD STATUS CODE FROM SERVER")
+					} else {
+						return err
+					}
+				} else {
+					defer resp.Body.Close()
+					body, err = ioutil.ReadAll(resp.Body)
+					if err != nil {
+						return err
+					}
+					return nil
+				}
+			},
+		)
+		//resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
 		//resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
+		/*
 		if err != nil {
 			log.Fatalln("Unable to get response")
 		}
 		body, err := ioutil.ReadAll(resp.Body)
+		*/
 		var receivedStuff Message
 		err = json.Unmarshal(body, &receivedStuff)
 		if err != nil {
