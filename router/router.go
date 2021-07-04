@@ -319,19 +319,14 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Landed in Reroute service")
         target_svc := strings.Split(r.RequestURI, "/")[2]
-	fmt.Println("\tTarget SVC: ", target_svc)
         tok_recv := r.Header["Authorization"][0]
-	fmt.Println("\tAuth Token: ", tok_recv)
         anv_catalog := catalog.GetCatalog()
         verifier := anv_catalog.GetQuorumMem()
-	fmt.Println("\tVerifier: ", verifier)
         var resp *http.Response
         var err error
         postBody, _ := json.Marshal(tok_recv)
         responseBody := bytes.NewBuffer(postBody)
-	fmt.Println("\t--- Making request to verifier for check")
         resp, err = security.TLSPostReq(verifier, "/anvil/raft/acl/"+target_svc, "", "application/json", responseBody)
         if err != nil {
                 log.Fatalln("Unable to post content")
@@ -342,7 +337,6 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
                 log.Fatalln("Unable to read received content")
         }
         approval, _ := strconv.ParseBool(string(body))
-	fmt.Println("\t REQUEST WAS APPROVED?: ", approval)
         if (approval) {
                 target_port := anv_catalog.GetSvcPort(strings.Split(r.RequestURI, "/")[2])
                 rem_path := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
