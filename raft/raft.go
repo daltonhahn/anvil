@@ -128,6 +128,9 @@ func GetLog() {
 func TokenLookup(token string, targetSvc string, requestTime time.Time) bool {
 	bounds := CM.aclBounds
 	log := CM.log
+	if bounds[2] == 0 {
+		bounds[2] = len(log)
+	}
 	for _, ele := range log[bounds[0]:bounds[2]+1] {
 		if ele.ACLObj.TokenValue == token {
 			for _,svc := range ele.ACLObj.ServiceList {
@@ -539,7 +542,6 @@ func startLeader() {
 						log.Fatalln(err)
 					}
 
-					fmt.Printf(" ----- PullCA: %v ----- \n", ele)
 					err = retry.Do(
 						func() error {
 							resp, err := security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
@@ -745,7 +747,6 @@ func startLeader() {
 							log.Fatalln("Unable to marshal JSON")
 						}
 
-						fmt.Println(" ----- CollectSignal ----- ")
 						err = retry.Do(
 							func() error {
 								resp, err := http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
@@ -826,7 +827,6 @@ func startLeader() {
 							log.Fatalln("Unable to marshal JSON")
 						}
 
-						fmt.Println(" ----- CollectSignal ----- ")
 						err = retry.Do(
 							func() error {
 								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
@@ -1137,7 +1137,6 @@ func leaderSendHeartbeats() {
 				ni = CM.nextIndex[ind]
 				prevLogIndex := ni - 1
 				prevLogTerm := -1
-				fmt.Printf("NI: %v --- PLI: %v --- PLT: %v --- LOGLEN: %v\n", ni, prevLogIndex, prevLogTerm, len(CM.log))
 				if prevLogIndex >= 0 {
 					prevLogTerm = CM.log[prevLogIndex].Term
 				}
