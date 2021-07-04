@@ -488,6 +488,7 @@ func startLeader() {
 				}
 				var body []byte
 
+				fmt.Println(" ---- MakeCA ----- ")
 				err = retry.Do(
 					func() error {
 						resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
@@ -543,6 +544,7 @@ func startLeader() {
 						log.Fatalln(err)
 					}
 
+					fmt.Println(" ---- PullCA ----- ")
 					err = retry.Do(
 						func() error {
 							resp, err := security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
@@ -601,6 +603,7 @@ func startLeader() {
 							log.Fatalln(err)
 						}
 
+						fmt.Println(" ---- Assignment ----- ")
 						err = retry.Do(
 							func() error {
 								resp, err := http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
@@ -647,6 +650,7 @@ func startLeader() {
 							log.Fatalln(err)
 						}
 
+						fmt.Printf(" ---- Assignment: %v ----- \n", CM.PeerIds[i])
 						err = retry.Do(
 							func() error {
 								resp, err := security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
@@ -689,6 +693,7 @@ func startLeader() {
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
 					semaphore <- struct{}{}
 					if i == len(CM.PeerIds) {
+						fmt.Printf(" ---- PeerList ----- \n")
 						err = retry.Do(
 							func() error {
 								resp, err := security.TLSGetReq(hname, "/anvil/raft/peerList", "")
@@ -747,6 +752,7 @@ func startLeader() {
 							log.Fatalln("Unable to marshal JSON")
 						}
 
+						fmt.Println(" ----- PrepBundle ----- ")
 						err = retry.Do(
 							func() error {
 								resp, err := http.Post("http://" + hname + ":8080/prepBundle", "application/json", bytes.NewBuffer(jsonData))
@@ -826,6 +832,7 @@ func startLeader() {
 							log.Fatalln("Unable to marshal JSON")
 						}
 
+						fmt.Printf(" ----- PrepBundle: %v ----- \n", sendTarg)
 						err = retry.Do(
 							func() error {
 								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/prepBundle", "rotation", "application/json", bytes.NewBuffer(jsonData))
@@ -882,6 +889,7 @@ func startLeader() {
 							log.Fatalln("Unable to marshal JSON")
 						}
 
+						fmt.Printf(" ----- CollectSignal ----- \n")
 						err = retry.Do(
 							func() error {
 								resp, err := http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
@@ -935,6 +943,7 @@ func startLeader() {
 							log.Fatalln("Unable to marshal JSON")
 						}
 
+						fmt.Printf(" ----- CollectSignal: %v ----- \n", sendTarg)
 						err = retry.Do(
 							func() error {
 								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
@@ -991,6 +1000,7 @@ func startLeader() {
 							log.Fatalln("Unable to marshal JSON")
 						}
 
+						fmt.Printf(" ----- FillCA ----- \n")
 						err = retry.Do(
 							func() error {
 								resp, err := http.Post("http://" + hname + ":8080/fillCA", "application/json", bytes.NewBuffer(jsonData))
@@ -1044,6 +1054,7 @@ func startLeader() {
 							log.Fatalln("Unable to marshal JSON")
 						}
 
+						fmt.Printf(" ----- FillCA: %v ----- \n", sendTarg)
 						err = retry.Do(
 							func() error {
 								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/fillCA", "rotation", "application/json", bytes.NewBuffer(jsonData))
@@ -1117,6 +1128,7 @@ func startLeader() {
 					CM.aclBounds[2] = len(CM.log)
 				}
 
+				fmt.Printf(" ----- GetClients ----- \n")
 				err = retry.Do(
                                         func() error {
 						resp, err := security.TLSGetReq(hname, "/anvil/catalog/clients", "")
@@ -1178,6 +1190,7 @@ func startLeader() {
                                                 log.Fatalln(err)
                                         }
 
+					fmt.Printf(" ----- Pull Rotation Files: %v ----- \n", ele)
 					err = retry.Do(
 						func() error {
 							resp, err := security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
@@ -1223,6 +1236,7 @@ func startLeader() {
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
 					semaphore <- struct{}{}
 					if i == len(CM.PeerIds) {
+						fmt.Printf(" ----- Rotation Config ----- \n")
 						_ = retry.Do(
 							func() error {
 								resp, err := security.TLSGetReq(hname, "/anvil/rotation/config", "")
@@ -1253,6 +1267,7 @@ func startLeader() {
 						<-semaphore
 					} else {
 						sendTarg := CM.PeerIds[i]
+						fmt.Printf(" ----- Rotation Config: %v ----- \n", sendTarg)
 						err = retry.Do(
 							func() error {
 								resp, err := security.TLSGetReq(sendTarg, "/anvil/rotation/config", "")
@@ -1287,6 +1302,7 @@ func startLeader() {
 				semaphore = make(chan struct{}, len(clientList.Clients))
                                 for _, ele := range clientList.Clients {
                                         semaphore <- struct{}{}
+					fmt.Printf(" ----- Rotation Config: %v ----- \n", ele)
 					err = retry.Do(
 						func() error {
 							resp, err := security.TLSGetReq(ele, "/anvil/rotation/config", "")
