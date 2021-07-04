@@ -740,8 +740,7 @@ func startLeader() {
 						collectMap := struct {
 							Targets         []string
 							Iteration       string
-							QuorumMems	[]string
-						}{Targets: targets, Iteration: strconv.Itoa(iteration), QuorumMems: CM.PeerIds}
+						}{Targets: targets, Iteration: strconv.Itoa(iteration)}
 
 						jsonData, err := json.Marshal(collectMap)
 						if err != nil {
@@ -750,7 +749,7 @@ func startLeader() {
 
 						err = retry.Do(
 							func() error {
-								resp, err := http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
+								resp, err := http.Post("http://" + hname + ":8080/prepBundle", "application/json", bytes.NewBuffer(jsonData))
 								if err != nil || resp.StatusCode != http.StatusOK {
 									if err == nil {
 										return errors.New("BAD STATUS CODE FROM SERVER")
@@ -820,8 +819,116 @@ func startLeader() {
 						collectMap := struct {
 							Targets         []string
 							Iteration       string
+						}{Targets: targets, Iteration: strconv.Itoa(iteration)}
+
+						jsonData, err := json.Marshal(collectMap)
+						if err != nil {
+							log.Fatalln("Unable to marshal JSON")
+						}
+
+						err = retry.Do(
+							func() error {
+								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/prepBundle", "rotation", "application/json", bytes.NewBuffer(jsonData))
+								if err != nil || resp.StatusCode != http.StatusOK {
+									if err == nil {
+										return errors.New("BAD STATUS CODE FROM SERVER")
+									} else {
+										return err
+									}
+								} else {
+									defer resp.Body.Close()
+									body, err = ioutil.ReadAll(resp.Body)
+									if err != nil {
+										return err
+									}
+									return nil
+								}
+							},
+						)
+
+						/*
+						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
+						if err != nil || resp.StatusCode != http.StatusOK {
+							fmt.Println(resp.StatusCode)
+							fmt.Println(err)
+						}
+						defer func() {
+							if err := resp.Body.Close(); err != nil {
+								fmt.Println("FAILURE TO CLOSE RESP BODY")
+								fmt.Println(err)
+							}
+						}()
+						_, err = ioutil.ReadAll(resp.Body)
+						if err != nil {
+							fmt.Println("Bad Read")
+						}
+						*/
+						<-semaphore
+					}
+				}
+
+				for i:=0; i < len(CM.PeerIds)+1; i++ {
+					semaphore <- struct{}{}
+					if i == len(CM.PeerIds) {
+						qMems := CM.PeerIds
+						qMems = append(qMems, hname)
+						collectMap := struct {
+							Iteration       string
 							QuorumMems	[]string
-						}{Targets: targets, Iteration: strconv.Itoa(iteration), QuorumMems: qMems}
+						}{Iteration: strconv.Itoa(iteration), QuorumMems: qMems}
+
+						jsonData, err := json.Marshal(collectMap)
+						if err != nil {
+							log.Fatalln("Unable to marshal JSON")
+						}
+
+						err = retry.Do(
+							func() error {
+								resp, err := http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
+								if err != nil || resp.StatusCode != http.StatusOK {
+									if err == nil {
+										return errors.New("BAD STATUS CODE FROM SERVER")
+									} else {
+										return err
+									}
+								} else {
+									defer resp.Body.Close()
+									body, err = ioutil.ReadAll(resp.Body)
+									if err != nil {
+										return err
+									}
+									return nil
+								}
+							},
+						)
+
+
+						/*
+						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
+						if err != nil || resp.StatusCode != http.StatusOK {
+							fmt.Println(resp.StatusCode)
+							fmt.Println(err)
+						}
+						defer func() {
+							if err := resp.Body.Close(); err != nil {
+								fmt.Println("FAILURE TO CLOSE RESP BODY")
+								fmt.Println(err)
+							}
+						}()
+						_, err = ioutil.ReadAll(resp.Body)
+						if err != nil {
+							fmt.Println("Bad Read")
+						}
+						*/
+						<-semaphore
+					} else {
+						qMems := CM.PeerIds
+						sendTarg := CM.PeerIds[i]
+						qMems = append(qMems, hname)
+						collectMap := struct {
+							Iteration       string
+							QuorumMems	[]string
+						}{Iteration: strconv.Itoa(iteration), QuorumMems: qMems}
 
 						jsonData, err := json.Marshal(collectMap)
 						if err != nil {
@@ -831,6 +938,115 @@ func startLeader() {
 						err = retry.Do(
 							func() error {
 								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
+								if err != nil || resp.StatusCode != http.StatusOK {
+									if err == nil {
+										return errors.New("BAD STATUS CODE FROM SERVER")
+									} else {
+										return err
+									}
+								} else {
+									defer resp.Body.Close()
+									body, err = ioutil.ReadAll(resp.Body)
+									if err != nil {
+										return err
+									}
+									return nil
+								}
+							},
+						)
+
+						/*
+						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
+						if err != nil || resp.StatusCode != http.StatusOK {
+							fmt.Println(resp.StatusCode)
+							fmt.Println(err)
+						}
+						defer func() {
+							if err := resp.Body.Close(); err != nil {
+								fmt.Println("FAILURE TO CLOSE RESP BODY")
+								fmt.Println(err)
+							}
+						}()
+						_, err = ioutil.ReadAll(resp.Body)
+						if err != nil {
+							fmt.Println("Bad Read")
+						}
+						*/
+						<-semaphore
+					}
+				}
+
+				for i:=0; i < len(CM.PeerIds)+1; i++ {
+					semaphore <- struct{}{}
+					if i == len(CM.PeerIds) {
+						qMems := CM.PeerIds
+						qMems = append(qMems, hname)
+						collectMap := struct {
+							Iteration       string
+							QuorumMems	[]string
+						}{Iteration: strconv.Itoa(iteration), QuorumMems: qMems}
+
+						jsonData, err := json.Marshal(collectMap)
+						if err != nil {
+							log.Fatalln("Unable to marshal JSON")
+						}
+
+						err = retry.Do(
+							func() error {
+								resp, err := http.Post("http://" + hname + ":8080/fillCA", "application/json", bytes.NewBuffer(jsonData))
+								if err != nil || resp.StatusCode != http.StatusOK {
+									if err == nil {
+										return errors.New("BAD STATUS CODE FROM SERVER")
+									} else {
+										return err
+									}
+								} else {
+									defer resp.Body.Close()
+									body, err = ioutil.ReadAll(resp.Body)
+									if err != nil {
+										return err
+									}
+									return nil
+								}
+							},
+						)
+
+
+						/*
+						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
+						if err != nil || resp.StatusCode != http.StatusOK {
+							fmt.Println(resp.StatusCode)
+							fmt.Println(err)
+						}
+						defer func() {
+							if err := resp.Body.Close(); err != nil {
+								fmt.Println("FAILURE TO CLOSE RESP BODY")
+								fmt.Println(err)
+							}
+						}()
+						_, err = ioutil.ReadAll(resp.Body)
+						if err != nil {
+							fmt.Println("Bad Read")
+						}
+						*/
+						<-semaphore
+					} else {
+						qMems := CM.PeerIds
+						sendTarg := CM.PeerIds[i]
+						qMems = append(qMems, hname)
+						collectMap := struct {
+							Iteration       string
+							QuorumMems	[]string
+						}{Iteration: strconv.Itoa(iteration), QuorumMems: qMems}
+
+						jsonData, err := json.Marshal(collectMap)
+						if err != nil {
+							log.Fatalln("Unable to marshal JSON")
+						}
+
+						err = retry.Do(
+							func() error {
+								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/fillCA", "rotation", "application/json", bytes.NewBuffer(jsonData))
 								if err != nil || resp.StatusCode != http.StatusOK {
 									if err == nil {
 										return errors.New("BAD STATUS CODE FROM SERVER")
