@@ -84,7 +84,7 @@ type ConsensusModule struct {
 	nextIndex	map[int]int
 	matchIndex	map[int]int
 	iteration	int
-	//aclBounds	[]int
+	aclBounds	[]int
 }
 
 
@@ -126,8 +126,9 @@ func GetLog() {
 }
 
 func TokenLookup(token string, targetSvc string, requestTime time.Time) bool {
+	bounds := CM.aclBounds
 	log := CM.log
-	for _, ele := range log {
+	for _, ele := range log[bounds[0]:bounds[2]+1] {
 		if ele.ACLObj.TokenValue == token {
 			for _,svc := range ele.ACLObj.ServiceList {
 				if svc == targetSvc && requestTime.Before(ele.ACLObj.ExpirationTime) {
@@ -432,7 +433,7 @@ func becomeFollower(term int) {
 func startLeader() {
 	CM.state = Leader
 	dlog(fmt.Sprintf("becomes Leader; term=%d", CM.currentTerm))
-	//CM.aclBounds = make([]int, 2)
+	CM.aclBounds = make([]int, 3)
 
 	UpdateLeader(CM.id, CM.id)
 	if len(CM.PeerIds) == 0 {
@@ -471,11 +472,6 @@ func startLeader() {
 			}
 			CM.mu.Unlock()
 			if CM.currentTerm > 1 {
-				/*
-				if CM.aclBounds[0] == 0 {
-					CM.aclBounds[0] = len(CM.log)
-				}
-				*/
 
 				hname, err := os.Hostname()
 				if err != nil {
@@ -872,11 +868,6 @@ func startLeader() {
 					}
 				}
 
-				/*
-				if CM.aclBounds[0] != 0 && CM.aclBounds[1] != 0 {
-					CM.log = CM.log[CM.aclBounds[1]:]
-				}
-				*/
 				aclEntries,_ := acl.ACLIngest("/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/acls.yaml")
 				for _, ele := range aclEntries {
 					postBody, _ := json.Marshal(ele)
@@ -898,19 +889,16 @@ func startLeader() {
 						log.Fatalln("Unable to read received content")
 					}
 				}
-				// Once new ACLs pushed on
-				/*
-				if CM.aclBounds[0] == 0 && CM.aclBounds[1] == 0 {
-					CM.aclBounds[0] = len(CM.log)
-				} else if CM.aclBounds[0] != 0 && CM.aclBounds[1] == 0 {
-					CM.aclBounds[1] = CM.aclBounds[0]
-					CM.aclBounds[0] = len(CM.log)
-				} else if CM.aclBounds[0] != 0 && CM.aclBounds[1] != 0 {
-					tempBounds := CM.aclBounds[1]
-					CM.aclBounds[1] = CM.aclBounds[0] - tempBounds
-					CM.aclBounds[0] = len(CM.log)
+				if CM.aclBounds[0] == 0 && CM.aclBounds[1] == 0 && CM.aclBounds[2] == 0 {
+					CM.aclBounds[2] = len(CM.log)
+				} else if CM.aclBounds[2] != 0 && CM.aclBounds[1] == 0 && CM.aclBounds[0] == 0 {
+					CM.aclBounds[1] = CM.aclBounds[2]
+					CM.aclBounds[2] = len(CM.log)
+				} else if CM.aclBounds[2] != 0 && CM.aclBounds[1] != 0 && CM.aclBounds[0] == 0 {
+					CM.aclBounds[0] = CM.aclBounds[1]
+					CM.aclBounds[1] = CM.aclBounds[2]
+					CM.aclBounds[2] = len(CM.log)
 				}
-				*/
 
 				err = retry.Do(
                                         func() error {
