@@ -507,6 +507,7 @@ func startLeader() {
 							return nil
 						}
 					},
+					retry.Attempts(3),
 				)
 
 				//resp, err := security.TLSPostReq(hname, "/service/rotation/makeCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
@@ -565,6 +566,7 @@ func startLeader() {
 								return nil
 							}
 						},
+						retry.Attempts(3),
 					)
 
 					//CM.PeerIds stores IP addresses, not node names, need to look up so that TLS req can be made properly and verified with cert
@@ -622,6 +624,7 @@ func startLeader() {
 									return nil
 								}
 							},
+							retry.Attempts(3),
 						)
 
 						//resp, err = security.TLSPostReq(hname, "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
@@ -669,6 +672,7 @@ func startLeader() {
 									return nil
 								}
 							},
+							retry.Attempts(3),
 						)
 
 						//resp, err = security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
@@ -712,6 +716,7 @@ func startLeader() {
 									return nil
 								}
 							},
+							retry.Attempts(3),
 						)
 
 						/*
@@ -771,6 +776,7 @@ func startLeader() {
 									return nil
 								}
 							},
+							retry.Attempts(3),
 						)
 
 
@@ -851,6 +857,7 @@ func startLeader() {
 									return nil
 								}
 							},
+							retry.Attempts(3),
 						)
 
 						/*
@@ -908,6 +915,7 @@ func startLeader() {
 									return nil
 								}
 							},
+							retry.Attempts(3),
 						)
 
 
@@ -962,6 +970,7 @@ func startLeader() {
 									return nil
 								}
 							},
+							retry.Attempts(3),
 						)
 
 						/*
@@ -1019,6 +1028,7 @@ func startLeader() {
 									return nil
 								}
 							},
+							retry.Attempts(3),
 						)
 
 
@@ -1073,6 +1083,7 @@ func startLeader() {
 									return nil
 								}
 							},
+							retry.Attempts(3),
 						)
 
 						/*
@@ -1147,6 +1158,7 @@ func startLeader() {
 							return nil
 						}
 					},
+					retry.Attempts(3),
 				)
 
 				/*
@@ -1209,6 +1221,7 @@ func startLeader() {
 								return nil
 							}
 						},
+						retry.Attempts(3),
 					)
 
 
@@ -1255,6 +1268,7 @@ func startLeader() {
 									return nil
 								}
 							},
+							retry.Attempts(3),
 						)
 
 						/*
@@ -1286,6 +1300,7 @@ func startLeader() {
 									return nil
 								}
 							},
+							retry.Attempts(3),
 						)
 
 						/*
@@ -1321,6 +1336,7 @@ func startLeader() {
 								return nil
 							}
 						},
+						retry.Attempts(3),
 					)
 
 					/*

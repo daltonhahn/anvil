@@ -2,7 +2,7 @@ package rotation
 
 import (
 	"os"
-	"io"
+	//"io"
 	"io/ioutil"
 	"path/filepath"
 	"log"
@@ -13,9 +13,11 @@ import (
         "strconv"
 	"strings"
         "reflect"
+	"errors"
 
 	"github.com/daltonhahn/anvil/security"
 	"github.com/daltonhahn/anvil/catalog"
+	"github.com/avast/retry-go/v3"
 )
 
 type SecConfig struct {
@@ -54,18 +56,44 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 		log.Fatalln("Unable to marshal JSON")
 	}
 	postVal := bytes.NewBuffer(jsonData)
-	resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+	//resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+
+	var body []byte
+	err = retry.Do(
+		func() error {
+			resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+			if err != nil || resp.StatusCode != http.StatusOK {
+				if err == nil {
+					return errors.New("BAD STATUS CODE FROM SERVER")
+				} else {
+					return err
+				}
+			} else {
+				defer resp.Body.Close()
+				body, err = ioutil.ReadAll(resp.Body)
+				if err != nil {
+					return err
+				}
+				return nil
+			}
+		},
+		retry.Attempts(3),
+	)
+
 
 	out, err := os.Create("/root/anvil/config/gossip/"+iter+"/"+fMess.FilePath)
 	if err != nil  {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
 	defer out.Close()
+	/*
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("bad status: %s", resp.Status)
 	}
-	_, err = io.Copy(out, resp.Body)
+	*/
+	err = ioutil.WriteFile(out.Name(), body, 0755)
+	//_, err = io.Copy(out, body)
 	if err != nil  {
 		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
@@ -76,18 +104,43 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 		log.Fatalln("Unable to marshal JSON")
 	}
 	postVal = bytes.NewBuffer(jsonData)
-	resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+	//resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+
+	err = retry.Do(
+                func() error {
+			resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+                        if err != nil || resp.StatusCode != http.StatusOK {
+                                if err == nil {
+                                        return errors.New("BAD STATUS CODE FROM SERVER")
+                                } else {
+                                        return err
+                                }
+                        } else {
+                                defer resp.Body.Close()
+                                body, err = ioutil.ReadAll(resp.Body)
+                                if err != nil {
+                                        return err
+                                }
+                                return nil
+                        }
+                },
+                retry.Attempts(3),
+        )
+
 
 	out, err = os.Create("/root/anvil/config/acls/"+iter+"/acl.yaml")
 	if err != nil  {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
 	defer out.Close()
+	/*
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("bad status: %s", resp.Status)
 	}
-	_, err = io.Copy(out, resp.Body)
+	*/
+	err = ioutil.WriteFile(out.Name(), body, 0755)
+	//_, err = io.Copy(out, resp.Body)
 	if err != nil  {
 		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
@@ -98,18 +151,42 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 		log.Fatalln("Unable to marshal JSON")
 	}
 	postVal = bytes.NewBuffer(jsonData)
-	resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+	//resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+
+	err = retry.Do(
+                func() error {
+			resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+                        if err != nil || resp.StatusCode != http.StatusOK {
+                                if err == nil {
+                                        return errors.New("BAD STATUS CODE FROM SERVER")
+                                } else {
+                                        return err
+                                }
+                        } else {
+                                defer resp.Body.Close()
+                                body, err = ioutil.ReadAll(resp.Body)
+                                if err != nil {
+                                        return err
+                                }
+                                return nil
+                        }
+                },
+                retry.Attempts(3),
+        )
 
 	out, err = os.Create("/root/anvil/config/certs/"+iter+"/"+nodeName+".key")
 	if err != nil  {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
 	defer out.Close()
+	/*
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("bad status: %s", resp.Status)
 	}
-	_, err = io.Copy(out, resp.Body)
+	*/
+	err = ioutil.WriteFile(out.Name(), body, 0755)
+	//_, err = io.Copy(out, resp.Body)
 	if err != nil  {
 		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
@@ -120,18 +197,42 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 		log.Fatalln("Unable to marshal JSON")
 	}
 	postVal = bytes.NewBuffer(jsonData)
-	resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+	//resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+
+        err = retry.Do(
+                func() error {
+			resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+                        if err != nil || resp.StatusCode != http.StatusOK {
+                                if err == nil {
+                                        return errors.New("BAD STATUS CODE FROM SERVER")
+                                } else {
+                                        return err
+                                }
+                        } else {
+                                defer resp.Body.Close()
+                                body, err = ioutil.ReadAll(resp.Body)
+                                if err != nil {
+                                        return err
+                                }
+                                return nil
+                        }
+                },
+                retry.Attempts(3),
+        )
 
 	out, err = os.Create("/root/anvil/config/certs/"+iter+"/"+nodeName+".crt")
 	if err != nil  {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
 	defer out.Close()
+	/*
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("bad status: %s", resp.Status)
 	}
-	_, err = io.Copy(out, resp.Body)
+	*/
+	err = ioutil.WriteFile(out.Name(), body, 0755)
+	//_, err = io.Copy(out, resp.Body)
 	if err != nil  {
 		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
@@ -143,18 +244,43 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 			log.Fatalln("Unable to marshal JSON")
 		}
 		postVal = bytes.NewBuffer(jsonData)
-		resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+		//resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+
+
+		err = retry.Do(
+			func() error {
+				resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+				if err != nil || resp.StatusCode != http.StatusOK {
+					if err == nil {
+						return errors.New("BAD STATUS CODE FROM SERVER")
+					} else {
+						return err
+					}
+				} else {
+					defer resp.Body.Close()
+					body, err = ioutil.ReadAll(resp.Body)
+					if err != nil {
+						return err
+					}
+					return nil
+				}
+			},
+			retry.Attempts(3),
+		)
 
 		out, err = os.Create("/root/anvil/config/certs/"+iter+"/"+ele+".crt")
 		if err != nil  {
 			log.Printf("FAILURE OPENING FILE\n")
 		}
 		defer out.Close()
+		/*
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			log.Printf("bad status: %s", resp.Status)
 		}
-		_, err = io.Copy(out, resp.Body)
+		*/
+		err = ioutil.WriteFile(out.Name(), body, 0755)
+		//_, err = io.Copy(out, resp.Body)
 		if err != nil  {
 			log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 		}
@@ -364,11 +490,37 @@ func processCAs(iter int) []string {
 	if err != nil {
 		log.Fatalln("Unable to get hostname")
 	}
-	resp, err := security.TLSGetReq(hname, "/anvil/type", "")
+	//resp, err := security.TLSGetReq(hname, "/anvil/type", "")
+
+	var body []byte
+        err = retry.Do(
+                func() error {
+			resp, err := security.TLSGetReq(hname, "/anvil/type", "")
+                        if err != nil || resp.StatusCode != http.StatusOK {
+                                if err == nil {
+                                        return errors.New("BAD STATUS CODE FROM SERVER")
+                                } else {
+                                        return err
+                                }
+                        } else {
+                                defer resp.Body.Close()
+                                body, err = ioutil.ReadAll(resp.Body)
+                                if err != nil {
+                                        return err
+                                }
+                                return nil
+                        }
+                },
+                retry.Attempts(3),
+        )
+
+
 	if err != nil {
 		log.Fatalln("Unable to retrieve node type")
 	}
+	/*
 	body, err := ioutil.ReadAll(resp.Body)
+	*/
 	nodeType := string(body)
 	if nodeType == "server" {
 		retList = append(retList, "/root/anvil/config/certs/"+strconv.Itoa(iter)+"/"+hname+".crt")
