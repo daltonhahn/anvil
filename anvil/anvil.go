@@ -88,13 +88,13 @@ func AnvilInit(nodeType string) {
                         <-sigHandle
 			if rotFlag == true {
 				rotFlag = false
-				ctxShutDown, cancel := context.WithTimeout(context.Background(), (500*time.Millisecond))
+				ctxShutDown, cancel := context.WithTimeout(context.Background(), (5*time.Second))
 				defer func() {
 					cancel()
 				}()
 
 				if err := server.Shutdown(ctxShutDown); err != nil {
-					log.Fatalf("server Shutdown Failed:%+s", err)
+					log.Printf("server Shutdown Failed:%+s", err)
 				}
 				go cw.startNewServer(anv_router)
 			}
