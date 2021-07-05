@@ -1386,7 +1386,7 @@ func leaderSendHeartbeats() {
 				ni = CM.nextIndex[ind]
 				prevLogIndex := ni - 1
 				prevLogTerm := -1
-				if prevLogIndex >= 0 {
+				if prevLogIndex >= 0 && prevLogIndex <= len(CM.log) {
 					prevLogTerm = CM.log[prevLogIndex].Term
 				}
 				entries := CM.log[ni:]
