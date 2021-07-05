@@ -143,7 +143,7 @@ func CheckHealth() {
 				}
 			}
 		}
-		time.Sleep(10 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 }
 
@@ -198,6 +198,6 @@ func PropagateCatalog() {
 			}
 			sendCatalogSync(receivedStuff.Nodes[target].Name, jsonData)
 		}
-		time.Sleep(10 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 }
