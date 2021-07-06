@@ -1386,7 +1386,6 @@ func leaderSendHeartbeats() {
 				ni = CM.nextIndex[ind]
 				prevLogIndex := ni - 1
 				prevLogTerm := -1
-				fmt.Printf("CM.NI: %v --- PLI: %v --- LENLOG: %v\n", CM.nextIndex[ind], prevLogIndex, len(CM.log))
 				if prevLogIndex >= 0 {
 					prevLogTerm = CM.log[prevLogIndex].Term
 				}
@@ -1419,7 +1418,6 @@ func leaderSendHeartbeats() {
 					if reply.Success {
 						if (ni + len(entries)) < len(CM.log) {
 							CM.nextIndex[ind] = ni + len(entries)
-							fmt.Printf("\t --- I just set next index to: %v --- Received from: %v\n", CM.nextIndex[ind], peerId)
 						}
 						CM.matchIndex[ind] = CM.nextIndex[ind] - 1
 
@@ -1443,7 +1441,6 @@ func leaderSendHeartbeats() {
 					} else {
 						if (ni -1) < len(CM.log) {
 							CM.nextIndex[ind] = ni - 1
-							fmt.Printf("\t --- I just set next index to: %v --- Received from: %v\n", CM.nextIndex[ind], peerId)
 							dlog(fmt.Sprintf("AppendEntries reply from %d !success: nextIndex := %d", peerId, ni-1))
 						}
 					}
