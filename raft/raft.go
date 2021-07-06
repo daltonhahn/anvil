@@ -450,7 +450,7 @@ func startLeader() {
 	}
 
 	go func() {
-		ticker := time.NewTicker(1 * time.Second)
+		ticker := time.NewTicker(3 * time.Second)
 		defer ticker.Stop()
 
 		for {
@@ -1418,7 +1418,7 @@ func leaderSendHeartbeats() {
 				if CM.state == Leader && savedCurrentTerm == reply.Term {
 					if reply.Success {
 						CM.nextIndex[ind] = ni + len(entries)
-						fmt.Printf("\t --- I just set next index to: %v\n", CM.nextIndex[ind])
+						fmt.Printf("\t --- I just set next index to: %v --- Received from: %v\n", CM.nextIndex[ind], CM.PeerIds[ind])
 						CM.matchIndex[ind] = CM.nextIndex[ind] - 1
 
 						savedCommitIndex := CM.commitIndex
@@ -1440,7 +1440,7 @@ func leaderSendHeartbeats() {
 						}
 					} else {
 						CM.nextIndex[ind] = ni - 1
-						fmt.Printf("\t --- I just set next index to: %v\n", CM.nextIndex[ind])
+						fmt.Printf("\t --- I just set next index to: %v --- Received from: %v\n", CM.nextIndex[ind], CM.PeerIds[ind])
 						dlog(fmt.Sprintf("AppendEntries reply from %d !success: nextIndex := %d", peerId, ni-1))
 					}
 				}
