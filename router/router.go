@@ -12,9 +12,10 @@ import (
 	"strconv"
 	"strings"
 	"bytes"
-	//"errors"
+	"errors"
 
 	"github.com/gorilla/mux"
+	"github.com/avast/retry-go/v3"
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/raft"
 	"github.com/daltonhahn/anvil/service"
@@ -298,24 +299,54 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	var resp *http.Response
 	var err error
+	var body []byte
 	anv_catalog := catalog.GetCatalog()
 	target := anv_catalog.GetSvcHost(r.Host)
 	target_uri := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
 	if (r.Method == "POST") {
-		resp, err = security.TLSPostReq(target, target_uri, strings.Split(r.RequestURI, "/")[2], r.Header.Get("Content-Type"), r.Body)
+                err = retry.Do(
+                        func() error {
+				resp, err = security.TLSPostReq(target, target_uri, strings.Split(r.RequestURI, "/")[2], r.Header.Get("Content-Type"), r.Body)
+                                if err != nil || resp.StatusCode != http.StatusOK {
+                                        if err == nil {
+                                                return errors.New("BAD STATUS CODE FROM SERVER")
+                                        } else {
+                                                return err
+                                        }
+                                } else {
+                                        defer resp.Body.Close()
+                                        body, err = ioutil.ReadAll(resp.Body)
+                                        if err != nil {
+                                                return err
+                                        }
+                                        return nil
+                                }
+                        },
+                        retry.Attempts(3),
+                )
 	} else {
-		resp, err = security.TLSGetReq(target, target_uri, strings.Split(r.RequestURI, "/")[2])
+		err = retry.Do(
+                        func() error {
+				resp, err = security.TLSGetReq(target, target_uri, strings.Split(r.RequestURI, "/")[2])
+                                if err != nil || resp.StatusCode != http.StatusOK {
+                                        if err == nil {
+                                                return errors.New("BAD STATUS CODE FROM SERVER")
+                                        } else {
+                                                return err
+                                        }
+                                } else {
+                                        defer resp.Body.Close()
+                                        body, err = ioutil.ReadAll(resp.Body)
+                                        if err != nil {
+                                                return err
+                                        }
+                                        return nil
+                                }
+                        },
+                        retry.Attempts(3),
+                )
 	}
-	if err != nil {
-		fmt.Fprintf(w, "Bad Response")
-	}
-	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Fprintf(w, "Bad Read")
-	}
-
-	fmt.Fprintf(w, string(respBody))
+	fmt.Fprintf(w, string(body))
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
@@ -325,17 +356,29 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
         verifier := anv_catalog.GetQuorumMem()
         var resp *http.Response
         var err error
+	var body []byte
         postBody, _ := json.Marshal(tok_recv)
         responseBody := bytes.NewBuffer(postBody)
-        resp, err = security.TLSPostReq(verifier, "/anvil/raft/acl/"+target_svc, "", "application/json", responseBody)
-        if err != nil {
-                log.Fatalln("Unable to post content")
-        }
-        defer resp.Body.Close()
-        body, err := ioutil.ReadAll(resp.Body)
-        if err != nil {
-                log.Fatalln("Unable to read received content")
-        }
+	err = retry.Do(
+		func() error {
+			resp, err = security.TLSPostReq(verifier, "/anvil/raft/acl/"+target_svc, "", "application/json", responseBody)
+			if err != nil || resp.StatusCode != http.StatusOK {
+				if err == nil {
+					return errors.New("BAD STATUS CODE FROM SERVER")
+				} else {
+					return err
+				}
+			} else {
+				defer resp.Body.Close()
+				body, err = ioutil.ReadAll(resp.Body)
+				if err != nil {
+					return err
+				}
+				return nil
+			}
+		},
+		retry.Attempts(3),
+	)
         approval, _ := strconv.ParseBool(string(body))
         if (approval) {
                 target_port := anv_catalog.GetSvcPort(strings.Split(r.RequestURI, "/")[2])
@@ -349,29 +392,50 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 		}
 		req.Header.Add("X-Forwarded-For", strings.Split(r.RemoteAddr,":")[0])
                 if (r.Method == "POST") {
-                        //resp, err = http.Post("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path, r.Header.Get("Content-Type"), r.Body)
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				fmt.Fprintf(w, "Bad Response")
-			}
-			defer resp.Body.Close()
-			respBody, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				fmt.Fprintf(w, "Bad Read")
-			}
-			fmt.Fprintf(w, string(respBody))
+			err = retry.Do(
+				func() error {
+					resp, err := http.DefaultClient.Do(req)
+					if err != nil || resp.StatusCode != http.StatusOK {
+						if err == nil {
+							return errors.New("BAD STATUS CODE FROM SERVER")
+						} else {
+							return err
+						}
+					} else {
+						defer resp.Body.Close()
+						body, err = ioutil.ReadAll(resp.Body)
+						if err != nil {
+							return err
+						}
+						return nil
+					}
+				},
+				retry.Attempts(3),
+			)
+			fmt.Fprintf(w, string(body))
 		} else {
 			//resp, err = http.Get("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path)
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				fmt.Fprintf(w, "Bad Response")
-			}
-			defer resp.Body.Close()
-			respBody, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				fmt.Fprintf(w, "Bad Read")
-			}
-			fmt.Fprintf(w, string(respBody))
+			err = retry.Do(
+				func() error {
+					resp, err := http.DefaultClient.Do(req)
+					if err != nil || resp.StatusCode != http.StatusOK {
+						if err == nil {
+							return errors.New("BAD STATUS CODE FROM SERVER")
+						} else {
+							return err
+						}
+					} else {
+						defer resp.Body.Close()
+						body, err = ioutil.ReadAll(resp.Body)
+						if err != nil {
+							return err
+						}
+						return nil
+					}
+				},
+				retry.Attempts(3),
+			)
+			fmt.Fprintf(w, string(body))
 		}
 	} else {
 		http.Error(w, "Token not validated", http.StatusForbidden)
