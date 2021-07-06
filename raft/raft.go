@@ -1418,7 +1418,7 @@ func leaderSendHeartbeats() {
 				if CM.state == Leader && savedCurrentTerm == reply.Term {
 					if reply.Success {
 						CM.nextIndex[ind] = ni + len(entries)
-						fmt.Printf("\t --- I just set next index to: %v --- Received from: %v\n", CM.nextIndex[ind], CM.PeerIds[ind])
+						fmt.Printf("\t --- I just set next index to: %v --- Received from: %v\n", CM.nextIndex[ind], peerId)
 						CM.matchIndex[ind] = CM.nextIndex[ind] - 1
 
 						savedCommitIndex := CM.commitIndex
@@ -1440,7 +1440,7 @@ func leaderSendHeartbeats() {
 						}
 					} else {
 						CM.nextIndex[ind] = ni - 1
-						fmt.Printf("\t --- I just set next index to: %v --- Received from: %v\n", CM.nextIndex[ind], CM.PeerIds[ind])
+						fmt.Printf("\t --- I just set next index to: %v --- Received from: %v\n", CM.nextIndex[ind], peerId)
 						dlog(fmt.Sprintf("AppendEntries reply from %d !success: nextIndex := %d", peerId, ni-1))
 					}
 				}
