@@ -357,7 +357,7 @@ func rewriteYaml(indA int, indB int) {
 
 		caList := processCAs(0)
 
-                tokMap := readACLFile("/root/anvil/config/acls/0/test.yaml")
+                tokMap := readACLFile("/root/anvil/config/acls/0/acl.yaml")
                 tmpSecConf := SecConfig {
                         Key: gKey,
                         CACert: caList,
