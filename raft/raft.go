@@ -487,6 +487,33 @@ func startLeader() {
 					log.Fatalln(err)
 				}
 				var body []byte
+				err = retry.Do(
+                                        func() error {
+						resp, err := security.TLSGetReq(hname, "/anvil/catalog/clients", "")
+						if err != nil || resp.StatusCode != http.StatusOK {
+							if err == nil {
+								return errors.New("BAD STATUS CODE FROM SERVER")
+							} else {
+								return err
+							}
+						} else {
+							defer resp.Body.Close()
+							body, err = ioutil.ReadAll(resp.Body)
+							if err != nil {
+								return err
+							}
+							return nil
+						}
+					},
+					retry.Attempts(3),
+				)
+				clientList := struct {
+					Clients		[]string
+				}{}
+				err = json.Unmarshal(body, &clientList)
+				if err != nil {
+					fmt.Println(err)
+				}
 
 				fmt.Println(" ---- MakeCA ----- ")
 				err = retry.Do(
@@ -1139,27 +1166,6 @@ func startLeader() {
 					CM.aclBounds[2] = len(CM.log)
 				}
 
-				fmt.Printf(" ----- GetClients ----- \n")
-				err = retry.Do(
-                                        func() error {
-						resp, err := security.TLSGetReq(hname, "/anvil/catalog/clients", "")
-						if err != nil || resp.StatusCode != http.StatusOK {
-							if err == nil {
-								return errors.New("BAD STATUS CODE FROM SERVER")
-							} else {
-								return err
-							}
-						} else {
-							defer resp.Body.Close()
-							body, err = ioutil.ReadAll(resp.Body)
-							if err != nil {
-								return err
-							}
-							return nil
-						}
-					},
-					retry.Attempts(3),
-				)
 
 				/*
 				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
@@ -1179,14 +1185,6 @@ func startLeader() {
 					fmt.Println(err)
 				}
 				*/
-				clientList := struct {
-					Clients		[]string
-				}{}
-				err = json.Unmarshal(body, &clientList)
-				if err != nil {
-					fmt.Println(err)
-				}
-
 
 				semaphore = make(chan struct{}, len(clientList.Clients))
 				for _, ele := range clientList.Clients {
