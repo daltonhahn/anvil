@@ -1020,6 +1020,34 @@ func startLeader() {
 					<-semaphore
                                 }
 
+				semaphore = make(chan struct{}, len(clientList.Clients))
+                                for _, ele := range clientList.Clients {
+                                        semaphore <- struct{}{}
+					fmt.Printf(" ----- Rotation Config: %v ----- \n", ele)
+					err = retry.Do(
+						func() error {
+							resp, err := security.TLSGetReq(ele, "/anvil/rotation/config", "")
+							if err != nil || resp.StatusCode != http.StatusOK {
+								if err == nil {
+									return errors.New("BAD STATUS CODE FROM SERVER")
+								} else {
+									return err
+								}
+							} else {
+								defer resp.Body.Close()
+								body, err = ioutil.ReadAll(resp.Body)
+								if err != nil {
+									return err
+								}
+								return nil
+							}
+						},
+						retry.Attempts(3),
+					)
+
+                                        <-semaphore
+                                }
+
 				semaphore = make(chan struct{}, len(CM.PeerIds)+1)
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
 					semaphore <- struct{}{}
@@ -1075,33 +1103,6 @@ func startLeader() {
 					}
 				}
 
-				semaphore = make(chan struct{}, len(clientList.Clients))
-                                for _, ele := range clientList.Clients {
-                                        semaphore <- struct{}{}
-					fmt.Printf(" ----- Rotation Config: %v ----- \n", ele)
-					err = retry.Do(
-						func() error {
-							resp, err := security.TLSGetReq(ele, "/anvil/rotation/config", "")
-							if err != nil || resp.StatusCode != http.StatusOK {
-								if err == nil {
-									return errors.New("BAD STATUS CODE FROM SERVER")
-								} else {
-									return err
-								}
-							} else {
-								defer resp.Body.Close()
-								body, err = ioutil.ReadAll(resp.Body)
-								if err != nil {
-									return err
-								}
-								return nil
-							}
-						},
-						retry.Attempts(3),
-					)
-
-                                        <-semaphore
-                                }
 				iteration = iteration + 1
 			}
 			<-rotateTicker.C
