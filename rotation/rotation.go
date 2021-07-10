@@ -2,7 +2,6 @@ package rotation
 
 import (
 	"os"
-	//"io"
 	"io/ioutil"
 	"path/filepath"
 	"log"
@@ -33,7 +32,7 @@ type TokMap struct {
         TokenVal        string  `yaml:"tval,omitempty"`
 }
 
-var SecConf []SecConfig
+var SecConf SecConfig
 
 type FPMess struct {
         FilePath        string
@@ -56,7 +55,6 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 		log.Fatalln("Unable to marshal JSON")
 	}
 	postVal := bytes.NewBuffer(jsonData)
-	//resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
 
 	var body []byte
 	err = retry.Do(
@@ -86,14 +84,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
 	defer out.Close()
-	/*
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("bad status: %s", resp.Status)
-	}
-	*/
 	err = ioutil.WriteFile(out.Name(), body, 0755)
-	//_, err = io.Copy(out, body)
 	if err != nil  {
 		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
@@ -104,7 +95,6 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 		log.Fatalln("Unable to marshal JSON")
 	}
 	postVal = bytes.NewBuffer(jsonData)
-	//resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
 
 	err = retry.Do(
                 func() error {
@@ -133,14 +123,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
 	defer out.Close()
-	/*
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("bad status: %s", resp.Status)
-	}
-	*/
 	err = ioutil.WriteFile(out.Name(), body, 0755)
-	//_, err = io.Copy(out, resp.Body)
 	if err != nil  {
 		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
@@ -151,7 +134,6 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 		log.Fatalln("Unable to marshal JSON")
 	}
 	postVal = bytes.NewBuffer(jsonData)
-	//resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
 
 	err = retry.Do(
                 func() error {
@@ -179,14 +161,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
 	defer out.Close()
-	/*
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("bad status: %s", resp.Status)
-	}
-	*/
 	err = ioutil.WriteFile(out.Name(), body, 0755)
-	//_, err = io.Copy(out, resp.Body)
 	if err != nil  {
 		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
@@ -197,7 +172,6 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 		log.Fatalln("Unable to marshal JSON")
 	}
 	postVal = bytes.NewBuffer(jsonData)
-	//resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
 
         err = retry.Do(
                 func() error {
@@ -225,14 +199,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
 	defer out.Close()
-	/*
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("bad status: %s", resp.Status)
-	}
-	*/
 	err = ioutil.WriteFile(out.Name(), body, 0755)
-	//_, err = io.Copy(out, resp.Body)
 	if err != nil  {
 		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 	}
@@ -244,7 +211,6 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 			log.Fatalln("Unable to marshal JSON")
 		}
 		postVal = bytes.NewBuffer(jsonData)
-		//resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
 
 
 		err = retry.Do(
@@ -273,14 +239,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 			log.Printf("FAILURE OPENING FILE\n")
 		}
 		defer out.Close()
-		/*
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			log.Printf("bad status: %s", resp.Status)
-		}
-		*/
 		err = ioutil.WriteFile(out.Name(), body, 0755)
-		//_, err = io.Copy(out, resp.Body)
 		if err != nil  {
 			log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
 		}
@@ -303,22 +262,7 @@ func AdjustConfig() {
                         }
                 }
         }
-
-        if len(cmpList) < 2 {
-                rewriteYaml(cmpList[0], 0)
-        } else {
-		maxValA := 0
-		maxValB := 0
-		for _, val := range cmpList {
-			if val > maxValA && val > maxValB {
-				maxValB = maxValA
-				maxValA = val
-			} else if val <= maxValA && val > maxValB {
-				maxValB = val
-			}
-		}
-                rewriteYaml(maxValA, maxValB)
-        }
+        rewriteYaml(cmpList[0])
 }
 
 func updateRunningConfig(yamlOut string) {
@@ -334,7 +278,7 @@ func updateRunningConfig(yamlOut string) {
 	defer f.Close()
 }
 
-func rewriteYaml(indA int, indB int) {
+func rewriteYaml(indA int) {
         yamlFile, err := ioutil.ReadFile("/root/anvil/config/test_config.yaml")
         if err != nil {
                 log.Printf("Read file error #%v", err)
@@ -345,10 +289,10 @@ func rewriteYaml(indA int, indB int) {
         }
 
         hname, _ := os.Hostname()
-        listSecConf := []SecConfig{}
+        listSecConf := SecConfig{}
 	var yamlOut []byte
 
-        if indB == 0 && indA == 0 {
+        if indA == 0 {
 		b, err := ioutil.ReadFile("/root/anvil/config/gossip/0/gossip.key")
 		if err != nil {
 			panic(err)
@@ -365,7 +309,7 @@ func rewriteYaml(indA int, indB int) {
                         TLSKey: "/root/anvil/config/certs/0/"+hname+".key",
                         Tokens: tokMap,
                 }
-                listSecConf = []SecConfig{tmpSecConf}
+                listSecConf = tmpSecConf
 
                 yamlOut, err = yaml.Marshal(listSecConf)
                 if err != nil {
@@ -373,10 +317,8 @@ func rewriteYaml(indA int, indB int) {
                 }
         } else {
                 strA := strconv.Itoa(indA)
-                strB := strconv.Itoa(indB)
 
                 tMapA := readACLFile("/root/anvil/config/acls/"+strA+"/acl.yaml")
-                tMapB := readACLFile("/root/anvil/config/acls/"+strB+"/acl.yaml")
 		b, err := ioutil.ReadFile("/root/anvil/config/gossip/"+strA+"/gossip.key")
 		if err != nil {
 			panic(err)
@@ -392,22 +334,7 @@ func rewriteYaml(indA int, indB int) {
                         TLSKey: "/root/anvil/config/certs/"+strA+"/"+hname+".key",
                         Tokens: tMapA,
                 }
-		b, err = ioutil.ReadFile("/root/anvil/config/gossip/"+strB+"/gossip.key")
-		if err != nil {
-			panic(err)
-		}
-		gKeyB := string(b)
-
-		caListB := processCAs(indB)
-
-                sConfB := SecConfig {
-                        Key: gKeyB,
-                        CACert: caListB,
-                        TLSCert: "/root/anvil/config/certs/"+strB+"/"+hname+".crt",
-                        TLSKey: "/root/anvil/config/certs/"+strB+"/"+hname+".key",
-                        Tokens: tMapB,
-                }
-                listSecConf = []SecConfig{sConfA, sConfB}
+		listSecConf = sConfA
                 yamlOut, err = yaml.Marshal(listSecConf)
                 if err != nil {
                         panic(err)
@@ -490,7 +417,6 @@ func processCAs(iter int) []string {
 	if err != nil {
 		log.Fatalln("Unable to get hostname")
 	}
-	//resp, err := security.TLSGetReq(hname, "/anvil/type", "")
 
 	var body []byte
         err = retry.Do(
@@ -518,9 +444,6 @@ func processCAs(iter int) []string {
 	if err != nil {
 		log.Fatalln("Unable to retrieve node type")
 	}
-	/*
-	body, err := ioutil.ReadAll(resp.Body)
-	*/
 	nodeType := string(body)
 	if nodeType == "server" {
 		retList = append(retList, "/root/anvil/config/certs/"+strconv.Itoa(iter)+"/"+hname+".crt")

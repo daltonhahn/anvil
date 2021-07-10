@@ -536,23 +536,6 @@ func startLeader() {
 					},
 					retry.Attempts(3),
 				)
-
-				//resp, err := security.TLSPostReq(hname, "/service/rotation/makeCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
-				//resp, err := http.Post("http://" + hname + ":8080/makeCA", "application/json", bytes.NewBuffer(jsonDat))
-				/*
-				if err != nil || resp.StatusCode != http.StatusOK {
-					fmt.Println(resp.StatusCode)
-					fmt.Println(err)
-				}
-				defer func() {
-					if err := resp.Body.Close(); err != nil {
-						fmt.Println("FAILURE TO CLOSE RESP BODY")
-						fmt.Println(err)
-					}
-				}()
-				*/
-
-				// Make gofunc()
 				for _, ele := range CM.PeerIds {
 					var qMems []string
 					for _, mem := range CM.PeerIds {
@@ -595,30 +578,11 @@ func startLeader() {
 						},
 						retry.Attempts(3),
 					)
-
-					//CM.PeerIds stores IP addresses, not node names, need to look up so that TLS req can be made properly and verified with cert
-					//resp, err = security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
-					//resp, err = http.Post("http://" + ele + ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
-					/*
-					if err != nil || resp.StatusCode != http.StatusOK {
-						fmt.Println(resp.StatusCode)
-						fmt.Println(err)
-						fmt.Printf("Failure to notify other Quorum members of CA artifacts\n")
-					}
-					defer func() {
-						if err := resp.Body.Close(); err != nil {
-							fmt.Println("FAILURE TO CLOSE RESP BODY")
-							fmt.Println(err)
-						}
-					}()
-					*/
 				}
 				var newMap AssignmentMap
 				fullMap := processManifest(newMap)
 				splitMap := splitAssignments(len(CM.PeerIds)+1, fullMap)
-				//splitAssignments(len(CM.PeerIds)+3, fullMap)
 
-				// Make gofunc()
 				var semaphore = make(chan struct{}, len(CM.PeerIds)+1)
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
 					semaphore <- struct{}{}
@@ -654,21 +618,6 @@ func startLeader() {
 							retry.Attempts(3),
 						)
 
-						//resp, err = security.TLSPostReq(hname, "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
-						//resp, err = http.Post("http://" + hname + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
-						/*
-						if err != nil || resp.StatusCode != http.StatusOK {
-							fmt.Println(resp.StatusCode)
-							fmt.Println(err)
-							fmt.Printf("Failure to send generation assignment to self\n")
-						}
-						defer func() {
-							if err := resp.Body.Close(); err != nil {
-								fmt.Println("FAILURE TO CLOSE RESP BODY")
-								fmt.Println(err)
-							}
-						}()
-						*/
 						<-semaphore
 					} else {
 						splitMap[i].Iteration = iteration
@@ -702,21 +651,6 @@ func startLeader() {
 							retry.Attempts(3),
 						)
 
-						//resp, err = security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
-						//resp, err = http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
-						/*
-						if err != nil || resp.StatusCode != http.StatusOK {
-							fmt.Println(resp.StatusCode)
-							fmt.Println(err)
-							fmt.Printf("Failure to send generation assignments to other quorum members\n")
-						}
-						defer func() {
-							if err := resp.Body.Close(); err != nil {
-								fmt.Println("FAILURE TO CLOSE RESP BODY")
-								fmt.Println(err)
-							}
-						}()
-						*/
 						<-semaphore
 					}
 				}
@@ -746,19 +680,6 @@ func startLeader() {
 							retry.Attempts(3),
 						)
 
-						/*
-						resp, err := security.TLSGetReq(hname, "/anvil/raft/peerList", "")
-						b, err := ioutil.ReadAll(resp.Body)
-						if err != nil {
-							fmt.Println(err)
-						}
-						defer func() {
-							if err := resp.Body.Close(); err != nil {
-								fmt.Println("FAILURE TO CLOSE RESP BODY")
-								fmt.Println(err)
-							}
-						}()
-						*/
 						var temptargets []string
 						err = json.Unmarshal(body, &temptargets)
 						if err != nil {
@@ -807,23 +728,6 @@ func startLeader() {
 						)
 
 
-						/*
-						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
-						if err != nil || resp.StatusCode != http.StatusOK {
-							fmt.Println(resp.StatusCode)
-							fmt.Println(err)
-						}
-						defer func() {
-							if err := resp.Body.Close(); err != nil {
-								fmt.Println("FAILURE TO CLOSE RESP BODY")
-								fmt.Println(err)
-							}
-						}()
-						_, err = ioutil.ReadAll(resp.Body)
-						if err != nil {
-							fmt.Println("Bad Read")
-						}
-						*/
 						<-semaphore
 					} else {
 						var qMems []string
@@ -887,23 +791,6 @@ func startLeader() {
 							retry.Attempts(3),
 						)
 
-						/*
-						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
-						if err != nil || resp.StatusCode != http.StatusOK {
-							fmt.Println(resp.StatusCode)
-							fmt.Println(err)
-						}
-						defer func() {
-							if err := resp.Body.Close(); err != nil {
-								fmt.Println("FAILURE TO CLOSE RESP BODY")
-								fmt.Println(err)
-							}
-						}()
-						_, err = ioutil.ReadAll(resp.Body)
-						if err != nil {
-							fmt.Println("Bad Read")
-						}
-						*/
 						<-semaphore
 					}
 				}
@@ -945,24 +832,6 @@ func startLeader() {
 							retry.Attempts(3),
 						)
 
-
-						/*
-						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
-						if err != nil || resp.StatusCode != http.StatusOK {
-							fmt.Println(resp.StatusCode)
-							fmt.Println(err)
-						}
-						defer func() {
-							if err := resp.Body.Close(); err != nil {
-								fmt.Println("FAILURE TO CLOSE RESP BODY")
-								fmt.Println(err)
-							}
-						}()
-						_, err = ioutil.ReadAll(resp.Body)
-						if err != nil {
-							fmt.Println("Bad Read")
-						}
-						*/
 						<-semaphore
 					} else {
 						qMems := CM.PeerIds
@@ -999,24 +868,6 @@ func startLeader() {
 							},
 							retry.Attempts(3),
 						)
-
-						/*
-						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
-						if err != nil || resp.StatusCode != http.StatusOK {
-							fmt.Println(resp.StatusCode)
-							fmt.Println(err)
-						}
-						defer func() {
-							if err := resp.Body.Close(); err != nil {
-								fmt.Println("FAILURE TO CLOSE RESP BODY")
-								fmt.Println(err)
-							}
-						}()
-						_, err = ioutil.ReadAll(resp.Body)
-						if err != nil {
-							fmt.Println("Bad Read")
-						}
-						*/
 						<-semaphore
 					}
 				}
@@ -1058,24 +909,6 @@ func startLeader() {
 							retry.Attempts(3),
 						)
 
-
-						/*
-						resp, err = http.Post("http://" + hname + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
-						if err != nil || resp.StatusCode != http.StatusOK {
-							fmt.Println(resp.StatusCode)
-							fmt.Println(err)
-						}
-						defer func() {
-							if err := resp.Body.Close(); err != nil {
-								fmt.Println("FAILURE TO CLOSE RESP BODY")
-								fmt.Println(err)
-							}
-						}()
-						_, err = ioutil.ReadAll(resp.Body)
-						if err != nil {
-							fmt.Println("Bad Read")
-						}
-						*/
 						<-semaphore
 					} else {
 						qMems := CM.PeerIds
@@ -1113,23 +946,6 @@ func startLeader() {
 							retry.Attempts(3),
 						)
 
-						/*
-						resp, err = security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
-						if err != nil || resp.StatusCode != http.StatusOK {
-							fmt.Println(resp.StatusCode)
-							fmt.Println(err)
-						}
-						defer func() {
-							if err := resp.Body.Close(); err != nil {
-								fmt.Println("FAILURE TO CLOSE RESP BODY")
-								fmt.Println(err)
-							}
-						}()
-						_, err = ioutil.ReadAll(resp.Body)
-						if err != nil {
-							fmt.Println("Bad Read")
-						}
-						*/
 						<-semaphore
 					}
 				}
@@ -1138,7 +954,6 @@ func startLeader() {
 				for _, ele := range aclEntries {
 					postBody, _ := json.Marshal(ele)
 					responseBody := bytes.NewBuffer(postBody)
-					//resp, err := http.Post("http://"+hname+":443/anvil/raft/pushACL", "application/json", responseBody)
 					resp, err := security.TLSPostReq(hname, "/anvil/raft/pushACL", "", "application/json", responseBody)
 					if err != nil || resp.StatusCode != http.StatusOK {
 						fmt.Println(resp.StatusCode)
@@ -1167,29 +982,9 @@ func startLeader() {
 				}
 
 
-				/*
-				resp, err = security.TLSGetReq(hname, "/anvil/catalog/clients", "")
-				if err != nil || resp.StatusCode != http.StatusOK {
-					fmt.Println(resp.StatusCode)
-					fmt.Println(err)
-				}
-				defer func() {
-					if err := resp.Body.Close(); err != nil {
-						fmt.Println("FAILURE TO CLOSE RESP BODY")
-						fmt.Println(err)
-					}
-				}()
-
-				b, err := ioutil.ReadAll(resp.Body)
-				if err != nil {
-					fmt.Println(err)
-				}
-				*/
-
 				semaphore = make(chan struct{}, len(clientList.Clients))
 				for _, ele := range clientList.Clients {
 					semaphore <- struct{}{}
-                                        //postVal = map[string]string{"iteration": strconv.Itoa(iteration), "prefix": ele}
 					postVal := struct {
 						Iteration	string
 						Prefix		string
@@ -1222,24 +1017,6 @@ func startLeader() {
 						retry.Attempts(3),
 					)
 
-
-					/*
-                                        resp, err = security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
-                                        if err != nil || resp.StatusCode != http.StatusOK {
-						fmt.Println(resp.StatusCode)
-                                                fmt.Printf("Failure to notify all clients of available artifacts\n")
-                                        }
-					defer func() {
-						if err := resp.Body.Close(); err != nil {
-							fmt.Println("FAILURE TO CLOSE RESP BODY")
-							fmt.Println(err)
-						}
-					}()
-					_, err = ioutil.ReadAll(resp.Body)
-					if err != nil {
-						fmt.Println("Bad Read")
-					}
-					*/
 					<-semaphore
                                 }
 
@@ -1269,13 +1046,6 @@ func startLeader() {
 							retry.Attempts(3),
 						)
 
-						/*
-						_, err = security.TLSGetReq(hname, "/anvil/rotation/config", "")
-						if err != nil {
-							fmt.Println(err)
-							log.Println("Failed to adjust leader config")
-						}
-						*/
 						<-semaphore
 					} else {
 						sendTarg := CM.PeerIds[i]
@@ -1301,13 +1071,6 @@ func startLeader() {
 							retry.Attempts(3),
 						)
 
-						/*
-						_, err = security.TLSGetReq(sendTarg, "/anvil/rotation/config", "")
-						if err != nil {
-							fmt.Println(err)
-							log.Println("Failed to adjust quorum configs")
-						}
-						*/
 						<-semaphore
 					}
 				}
@@ -1337,19 +1100,6 @@ func startLeader() {
 						retry.Attempts(3),
 					)
 
-					/*
-					resp, err = security.TLSGetReq(ele, "/anvil/rotation/config", "")
-                                        if err != nil || resp.StatusCode != http.StatusOK {
-						fmt.Println(err)
-                                                fmt.Printf("Failure to notify all clients of available artifacts\n")
-                                        }
-					defer func() {
-						if err := resp.Body.Close(); err != nil {
-							fmt.Println("FAILURE TO CLOSE RESP BODY")
-							fmt.Println(err)
-						}
-					}()
-					*/
                                         <-semaphore
                                 }
 				iteration = iteration + 1

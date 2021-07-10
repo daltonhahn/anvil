@@ -19,7 +19,7 @@ type ACLEntry struct {
 	ServiceList	[]service.Service
 }
 
-var SecConf = []SecConfig{}
+var SecConf = SecConfig{}
 
 type TokMap struct {
 	ServiceName	string	`yaml:"sname,omitempty"`
@@ -38,7 +38,6 @@ type SecConfig struct {
 func ReadSecConfig() {
 	yamlFile, err := ioutil.ReadFile("/root/anvil/config/test_config.yaml")
         if err != nil {
-		//fmt.Println("Unable to read test_config")
                 log.Printf("Read file error #%v", err)
         }
         err = yaml.Unmarshal(yamlFile, &SecConf)
@@ -49,51 +48,27 @@ func ReadSecConfig() {
 
 func EncData(plaintext string) ([]byte, error) {
 	ReadSecConfig()
-	res1, err1 := EncDataSvc(plaintext, 0)
+	res1, err1 := EncDataSvc(plaintext)
 	if err1 != nil {
-		if len(SecConf) < 2 {
-			return []byte{}, err1
-		} else {
-			res2, err2 := EncDataSvc(plaintext, 1)
-			if err2 != nil {
-				return []byte{},err2
-			}
-			return res2, nil
-		}
+		return []byte{}, err1
 	}
 	return res1, nil
 }
 
 func DecData(input_ciphertext string) ([]byte,error) {
 	ReadSecConfig()
-	res1, err1 := DecDataSvc(input_ciphertext, 0)
+	res1, err1 := DecDataSvc(input_ciphertext)
 	if err1 != nil {
-		if len(SecConf) < 2 {
-			return []byte{}, err1
-		} else {
-			res2, err2 := DecDataSvc(input_ciphertext, 1)
-			if err2 != nil {
-				return []byte{},err2
-			}
-			return res2, nil
-		}
+		return []byte{}, err1
 	}
 	return res1, nil
 }
 
 func TLSGetReq(target string, path string, origin string) (*http.Response,error) {
 	ReadSecConfig()
-	res1, err1 := TLSGetReqSvc(target, path, origin, 0)
+	res1, err1 := TLSGetReqSvc(target, path, origin)
 	if err1 != nil {
-		if len(SecConf) < 2 {
-			return &http.Response{},err1
-		} else {
-			res2, err2 := TLSGetReqSvc(target, path, origin, 1)
-			if err2 != nil {
-				return &http.Response{},err2
-			}
-			return res2, nil
-		}
+		return &http.Response{},err1
 	}
 	return res1, nil
 }
@@ -104,17 +79,9 @@ func TLSPostReq(target string, path string, origin string, options string, body 
 	if err != nil {
 		log.Println("Body read failure")
 	}
-	res1, err1 := TLSPostReqSvc(target, path, origin, options, string(b), 0)
+	res1, err1 := TLSPostReqSvc(target, path, origin, options, string(b))
 	if err1 != nil {
-		if len(SecConf) < 2 {
-			return &http.Response{},err1
-		} else {
-			res2, err2 := TLSPostReqSvc(target, path, origin, options, string(b), 1)
-			if err2 != nil {
-				return &http.Response{},err2
-			}
-			return res2, nil
-		}
+		return &http.Response{},err1
 	}
 	return res1, nil
 }

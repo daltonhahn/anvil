@@ -14,9 +14,9 @@ import (
 	"strings"
 )
 
-func EncDataSvc(plaintext string, confNum int) ([]byte,error) {
+func EncDataSvc(plaintext string) ([]byte,error) {
     text := []byte(plaintext)
-    key := []byte(SecConf[confNum].Key)
+    key := []byte(SecConf.Key)
 
     c, err := aes.NewCipher(key)
     if err != nil {
@@ -33,8 +33,8 @@ func EncDataSvc(plaintext string, confNum int) ([]byte,error) {
     return []byte(gcm.Seal(nonce, nonce, text, nil)),nil
 }
 
-func DecDataSvc(input_ciphertext string, confNum int) ([]byte,error) {
-    key := []byte(SecConf[confNum].Key)
+func DecDataSvc(input_ciphertext string) ([]byte,error) {
+    key := []byte(SecConf.Key)
     data := []byte(input_ciphertext)
     c, err := aes.NewCipher(key)
     if err != nil {
@@ -59,8 +59,8 @@ func DecDataSvc(input_ciphertext string, confNum int) ([]byte,error) {
     return plaintext,nil
 }
 
-func TLSGetReqSvc(target string, path string, origin string, confNum int) (*http.Response,error) {
-	caCertPaths := SecConf[confNum].CACert
+func TLSGetReqSvc(target string, path string, origin string) (*http.Response,error) {
+	caCertPaths := SecConf.CACert
 	caCertPool := x509.NewCertPool()
         for _, fp := range caCertPaths {
                 caCert, err := ioutil.ReadFile(fp)
@@ -69,7 +69,7 @@ func TLSGetReqSvc(target string, path string, origin string, confNum int) (*http
                 }
                 caCertPool.AppendCertsFromPEM(caCert)
         }
-	cert,err := tls.LoadX509KeyPair(SecConf[confNum].TLSCert, SecConf[confNum].TLSKey)
+	cert,err := tls.LoadX509KeyPair(SecConf.TLSCert, SecConf.TLSKey)
         if err != nil {
                 return &http.Response{}, errors.New("Unable to read Cert+Key")
         }
@@ -95,8 +95,8 @@ func TLSGetReqSvc(target string, path string, origin string, confNum int) (*http
 	return resp, nil
 }
 
-func TLSPostReqSvc(target string, path string, origin string, options string, body string, confNum int) (*http.Response, error) {
-        caCertPaths := SecConf[confNum].CACert
+func TLSPostReqSvc(target string, path string, origin string, options string, body string) (*http.Response, error) {
+        caCertPaths := SecConf.CACert
 	caCertPool := x509.NewCertPool()
         for _, fp := range caCertPaths {
                 caCert, err := ioutil.ReadFile(fp)
@@ -105,7 +105,7 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
                 }
                 caCertPool.AppendCertsFromPEM(caCert)
         }
-        cert,err := tls.LoadX509KeyPair(SecConf[confNum].TLSCert, SecConf[confNum].TLSKey)
+        cert,err := tls.LoadX509KeyPair(SecConf.TLSCert, SecConf.TLSKey)
         if err != nil {
                 return &http.Response{}, errors.New("Unable to read Cert+Key")
         }
@@ -134,7 +134,7 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
 }
 
 func attachToken(originSvc string) string {
-	for _, ele := range SecConf[0].Tokens {
+	for _, ele := range SecConf.Tokens {
 		if ele.ServiceName == originSvc {
 			return ele.TokenVal
 		}
