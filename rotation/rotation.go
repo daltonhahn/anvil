@@ -262,7 +262,13 @@ func AdjustConfig() {
                         }
                 }
         }
-        rewriteYaml(cmpList[0])
+	maxVal := 0
+	for _, val := range cmpList {
+		if val > maxVal {
+			maxVal = val
+		}
+	}
+        rewriteYaml(maxVal)
 }
 
 func updateRunningConfig(yamlOut string) {
