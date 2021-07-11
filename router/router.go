@@ -303,6 +303,8 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	anv_catalog := catalog.GetCatalog()
 	target := anv_catalog.GetSvcHost(r.Host)
 	target_uri := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
+	fmt.Printf("\t --- TARG HOST: %v\n", target)
+	fmt.Printf("\t --- TARG URI: %v\n", target_uri)
 	if (r.Method == "POST") {
                 err = retry.Do(
                         func() error {
@@ -351,6 +353,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
         target_svc := strings.Split(r.RequestURI, "/")[2]
+	fmt.Printf("\t --- TARG SVC: %v\n", target_svc)
         tok_recv := r.Header["Authorization"][0]
         anv_catalog := catalog.GetCatalog()
         verifier := anv_catalog.GetQuorumMem()
