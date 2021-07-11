@@ -10,7 +10,6 @@ import (
 	"time"
 	"errors"
 	"strconv"
-	"net"
 
 	"net/http"
         "encoding/json"
@@ -688,11 +687,7 @@ func startLeader() {
 						targets := []string{}
 						for _,e := range temptargets {
 							if e != hname {
-								addr, err := net.LookupIP(e)
-								if err != nil {
-									fmt.Println("Lookup failed")
-								}
-								targets = append(targets, addr[0].String())
+								targets = append(targets, e)
 							}
 						}
 						collectMap := struct {
@@ -738,31 +733,10 @@ func startLeader() {
 							}
 						}
 						qMems = append(qMems, hname)
-						var targets []string
-						copy(targets, CM.PeerIds[:0])
-						hostAddr, err := net.LookupIP(hname)
-						if err != nil {
-							fmt.Println("Lookup failed")
-						}
-						for _,t := range CM.PeerIds {
-							targAddr, err := net.LookupIP(sendTarg)
-							if err != nil {
-								fmt.Println("Lookup failed")
-							}
-							if t != sendTarg && t != targAddr[0].String() && t != hname && t != hostAddr[1].String() {
-								addr, err := net.LookupIP(t)
-								if err != nil {
-									fmt.Println("Lookup failed")
-								}
-								targets = append(targets, addr[0].String())
-							}
-						}
-						targets = append(targets, hostAddr[1].String())
-
 						collectMap := struct {
 							Targets         []string
 							Iteration       string
-						}{Targets: targets, Iteration: strconv.Itoa(iteration)}
+						}{Targets: qMems, Iteration: strconv.Itoa(iteration)}
 
 						jsonData, err := json.Marshal(collectMap)
 						if err != nil {
