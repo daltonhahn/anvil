@@ -686,7 +686,9 @@ func startLeader() {
 						}
 						targets := []string{}
 						for _,e := range temptargets {
-							targets = append(targets, e)
+							if e != hname {
+								targets = append(targets, e)
+							}
 						}
 						collectMap := struct {
 							Targets         []string
