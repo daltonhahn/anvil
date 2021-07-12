@@ -356,7 +356,7 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
         verifier := anv_catalog.GetQuorumMem()
         var resp *http.Response
         var err error
-	var body []byte
+	var appbody []byte
         postBody, _ := json.Marshal(tok_recv)
         responseBody := bytes.NewBuffer(postBody)
 	err = retry.Do(
@@ -370,7 +370,7 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 				}
 			} else {
 				defer resp.Body.Close()
-				body, err = ioutil.ReadAll(resp.Body)
+				appbody, err = ioutil.ReadAll(resp.Body)
 				if err != nil {
 					return err
 				}
@@ -379,8 +379,9 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 		},
 		retry.Attempts(3),
 	)
-        approval, _ := strconv.ParseBool(string(body))
+        approval, _ := strconv.ParseBool(string(appbody))
         if (approval) {
+		var body []byte
                 target_port := anv_catalog.GetSvcPort(strings.Split(r.RequestURI, "/")[2])
                 rem_path := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
 		reqURL, _ := url.Parse("http://"+r.Host+":"+strconv.FormatInt(target_port,10)+rem_path)
