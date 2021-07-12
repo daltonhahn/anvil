@@ -297,6 +297,7 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 }
 
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("\tLanded in CatchOutbound")
 	var resp *http.Response
 	var err error
 	var body []byte
@@ -352,6 +353,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("\tLanded in RerouteService")
         target_svc := strings.Split(r.RequestURI, "/")[2]
 	fmt.Printf("\t --- TARG SVC: %v\n", target_svc)
         tok_recv := r.Header["Authorization"][0]
