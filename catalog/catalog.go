@@ -150,6 +150,7 @@ func (catalog *Catalog) PrintNodes() {
 	for _, ele := range AnvilCatalog.Nodes {
 		fmt.Println("\t",ele)
 	}
+	fmt.Printf("\t --- Number of nodes: %v ---\n", len(AnvilCatalog.Nodes))
 }
 
 func (catalog *Catalog) PrintServices() {
