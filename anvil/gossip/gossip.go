@@ -29,11 +29,13 @@ type Message struct {
 func sendCatalogSync(target string, catalogCopy []byte) {
 	_, err := net.ResolveUDPAddr("udp4", target+":443")
         if err != nil {
-                log.Fatalln("Invalid IP address")
+                //log.Fatalln("Invalid IP address")
+		return
         }
         conn, err := net.Dial("udp", target+":443")
         if err != nil {
-                log.Fatalln("Unable to connect to target")
+                //log.Fatalln("Unable to connect to target")
+		return
         }
 	encMessage,_ := security.EncData(("gossip -- " + string(catalogCopy)))
 	_,err = conn.Write([]byte(encMessage))
@@ -55,11 +57,13 @@ func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
 func sendHealthProbe(target string) bool {
 	_, err := net.ResolveUDPAddr("udp4", target+":443")
 	if err != nil {
-		log.Fatalln("Invalid IP address")
+		//log.Fatalln("Invalid IP address")
+		return false
 	}
 	conn, err := net.Dial("udp", target+":443")
 	if err != nil {
-		log.Fatalln("Unable to connect to target")
+		//log.Fatalln("Unable to connect to target")
+		return false
 	}
 	encMessage,_ := security.EncData(("Health Check -- REQ -- " + target))
 	_, err = conn.Write([]byte(encMessage))
@@ -69,10 +73,12 @@ func sendHealthProbe(target string) bool {
 		//n,err := conn.Read(buf)
 		_,err := conn.Read(buf)
 		if err != nil {
+			/*
 			if e, ok := err.(net.Error); !ok || !e.Timeout() {
 				conn.Close()
 				return false
 			}
+			*/
 			conn.Close()
 			return false
 		} else {
@@ -132,15 +138,15 @@ func CheckHealth() {
 
 		err = json.Unmarshal(body, &receivedStuff)
 		if err != nil {
-			log.Fatalln("Unable to decode JSON")
+			//log.Fatalln("Unable to decode JSON")
+			time.Sleep(10*time.Second)
 		}
 
-		for _, ele := range receivedStuff.Nodes {
-			if (ele.Name != hname) {
-				status := sendHealthProbe(ele.Name)
-				if (status != true) {
-					catalog.Deregister(ele.Name)
-				}
+		target := rand.Intn(len(receivedStuff.Nodes))
+		if(receivedStuff.Nodes[target].Name != hname) {
+			status := sendHealthProbe(receivedStuff.Nodes[target].Name)
+			if (status != true) {
+				catalog.Deregister(receivedStuff.Nodes[target].Name)
 			}
 		}
 		time.Sleep(10 * time.Second)
@@ -186,7 +192,9 @@ func PropagateCatalog() {
 		var receivedStuff Message
 		err = json.Unmarshal(body, &receivedStuff)
 		if err != nil {
-			log.Fatalln("Unable to decode JSON")
+			//log.Fatalln("Unable to decode JSON")
+			time.Sleep(10*time.Second)
+			continue
 		}
 		target := rand.Intn(len(receivedStuff.Nodes))
 		if(receivedStuff.Nodes[target].Name != hname) {
@@ -194,7 +202,9 @@ func PropagateCatalog() {
 			//Pass your catalog contents back to joiner
 			jsonData, err = json.Marshal(receivedStuff)
 			if err != nil {
-				log.Fatalln("Unable to marshal JSON")
+				//log.Fatalln("Unable to marshal JSON")
+				time.Sleep(10*time.Second)
+				continue
 			}
 			sendCatalogSync(receivedStuff.Nodes[target].Name, jsonData)
 		}
