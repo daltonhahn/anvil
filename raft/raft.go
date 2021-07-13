@@ -792,6 +792,8 @@ func startLeader() {
 
 						<-semaphore
 					}
+					// Slow down time between sending PrepBundle to people
+					time.Sleep(2*time.Second)
 				}
 
 				for i:=0; i < len(CM.PeerIds)+1; i++ {
