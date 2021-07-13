@@ -123,9 +123,11 @@ func Deregister(nodeName string) {
 		if ele.Name == nodeName {
 			AnvilCatalog.Nodes = AnvilCatalog.RemoveNode(nodeName)
 			for _, svc := range AnvilCatalog.Services {
-				addr, _ := net.LookupIP(nodeName)
-				if svc.Address == addr[0].String() {
-					AnvilCatalog.Services = AnvilCatalog.RemoveService(svc.Name, svc.Address)
+				addr, err := net.LookupIP(nodeName+".anvil-controller_dev")
+				if err == nil && addr != nil {
+					if svc.Address == addr[0].String() {
+						AnvilCatalog.Services = AnvilCatalog.RemoveService(svc.Name, svc.Address)
+					}
 				}
 			}
 		}
