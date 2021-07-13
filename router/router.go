@@ -354,13 +354,16 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Caught an microservice request request\n")
         target_svc := strings.Split(r.RequestURI, "/")[2]
         tok_recv := r.Header["Authorization"][0]
+	fmt.Printf(" --- TOK: %v\n", tok_recv)
         anv_catalog := catalog.GetCatalog()
         verifier := anv_catalog.GetQuorumMem()
+	fmt.Printf(" --- Verifier: %v\n", verifier)
         var resp *http.Response
         var err error
 	var appbody []byte
         postBody, _ := json.Marshal(tok_recv)
         responseBody := bytes.NewBuffer(postBody)
+	fmt.Printf(" --- Making request verification\n")
 	err = retry.Do(
 		func() error {
 			resp, err = security.TLSPostReq(verifier, "/anvil/raft/acl/"+target_svc, "", "application/json", responseBody)
@@ -382,6 +385,7 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 		retry.Attempts(3),
 	)
         approval, _ := strconv.ParseBool(string(appbody))
+	fmt.Printf(" --- Approved?: %v\n", approval)
         if (approval) {
 		var body []byte
                 target_port := anv_catalog.GetSvcPort(strings.Split(r.RequestURI, "/")[2])
@@ -393,7 +397,9 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 			Header: r.Header,
 			Body: r.Body,
 		}
+		fmt.Printf(" --- Reformed Request: %v\n", req)
 		req.Header.Add("X-Forwarded-For", strings.Split(r.RemoteAddr,":")[0])
+		fmt.Printf(" --- Forwarded For: %v\n", r.RemoteAddr)
                 if (r.Method == "POST") {
 			err = retry.Do(
 				func() error {
@@ -440,6 +446,7 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 			)
 			fmt.Fprintf(w, string(body))
 		}
+		fmt.Printf(" --- Response from service: %v\n", string(body))
 	} else {
 		http.Error(w, "Token not validated", http.StatusForbidden)
 	}
