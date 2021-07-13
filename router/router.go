@@ -303,7 +303,9 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	var body []byte
 	anv_catalog := catalog.GetCatalog()
 	target := anv_catalog.GetSvcHost(r.Host)
+	fmt.Printf("\t --- Request bound for: %v\n", target)
 	target_uri := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
+	fmt.Printf("\t --- URI: %v\n", target_uri)
 	if (r.Method == "POST") {
                 err = retry.Do(
                         func() error {
@@ -347,6 +349,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
                         retry.Attempts(3),
                 )
 	}
+	fmt.Printf("\t --- Forwarding to microservice: %v\n", string(body))
 	fmt.Fprintf(w, string(body))
 }
 
