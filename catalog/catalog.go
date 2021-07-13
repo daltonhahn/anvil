@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 
 	"github.com/daltonhahn/anvil/raft"
 	"github.com/daltonhahn/anvil/service"
@@ -175,7 +176,7 @@ func (catalog *Catalog) GetSvcHost(addr string) (string) {
 	if err != nil || dns == nil {
 		return ""
 	} else {
-		return dns[0]
+		return strings.Split(dns[0],".")[0]
 	}
 	return ""
 }

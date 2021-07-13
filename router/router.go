@@ -448,7 +448,6 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 			)
 			fmt.Fprintf(w, string(body))
 		}
-		fmt.Printf(" --- Response from service: %v\n", string(body))
 	} else {
 		http.Error(w, "Token not validated", http.StatusForbidden)
 	}
