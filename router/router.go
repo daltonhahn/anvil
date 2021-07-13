@@ -297,6 +297,7 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 }
 
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("Caught an outbound request\n")
 	var resp *http.Response
 	var err error
 	var body []byte
@@ -350,6 +351,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("Caught an microservice request request\n")
         target_svc := strings.Split(r.RequestURI, "/")[2]
         tok_recv := r.Header["Authorization"][0]
         anv_catalog := catalog.GetCatalog()
