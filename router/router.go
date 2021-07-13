@@ -349,7 +349,6 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
                         retry.Attempts(3),
                 )
 	}
-	fmt.Printf("\t --- Forwarding to microservice: %v\n", string(body))
 	fmt.Fprintf(w, string(body))
 }
 

@@ -171,6 +171,12 @@ func (catalog *Catalog) GetSvcHost(addr string) (string) {
 			return ele.Name
 		}
 	}
+	dns, err := net.LookupAddr(addr)
+	if err != nil || dns == nil {
+		return ""
+	} else {
+		return dns[0]
+	}
 	return ""
 }
 
