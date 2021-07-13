@@ -98,7 +98,7 @@ func sendHealthProbe(target string) bool {
 }
 
 func CheckHealth() {
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 	for {
 		//Pull current catalog
 		hname, err := os.Hostname()
@@ -139,7 +139,7 @@ func CheckHealth() {
 		err = json.Unmarshal(body, &receivedStuff)
 		if err != nil {
 			//log.Fatalln("Unable to decode JSON")
-			time.Sleep(10*time.Second)
+			time.Sleep(5*time.Second)
 		}
 
 		target := rand.Intn(len(receivedStuff.Nodes))
@@ -149,12 +149,12 @@ func CheckHealth() {
 				catalog.Deregister(receivedStuff.Nodes[target].Name)
 			}
 		}
-		time.Sleep(10 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }
 
 func PropagateCatalog() {
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 	for {
 		//Pull current catalog
 		hname, err := os.Hostname()
@@ -193,7 +193,7 @@ func PropagateCatalog() {
 		err = json.Unmarshal(body, &receivedStuff)
 		if err != nil {
 			//log.Fatalln("Unable to decode JSON")
-			time.Sleep(10*time.Second)
+			time.Sleep(5*time.Second)
 			continue
 		}
 		target := rand.Intn(len(receivedStuff.Nodes))
@@ -203,11 +203,11 @@ func PropagateCatalog() {
 			jsonData, err = json.Marshal(receivedStuff)
 			if err != nil {
 				//log.Fatalln("Unable to marshal JSON")
-				time.Sleep(10*time.Second)
+				time.Sleep(5*time.Second)
 				continue
 			}
 			sendCatalogSync(receivedStuff.Nodes[target].Name, jsonData)
 		}
-		time.Sleep(10 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }
