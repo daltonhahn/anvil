@@ -38,7 +38,7 @@ func sendCatalogSync(target string, catalogCopy []byte) {
 		return
         }
 	encMessage,_ := security.EncData(("gossip -- " + string(catalogCopy)))
-	fmt.Printf("LEN OF CATALOG: %v\n", len([]byte(encMessage)))
+	//fmt.Printf("LEN OF CATALOG: %v\n", len([]byte(encMessage)))
 	_,err = conn.Write([]byte(encMessage))
 	if err != nil {
 		fmt.Printf("SCS: Couldn't send response %v", err)
