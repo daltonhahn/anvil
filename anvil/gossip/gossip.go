@@ -27,12 +27,12 @@ type Message struct {
 }
 
 func sendCatalogSync(target string, catalogCopy []byte) {
-	_, err := net.ResolveUDPAddr("udp4", target+".anvil-controller_dev"+":443")
+	_, err := net.ResolveUDPAddr("udp4", target+":443")
         if err != nil {
                 //log.Fatalln("Invalid IP address")
 		return
         }
-        conn, err := net.Dial("udp", target+".anvil-controller_dev"+":443")
+        conn, err := net.Dial("udp4", target+":443")
         if err != nil {
                 //log.Fatalln("Unable to connect to target")
 		return
@@ -60,7 +60,7 @@ func sendHealthProbe(target string) bool {
 		//log.Fatalln("Invalid IP address")
 		return false
 	}
-	conn, err := net.Dial("udp", target+":443")
+	conn, err := net.Dial("udp4", target+":443")
 	if err != nil {
 		//log.Fatalln("Unable to connect to target")
 		return false
