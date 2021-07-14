@@ -27,17 +27,18 @@ type Message struct {
 }
 
 func sendCatalogSync(target string, catalogCopy []byte) {
-	_, err := net.ResolveUDPAddr("udp4", target+":443")
+	_, err := net.ResolveUDPAddr("udp", target+":443")
         if err != nil {
                 //log.Fatalln("Invalid IP address")
 		return
         }
-        conn, err := net.Dial("udp4", target+":443")
+        conn, err := net.Dial("udp", target+":443")
         if err != nil {
                 //log.Fatalln("Unable to connect to target")
 		return
         }
 	encMessage,_ := security.EncData(("gossip -- " + string(catalogCopy)))
+	fmt.Printf("LEN OF CATALOG: %v\n", len([]byte(encMessage)))
 	_,err = conn.Write([]byte(encMessage))
 	if err != nil {
 		fmt.Printf("SCS: Couldn't send response %v", err)
@@ -55,12 +56,12 @@ func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
 }
 
 func sendHealthProbe(target string) bool {
-	_, err := net.ResolveUDPAddr("udp4", target+":443")
+	_, err := net.ResolveUDPAddr("udp", target+":443")
 	if err != nil {
 		//log.Fatalln("Invalid IP address")
 		return false
 	}
-	conn, err := net.Dial("udp4", target+":443")
+	conn, err := net.Dial("udp", target+":443")
 	if err != nil {
 		//log.Fatalln("Unable to connect to target")
 		return false
