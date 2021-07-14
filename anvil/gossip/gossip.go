@@ -27,7 +27,7 @@ type Message struct {
 }
 
 func sendCatalogSync(target string, catalogCopy []byte) {
-	_, err := net.ResolveUDPAddr("udp4", target+":443")
+	_, err := net.ResolveUDPAddr("udp4", target+".anvil-controller_dev"+":443")
         if err != nil {
                 //log.Fatalln("Invalid IP address")
 		return
