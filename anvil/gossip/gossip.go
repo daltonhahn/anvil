@@ -40,7 +40,7 @@ func sendCatalogSync(target string, catalogCopy []byte) {
 	encMessage,_ := security.EncData(("gossip -- " + string(catalogCopy)))
 	_,err = conn.Write([]byte(encMessage))
 	if err != nil {
-		fmt.Printf("Couldn't send response %v", err)
+		fmt.Printf("SCS: Couldn't send response %v", err)
 	}
 }
 
@@ -49,7 +49,7 @@ func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
 	encMessage,_ := security.EncData("OK -- " + dt.String())
 	_,err := conn.WriteToUDP([]byte(encMessage), addr)
 	if err != nil {
-		fmt.Printf("Couldn't send response %v", err)
+		fmt.Printf("SHR: Couldn't send response %v", err)
 	}
 
 }
