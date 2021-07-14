@@ -32,7 +32,7 @@ func sendCatalogSync(target string, catalogCopy []byte) {
                 //log.Fatalln("Invalid IP address")
 		return
         }
-        conn, err := net.Dial("udp", target+":443")
+        conn, err := net.Dial("udp", target+".anvil-controller_dev"+":443")
         if err != nil {
                 //log.Fatalln("Unable to connect to target")
 		return
