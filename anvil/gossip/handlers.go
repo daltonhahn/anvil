@@ -39,6 +39,7 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 			if strings.Contains(string(decMessage), "Health Check -- REQ --") {
 				sendHealthResp(ser, remoteaddr)
 			} else if (len(decMessage) > 6 && string(decMessage)[:6] == "gossip") {
+				ser.Close()
 				if err !=  nil {
 					fmt.Printf("Some error  %v", err)
 					continue

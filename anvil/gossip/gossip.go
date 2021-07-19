@@ -27,19 +27,19 @@ type Message struct {
 }
 
 func sendCatalogSync(target string, catalogCopy []byte) {
-	_, err := net.ResolveUDPAddr("udp", target+":443")
+	addr, err := net.ResolveUDPAddr("udp", target+":443")
         if err != nil {
                 //log.Fatalln("Invalid IP address")
 		return
         }
-        conn, err := net.Dial("udp", target+":443")
+        conn, err := net.DialUDP("udp", nil, addr)
         if err != nil {
                 //log.Fatalln("Unable to connect to target")
 		return
         }
 	encMessage,_ := security.EncData(("gossip -- " + string(catalogCopy)))
 	fmt.Printf("LEN OF CATALOG: %v\n", len([]byte(encMessage)))
-	_,err = conn.Write([]byte(encMessage))
+	_,err = conn.WriteTo([]byte(encMessage), addr)
 	if err != nil {
 		fmt.Printf("SCS: Couldn't send response %v", err)
 	}
@@ -48,7 +48,7 @@ func sendCatalogSync(target string, catalogCopy []byte) {
 func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
 	dt := time.Now().UTC()
 	encMessage,_ := security.EncData("OK -- " + dt.String())
-	_,err := conn.WriteToUDP([]byte(encMessage), addr)
+	_,err := conn.WriteTo([]byte(encMessage), addr)
 	if err != nil {
 		fmt.Printf("SHR: Couldn't send response %v", err)
 	}
@@ -56,18 +56,18 @@ func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
 }
 
 func sendHealthProbe(target string) bool {
-	_, err := net.ResolveUDPAddr("udp", target+":443")
+	addr, err := net.ResolveUDPAddr("udp", target+":443")
 	if err != nil {
 		//log.Fatalln("Invalid IP address")
 		return false
 	}
-	conn, err := net.Dial("udp", target+":443")
+	conn, err := net.DialUDP("udp", nil, addr)
 	if err != nil {
 		//log.Fatalln("Unable to connect to target")
 		return false
 	}
 	encMessage,_ := security.EncData(("Health Check -- REQ -- " + target))
-	_, err = conn.Write([]byte(encMessage))
+	_, err = conn.WriteTo([]byte(encMessage), addr)
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
 	buf := make([]byte, 4096)
 	for {
@@ -99,7 +99,7 @@ func sendHealthProbe(target string) bool {
 }
 
 func CheckHealth() {
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	for {
 		//Pull current catalog
 		hname, err := os.Hostname()
@@ -140,7 +140,7 @@ func CheckHealth() {
 		err = json.Unmarshal(body, &receivedStuff)
 		if err != nil {
 			//log.Fatalln("Unable to decode JSON")
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			//time.Sleep(5*time.Second)
 		}
 
@@ -151,13 +151,13 @@ func CheckHealth() {
 				catalog.Deregister(receivedStuff.Nodes[target].Name)
 			}
 		}
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		//time.Sleep(5 * time.Second)
 	}
 }
 
 func PropagateCatalog() {
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	//time.Sleep(5 * time.Second)
 	for {
 		//Pull current catalog
@@ -197,7 +197,7 @@ func PropagateCatalog() {
 		err = json.Unmarshal(body, &receivedStuff)
 		if err != nil {
 			//log.Fatalln("Unable to decode JSON")
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			//time.Sleep(5*time.Second)
 			continue
 		}
@@ -208,13 +208,13 @@ func PropagateCatalog() {
 			jsonData, err = json.Marshal(receivedStuff)
 			if err != nil {
 				//log.Fatalln("Unable to marshal JSON")
-				time.Sleep(50 * time.Millisecond)
+				time.Sleep(100 * time.Millisecond)
 				//time.Sleep(5*time.Second)
 				continue
 			}
 			sendCatalogSync(receivedStuff.Nodes[target].Name, jsonData)
 		}
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		//time.Sleep(5 * time.Second)
 	}
 }
