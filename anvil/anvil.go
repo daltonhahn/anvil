@@ -111,7 +111,7 @@ func AnvilInit(nodeType string) {
 }
 
 func registerUDP() {
-	p := make([]byte, 64*1024)
+	p := make([]byte, 64)
 	addr := net.UDPAddr{
 		Port: 443,
 		IP: net.ParseIP("0.0.0.0"),
