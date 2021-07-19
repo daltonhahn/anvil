@@ -70,7 +70,7 @@ func sendHealthProbe(conn *net.UDPConn, target string) bool {
 				return false
 			}
 			*/
-			conn.Close()
+			//conn.Close()
 			return false
 		} else {
 			// Process response
@@ -82,7 +82,7 @@ func sendHealthProbe(conn *net.UDPConn, target string) bool {
 				fmt.Println("MY DT: ", time.Now().UTC())
 			}
 			*/
-			conn.Close()
+			//conn.Close()
 			return true
 		}
 	}
