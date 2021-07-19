@@ -69,7 +69,7 @@ func sendHealthProbe(target string) bool {
 	encMessage,_ := security.EncData(("Health Check -- REQ -- " + target))
 	_, err = conn.Write([]byte(encMessage))
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
-	buf := make([]byte, 64)
+	buf := make([]byte, 4096)
 	for {
 		//n,err := conn.Read(buf)
 		_,err := conn.Read(buf)
