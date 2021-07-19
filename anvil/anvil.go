@@ -12,6 +12,8 @@ import (
 	"context"
 	"time"
 
+	_ "net/http/pprof"
+
 	"github.com/daltonhahn/anvil/network"
 	"github.com/daltonhahn/anvil/router"
 	"github.com/daltonhahn/anvil/anvil/gossip"
