@@ -112,7 +112,6 @@ func AnvilInit(nodeType string) {
 	go func() {
 	    log.Println(http.ListenAndServe(":6060", nil))
 	}()
-	log.Fatal(server.ListenAndServe())
 
 	wg.Wait()
 }
