@@ -127,8 +127,8 @@ func registerUDP() {
 		log.Fatalln("Some error %v\n", err)
 	}
 	go gossip.HandleUDP(p, ser)
-	go gossip.CheckHealth()
-	go gossip.PropagateCatalog()
+	go gossip.CheckHealth(ser)
+	go gossip.PropagateCatalog(ser)
 }
 
 func registerRoutes(anv_router *mux.Router) {
