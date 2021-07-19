@@ -12,7 +12,7 @@ import (
 	"context"
 	"time"
 
-	"net/http/pprof"
+	_ "net/http/pprof"
 
 	"github.com/daltonhahn/anvil/network"
 	"github.com/daltonhahn/anvil/router"
@@ -109,6 +109,11 @@ func AnvilInit(nodeType string) {
 		log.Fatal(http.ListenAndServe(":444", svc_router))
 		wg.Done()
 	}()
+	go func() {
+	    log.Println(http.ListenAndServe(":6060", nil))
+	}()
+	log.Fatal(server.ListenAndServe())
+
 	wg.Wait()
 }
 
@@ -128,12 +133,6 @@ func registerUDP() {
 }
 
 func registerRoutes(anv_router *mux.Router) {
-	anv_router.HandleFunc("/debug/pprof/", pprof.Index)
-	anv_router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-	anv_router.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	anv_router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	anv_router.HandleFunc("/debug/pprof/trace", pprof.Trace)
-
 	anv_router.HandleFunc("/anvil/raft/requestvote", router.RequestVote).Methods("POST")
 	anv_router.HandleFunc("/anvil/raft/appendentries", router.AppendEntries).Methods("POST")
 	anv_router.HandleFunc("/anvil/raft/peers", router.RaftPeers).Methods("GET")
