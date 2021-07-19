@@ -33,7 +33,7 @@ type Message struct {
 
 func RegisterNode(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
-	defer r.Body.Close()
+	r.Body.Close()
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -160,7 +160,7 @@ func GetType(w http.ResponseWriter, r *http.Request) {
 
 func RequestVote(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
-        defer r.Body.Close()
+        r.Body.Close()
         if err != nil {
                 http.Error(w, err.Error(), 500)
                 return
@@ -185,7 +185,7 @@ func RequestVote(w http.ResponseWriter, r *http.Request) {
 
 func AppendEntries(w http.ResponseWriter, r *http.Request) {
         b, err := ioutil.ReadAll(r.Body)
-        defer r.Body.Close()
+        r.Body.Close()
         if err != nil {
                 http.Error(w, err.Error(), 500)
                 return
@@ -210,7 +210,7 @@ func AppendEntries(w http.ResponseWriter, r *http.Request) {
 
 func UpdateLeader(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
-        defer r.Body.Close()
+        r.Body.Close()
         if err != nil {
                 http.Error(w, err.Error(), 500)
                 return
@@ -223,7 +223,7 @@ func UpdateLeader(w http.ResponseWriter, r *http.Request) {
 
 func PushACL(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
-        defer r.Body.Close()
+        r.Body.Close()
         if err != nil {
                 http.Error(w, err.Error(), 500)
                 return
@@ -242,7 +242,7 @@ func GetACL(w http.ResponseWriter, r *http.Request) {
 func TokenLookup(w http.ResponseWriter, r *http.Request) {
 	serviceTarget := mux.Vars(r)["service"]
 	b, err := ioutil.ReadAll(r.Body)
-        defer r.Body.Close()
+        r.Body.Close()
         if err != nil {
                 http.Error(w, err.Error(), 500)
                 return
@@ -255,7 +255,7 @@ func TokenLookup(w http.ResponseWriter, r *http.Request) {
 
 func HandleRotation(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
-        defer r.Body.Close()
+        r.Body.Close()
         if err != nil {
                 http.Error(w, err.Error(), 500)
                 return
@@ -314,7 +314,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
                                                 return err
                                         }
                                 } else {
-                                        defer resp.Body.Close()
+                                        resp.Body.Close()
                                         body, err = ioutil.ReadAll(resp.Body)
                                         if err != nil {
                                                 return err
@@ -335,7 +335,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
                                                 return err
                                         }
                                 } else {
-                                        defer resp.Body.Close()
+                                        resp.Body.Close()
                                         body, err = ioutil.ReadAll(resp.Body)
                                         if err != nil {
                                                 return err
@@ -369,7 +369,7 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 					return err
 				}
 			} else {
-				defer resp.Body.Close()
+				resp.Body.Close()
 				appbody, err = ioutil.ReadAll(resp.Body)
 				if err != nil {
 					return err
@@ -403,7 +403,7 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 							return err
 						}
 					} else {
-						defer resp.Body.Close()
+						resp.Body.Close()
 						body, err = ioutil.ReadAll(resp.Body)
 						if err != nil {
 							return err
@@ -426,7 +426,7 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 							return err
 						}
 					} else {
-						defer resp.Body.Close()
+						resp.Body.Close()
 						body, err = ioutil.ReadAll(resp.Body)
 						if err != nil {
 							return err

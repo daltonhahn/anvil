@@ -67,7 +67,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 					return err
 				}
 			} else {
-				defer resp.Body.Close()
+				resp.Body.Close()
 				body, err = ioutil.ReadAll(resp.Body)
 				if err != nil {
 					return err
@@ -83,7 +83,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 	if err != nil  {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
-	defer out.Close()
+	out.Close()
 	err = ioutil.WriteFile(out.Name(), body, 0755)
 	if err != nil  {
 		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
@@ -106,7 +106,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
                                         return err
                                 }
                         } else {
-                                defer resp.Body.Close()
+                                resp.Body.Close()
                                 body, err = ioutil.ReadAll(resp.Body)
                                 if err != nil {
                                         return err
@@ -122,7 +122,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 	if err != nil  {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
-	defer out.Close()
+	out.Close()
 	err = ioutil.WriteFile(out.Name(), body, 0755)
 	if err != nil  {
 		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
@@ -145,7 +145,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
                                         return err
                                 }
                         } else {
-                                defer resp.Body.Close()
+                                resp.Body.Close()
                                 body, err = ioutil.ReadAll(resp.Body)
                                 if err != nil {
                                         return err
@@ -160,7 +160,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 	if err != nil  {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
-	defer out.Close()
+	out.Close()
 	err = ioutil.WriteFile(out.Name(), body, 0755)
 	if err != nil  {
 		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
@@ -183,7 +183,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
                                         return err
                                 }
                         } else {
-                                defer resp.Body.Close()
+                                resp.Body.Close()
                                 body, err = ioutil.ReadAll(resp.Body)
                                 if err != nil {
                                         return err
@@ -198,7 +198,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 	if err != nil  {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
-	defer out.Close()
+	out.Close()
 	err = ioutil.WriteFile(out.Name(), body, 0755)
 	if err != nil  {
 		log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
@@ -223,7 +223,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 						return err
 					}
 				} else {
-					defer resp.Body.Close()
+					resp.Body.Close()
 					body, err = ioutil.ReadAll(resp.Body)
 					if err != nil {
 						return err
@@ -238,7 +238,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 		if err != nil  {
 			log.Printf("FAILURE OPENING FILE\n")
 		}
-		defer out.Close()
+		out.Close()
 		err = ioutil.WriteFile(out.Name(), body, 0755)
 		if err != nil  {
 			log.Printf("FAILURE WRITING OUT FILE CONTENTS\n")
@@ -281,7 +281,7 @@ func updateRunningConfig(yamlOut string) {
         if err != nil {
                 log.Println(err)
         }
-	defer f.Close()
+	f.Close()
 }
 
 func rewriteYaml(indA int) {
@@ -435,7 +435,7 @@ func processCAs(iter int) []string {
                                         return err
                                 }
                         } else {
-                                defer resp.Body.Close()
+                                resp.Body.Close()
                                 body, err = ioutil.ReadAll(resp.Body)
                                 if err != nil {
                                         return err

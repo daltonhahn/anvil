@@ -497,7 +497,7 @@ func startLeader() {
 								return err
 							}
 						} else {
-							defer resp.Body.Close()
+							resp.Body.Close()
 							body, err = ioutil.ReadAll(resp.Body)
 							if err != nil {
 								return err
@@ -526,7 +526,7 @@ func startLeader() {
 								return err
 							}
 						} else {
-							defer resp.Body.Close()
+							resp.Body.Close()
 							body, err = ioutil.ReadAll(resp.Body)
 							if err != nil {
 								return err
@@ -568,7 +568,7 @@ func startLeader() {
 									return err
 								}
 							} else {
-								defer resp.Body.Close()
+								resp.Body.Close()
 								body, err = ioutil.ReadAll(resp.Body)
 								if err != nil {
 									return err
@@ -607,7 +607,7 @@ func startLeader() {
 										return err
 									}
 								} else {
-									defer resp.Body.Close()
+									resp.Body.Close()
 									body, err = ioutil.ReadAll(resp.Body)
 									if err != nil {
 										return err
@@ -640,7 +640,7 @@ func startLeader() {
 										return err
 									}
 								} else {
-									defer resp.Body.Close()
+									resp.Body.Close()
 									body, err = ioutil.ReadAll(resp.Body)
 									if err != nil {
 										return err
@@ -669,7 +669,7 @@ func startLeader() {
 										return err
 									}
 								} else {
-									defer resp.Body.Close()
+									resp.Body.Close()
 									body, err = ioutil.ReadAll(resp.Body)
 									if err != nil {
 										return err
@@ -716,7 +716,7 @@ func startLeader() {
 										return err
 									}
 								} else {
-									defer resp.Body.Close()
+									resp.Body.Close()
 									body, err = ioutil.ReadAll(resp.Body)
 									if err != nil {
 										return err
@@ -779,7 +779,7 @@ func startLeader() {
 										return err
 									}
 								} else {
-									defer resp.Body.Close()
+									resp.Body.Close()
 									body, err = ioutil.ReadAll(resp.Body)
 									if err != nil {
 										return err
@@ -822,7 +822,7 @@ func startLeader() {
 										return err
 									}
 								} else {
-									defer resp.Body.Close()
+									resp.Body.Close()
 									body, err = ioutil.ReadAll(resp.Body)
 									if err != nil {
 										return err
@@ -859,7 +859,7 @@ func startLeader() {
 										return err
 									}
 								} else {
-									defer resp.Body.Close()
+									resp.Body.Close()
 									body, err = ioutil.ReadAll(resp.Body)
 									if err != nil {
 										return err
@@ -899,7 +899,7 @@ func startLeader() {
 										return err
 									}
 								} else {
-									defer resp.Body.Close()
+									resp.Body.Close()
 									body, err = ioutil.ReadAll(resp.Body)
 									if err != nil {
 										return err
@@ -936,7 +936,7 @@ func startLeader() {
 										return err
 									}
 								} else {
-									defer resp.Body.Close()
+									resp.Body.Close()
 									body, err = ioutil.ReadAll(resp.Body)
 									if err != nil {
 										return err
@@ -960,12 +960,7 @@ func startLeader() {
 						fmt.Println(resp.StatusCode)
 						log.Fatalln("Unable to post content")
 					}
-					defer func() {
-						if err := resp.Body.Close(); err != nil {
-							fmt.Println("FAILURE TO CLOSE RESP BODY")
-							fmt.Println(err)
-						}
-					}()
+					resp.Body.Close()
 					_, err = ioutil.ReadAll(resp.Body)
 					if err != nil {
 						log.Fatalln("Unable to read received content")
@@ -1007,7 +1002,7 @@ func startLeader() {
 									return err
 								}
 							} else {
-								defer resp.Body.Close()
+								resp.Body.Close()
 								body, err = ioutil.ReadAll(resp.Body)
 								if err != nil {
 									return err
@@ -1035,7 +1030,7 @@ func startLeader() {
 									return err
 								}
 							} else {
-								defer resp.Body.Close()
+								resp.Body.Close()
 								body, err = ioutil.ReadAll(resp.Body)
 								if err != nil {
 									return err
@@ -1064,7 +1059,7 @@ func startLeader() {
 										return err
 									}
 								} else {
-									defer resp.Body.Close()
+									resp.Body.Close()
 									body, err = ioutil.ReadAll(resp.Body)
 									if err != nil {
 										return err
@@ -1089,7 +1084,7 @@ func startLeader() {
 										return err
 									}
 								} else {
-									defer resp.Body.Close()
+									resp.Body.Close()
 									body, err = ioutil.ReadAll(resp.Body)
 									if err != nil {
 										return err
@@ -1210,12 +1205,7 @@ func getLeader(target string) (string) {
         if err != nil {
                 return ""
         }
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			fmt.Println("FAILURE TO CLOSE RESP BODY")
-			fmt.Println(err)
-		}
-	}()
+	resp.Body.Close()
 	return string(body)
 }
 
@@ -1231,12 +1221,7 @@ func UpdateLeader(target string, newLeader string) {
 	if err != nil {
 		return
 	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			fmt.Println("FAILURE TO CLOSE RESP BODY")
-			fmt.Println(err)
-		}
-	}()
+	resp.Body.Close()
 	return
 }
 
@@ -1248,12 +1233,7 @@ func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntrie
         if err != nil {
 		return errors.New("No HTTP response"), AppendEntriesReply{}
         }
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			fmt.Println("FAILURE TO CLOSE RESP BODY")
-			fmt.Println(err)
-		}
-	}()
+	resp.Body.Close()
 
         b, err := ioutil.ReadAll(resp.Body)
         if err != nil {
@@ -1301,12 +1281,7 @@ func SendVoteReq(target string, args RequestVoteArgs) (error, RequestVoteReply) 
         if err != nil {
 		return errors.New("No HTTP response"), RequestVoteReply{}
         }
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			fmt.Println("FAILURE TO CLOSE RESP BODY")
-			fmt.Println(err)
-		}
-	}()
+	resp.Body.Close()
 
         b, err := ioutil.ReadAll(resp.Body)
         if err != nil {
