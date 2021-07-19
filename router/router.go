@@ -314,8 +314,8 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
                                                 return err
                                         }
                                 } else {
-                                        resp.Body.Close()
                                         body, err = ioutil.ReadAll(resp.Body)
+                                        resp.Body.Close()
                                         if err != nil {
                                                 return err
                                         }
@@ -335,8 +335,8 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
                                                 return err
                                         }
                                 } else {
-                                        resp.Body.Close()
                                         body, err = ioutil.ReadAll(resp.Body)
+                                        resp.Body.Close()
                                         if err != nil {
                                                 return err
                                         }
@@ -369,8 +369,8 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 					return err
 				}
 			} else {
-				resp.Body.Close()
 				appbody, err = ioutil.ReadAll(resp.Body)
+				resp.Body.Close()
 				if err != nil {
 					return err
 				}
@@ -403,8 +403,8 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 							return err
 						}
 					} else {
-						resp.Body.Close()
 						body, err = ioutil.ReadAll(resp.Body)
+						resp.Body.Close()
 						if err != nil {
 							return err
 						}
@@ -426,8 +426,8 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 							return err
 						}
 					} else {
-						resp.Body.Close()
 						body, err = ioutil.ReadAll(resp.Body)
+						resp.Body.Close()
 						if err != nil {
 							return err
 						}

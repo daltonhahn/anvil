@@ -117,8 +117,8 @@ func CheckHealth() {
 						return err
 					}
 				} else {
-					resp.Body.Close()
 					body, err = ioutil.ReadAll(resp.Body)
+					resp.Body.Close()
 					if err != nil {
 						return err
 					}
@@ -176,8 +176,8 @@ func PropagateCatalog() {
 						return err
 					}
 				} else {
-					resp.Body.Close()
 					body, err = ioutil.ReadAll(resp.Body)
+					resp.Body.Close()
 					if err != nil {
 						return err
 					}
