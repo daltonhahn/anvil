@@ -38,7 +38,7 @@ func sendCatalogSync(target string, catalogCopy []byte) {
 		return
         }
 	encMessage,_ := security.EncData(("gossip -- " + string(catalogCopy)))
-	//fmt.Printf("LEN OF CATALOG: %v\n", len([]byte(encMessage)))
+	fmt.Printf("LEN OF CATALOG: %v\n", len([]byte(encMessage)))
 	_,err = conn.Write([]byte(encMessage))
 	if err != nil {
 		fmt.Printf("SCS: Couldn't send response %v", err)
@@ -69,7 +69,7 @@ func sendHealthProbe(target string) bool {
 	encMessage,_ := security.EncData(("Health Check -- REQ -- " + target))
 	_, err = conn.Write([]byte(encMessage))
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
-	buf := make([]byte, 1024)
+	buf := make([]byte, 64)
 	for {
 		//n,err := conn.Read(buf)
 		_,err := conn.Read(buf)
@@ -99,7 +99,7 @@ func sendHealthProbe(target string) bool {
 }
 
 func CheckHealth() {
-	time.Sleep(5 * time.Second)
+	time.Sleep(50 * time.Millisecond)
 	for {
 		//Pull current catalog
 		hname, err := os.Hostname()
@@ -140,7 +140,8 @@ func CheckHealth() {
 		err = json.Unmarshal(body, &receivedStuff)
 		if err != nil {
 			//log.Fatalln("Unable to decode JSON")
-			time.Sleep(5*time.Second)
+			time.Sleep(50 * time.Millisecond)
+			//time.Sleep(5*time.Second)
 		}
 
 		target := rand.Intn(len(receivedStuff.Nodes))
@@ -150,12 +151,14 @@ func CheckHealth() {
 				catalog.Deregister(receivedStuff.Nodes[target].Name)
 			}
 		}
-		time.Sleep(5 * time.Second)
+		time.Sleep(50 * time.Millisecond)
+		//time.Sleep(5 * time.Second)
 	}
 }
 
 func PropagateCatalog() {
-	time.Sleep(5 * time.Second)
+	time.Sleep(50 * time.Millisecond)
+	//time.Sleep(5 * time.Second)
 	for {
 		//Pull current catalog
 		hname, err := os.Hostname()
@@ -194,7 +197,8 @@ func PropagateCatalog() {
 		err = json.Unmarshal(body, &receivedStuff)
 		if err != nil {
 			//log.Fatalln("Unable to decode JSON")
-			time.Sleep(5*time.Second)
+			time.Sleep(50 * time.Millisecond)
+			//time.Sleep(5*time.Second)
 			continue
 		}
 		target := rand.Intn(len(receivedStuff.Nodes))
@@ -204,11 +208,13 @@ func PropagateCatalog() {
 			jsonData, err = json.Marshal(receivedStuff)
 			if err != nil {
 				//log.Fatalln("Unable to marshal JSON")
-				time.Sleep(5*time.Second)
+				time.Sleep(50 * time.Millisecond)
+				//time.Sleep(5*time.Second)
 				continue
 			}
 			sendCatalogSync(receivedStuff.Nodes[target].Name, jsonData)
 		}
-		time.Sleep(5 * time.Second)
+		time.Sleep(50 * time.Millisecond)
+		//time.Sleep(5 * time.Second)
 	}
 }
