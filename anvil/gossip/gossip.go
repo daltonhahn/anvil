@@ -33,7 +33,7 @@ func sendCatalogSync(conn *net.UDPConn, target string, catalogCopy []byte) {
 		return
         }
 	encMessage,_ := security.EncData(("gossip -- " + string(catalogCopy)))
-	fmt.Printf("LEN OF CATALOG: %v\n", len([]byte(encMessage)))
+	//fmt.Printf("LEN OF CATALOG: %v\n", len([]byte(encMessage)))
 	_,err = conn.WriteTo([]byte(encMessage), addr)
 	if err != nil {
 		fmt.Printf("SCS: Couldn't send response %v", err)
@@ -89,7 +89,7 @@ func sendHealthProbe(conn *net.UDPConn, target string) bool {
 }
 
 func CheckHealth(conn *net.UDPConn) {
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 	for {
 		//Pull current catalog
 		hname, err := os.Hostname()
@@ -130,7 +130,7 @@ func CheckHealth(conn *net.UDPConn) {
 		err = json.Unmarshal(body, &receivedStuff)
 		if err != nil {
 			//log.Fatalln("Unable to decode JSON")
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(200 * time.Millisecond)
 			//time.Sleep(5*time.Second)
 		}
 
@@ -141,13 +141,13 @@ func CheckHealth(conn *net.UDPConn) {
 				catalog.Deregister(receivedStuff.Nodes[target].Name)
 			}
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 		//time.Sleep(5 * time.Second)
 	}
 }
 
 func PropagateCatalog(conn *net.UDPConn) {
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(1000 * time.Millisecond)
 	//time.Sleep(5 * time.Second)
 	for {
 		//Pull current catalog
@@ -187,7 +187,7 @@ func PropagateCatalog(conn *net.UDPConn) {
 		err = json.Unmarshal(body, &receivedStuff)
 		if err != nil {
 			//log.Fatalln("Unable to decode JSON")
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(1000 * time.Millisecond)
 			//time.Sleep(5*time.Second)
 			continue
 		}
@@ -198,13 +198,13 @@ func PropagateCatalog(conn *net.UDPConn) {
 			jsonData, err = json.Marshal(receivedStuff)
 			if err != nil {
 				//log.Fatalln("Unable to marshal JSON")
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(1000 * time.Millisecond)
 				//time.Sleep(5*time.Second)
 				continue
 			}
 			sendCatalogSync(conn, receivedStuff.Nodes[target].Name, jsonData)
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 		//time.Sleep(5 * time.Second)
 	}
 }

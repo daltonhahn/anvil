@@ -36,7 +36,7 @@ type SecConfig struct {
 
 
 func ReadSecConfig() {
-	yamlFile, err := ioutil.ReadFile("/root/anvil/config/test_config.yaml")
+	yamlFile, err := ioutil.ReadFile("/home/anvil/Desktop/anvil/config/test_config.yaml")
         if err != nil {
                 log.Printf("Read file error #%v", err)
         }

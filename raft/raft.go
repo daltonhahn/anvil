@@ -317,11 +317,11 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 
 
 func electionTimeout() time.Duration {
-	duration := 20
+	duration := 65
 	if len(os.Getenv("RAFT_FORCE_MORE_REELECTION")) > 0 && rand.Intn(3) == 0 {
 		return time.Duration(duration) * time.Second
 	} else {
-		return time.Duration(duration+rand.Intn(150)) * time.Second
+		return time.Duration(duration+rand.Intn(10)) * time.Second
 	}
 }
 
@@ -450,7 +450,7 @@ func startLeader() {
 	}
 
 	go func() {
-		ticker := time.NewTicker(3 * time.Second)
+		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
 
 		for {
@@ -466,7 +466,7 @@ func startLeader() {
 		}
 	}()
 	go func() {
-		rotateTicker := time.NewTicker(5 * time.Minute)
+		rotateTicker := time.NewTicker(1000 * time.Minute)
 		defer rotateTicker.Stop()
 		for {
 			CM.mu.Lock()
@@ -951,7 +951,7 @@ func startLeader() {
 					}
 				}
 
-				aclEntries,_ := acl.ACLIngest("/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/acls.yaml")
+				aclEntries,_ := acl.ACLIngest("/home/anvil/Desktop/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/acls.yaml")
 				for _, ele := range aclEntries {
 					postBody, _ := json.Marshal(ele)
 					responseBody := bytes.NewBuffer(postBody)
