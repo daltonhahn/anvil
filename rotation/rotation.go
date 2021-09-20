@@ -39,11 +39,11 @@ type FPMess struct {
 }
 
 func CollectFiles(iter string, nodeName string, qMems []string) bool {
-	newpath := filepath.Join("/root/anvil/", "config/gossip", iter)
+	newpath := filepath.Join("/home/anvil/Desktop/anvil/", "config/gossip", iter)
         os.MkdirAll(newpath, os.ModePerm)
-        newpath = filepath.Join("/root/anvil/", "config/acls", iter)
+        newpath = filepath.Join("/home/anvil/Desktop/anvil/", "config/acls", iter)
         os.MkdirAll(newpath, os.ModePerm)
-        newpath = filepath.Join("/root/anvil/", "config/certs", iter)
+        newpath = filepath.Join("/home/anvil/Desktop/anvil/", "config/certs", iter)
         os.MkdirAll(newpath, os.ModePerm)
 
 	anv_catalog := catalog.GetCatalog()
@@ -79,7 +79,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 	)
 
 
-	out, err := os.Create("/root/anvil/config/gossip/"+iter+"/"+fMess.FilePath)
+	out, err := os.Create("/home/anvil/Desktop/anvil/config/gossip/"+iter+"/"+fMess.FilePath)
 	if err != nil  {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
@@ -118,7 +118,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
         )
 
 
-	out, err = os.Create("/root/anvil/config/acls/"+iter+"/acl.yaml")
+	out, err = os.Create("/home/anvil/Desktop/anvil/config/acls/"+iter+"/acl.yaml")
 	if err != nil  {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
@@ -156,7 +156,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
                 retry.Attempts(3),
         )
 
-	out, err = os.Create("/root/anvil/config/certs/"+iter+"/"+nodeName+".key")
+	out, err = os.Create("/home/anvil/Desktop/anvil/config/certs/"+iter+"/"+nodeName+".key")
 	if err != nil  {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
@@ -194,7 +194,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
                 retry.Attempts(3),
         )
 
-	out, err = os.Create("/root/anvil/config/certs/"+iter+"/"+nodeName+".crt")
+	out, err = os.Create("/home/anvil/Desktop/anvil/config/certs/"+iter+"/"+nodeName+".crt")
 	if err != nil  {
 		log.Printf("FAILURE OPENING FILE\n")
 	}
@@ -234,7 +234,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 			retry.Attempts(3),
 		)
 
-		out, err = os.Create("/root/anvil/config/certs/"+iter+"/"+ele+".crt")
+		out, err = os.Create("/home/anvil/Desktop/anvil/config/certs/"+iter+"/"+ele+".crt")
 		if err != nil  {
 			log.Printf("FAILURE OPENING FILE\n")
 		}
@@ -272,7 +272,7 @@ func AdjustConfig() {
 }
 
 func updateRunningConfig(yamlOut string) {
-	f, err := os.OpenFile("/root/anvil/config/test_config.yaml", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	f, err := os.OpenFile("/home/anvil/Desktop/anvil/config/test_config.yaml", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -285,7 +285,7 @@ func updateRunningConfig(yamlOut string) {
 }
 
 func rewriteYaml(indA int) {
-        yamlFile, err := ioutil.ReadFile("/root/anvil/config/test_config.yaml")
+        yamlFile, err := ioutil.ReadFile("/home/anvil/Desktop/anvil/config/test_config.yaml")
         if err != nil {
                 log.Printf("Read file error #%v", err)
         }
@@ -299,7 +299,7 @@ func rewriteYaml(indA int) {
 	var yamlOut []byte
 
         if indA == 0 {
-		b, err := ioutil.ReadFile("/root/anvil/config/gossip/0/gossip.key")
+		b, err := ioutil.ReadFile("/home/anvil/Desktop/anvil/config/gossip/0/gossip.key")
 		if err != nil {
 			panic(err)
 		}
@@ -307,12 +307,12 @@ func rewriteYaml(indA int) {
 
 		caList := processCAs(0)
 
-                tokMap := readACLFile("/root/anvil/config/acls/0/acl.yaml")
+                tokMap := readACLFile("/home/anvil/Desktop/anvil/config/acls/0/acl.yaml")
                 tmpSecConf := SecConfig {
                         Key: gKey,
                         CACert: caList,
-                        TLSCert: "/root/anvil/config/certs/0/"+hname+".crt",
-                        TLSKey: "/root/anvil/config/certs/0/"+hname+".key",
+                        TLSCert: "/home/anvil/Desktop/anvil/config/certs/0/"+hname+".crt",
+                        TLSKey: "/home/anvil/Desktop/anvil/config/certs/0/"+hname+".key",
                         Tokens: tokMap,
                 }
                 listSecConf = tmpSecConf
@@ -324,8 +324,8 @@ func rewriteYaml(indA int) {
         } else {
                 strA := strconv.Itoa(indA)
 
-                tMapA := readACLFile("/root/anvil/config/acls/"+strA+"/acl.yaml")
-		b, err := ioutil.ReadFile("/root/anvil/config/gossip/"+strA+"/gossip.key")
+                tMapA := readACLFile("/home/anvil/Desktop/anvil/config/acls/"+strA+"/acl.yaml")
+		b, err := ioutil.ReadFile("/home/anvil/Desktop/anvil/config/gossip/"+strA+"/gossip.key")
 		if err != nil {
 			panic(err)
 		}
@@ -336,8 +336,8 @@ func rewriteYaml(indA int) {
                 sConfA := SecConfig {
                         Key: gKeyA,
                         CACert: caListA,
-                        TLSCert: "/root/anvil/config/certs/"+strA+"/"+hname+".crt",
-                        TLSKey: "/root/anvil/config/certs/"+strA+"/"+hname+".key",
+                        TLSCert: "/home/anvil/Desktop/anvil/config/certs/"+strA+"/"+hname+".crt",
+                        TLSKey: "/home/anvil/Desktop/anvil/config/certs/"+strA+"/"+hname+".key",
                         Tokens: tMapA,
                 }
 		listSecConf = sConfA
@@ -350,15 +350,15 @@ func rewriteYaml(indA int) {
 }
 
 func getDirMap() map[string][]int {
-        aclIters, err := ioutil.ReadDir("/root/anvil/config/acls")
+        aclIters, err := ioutil.ReadDir("/home/anvil/Desktop/anvil/config/acls")
         if err != nil {
                 log.Println(err)
         }
-        gossipIters, err := ioutil.ReadDir("/root/anvil/config/gossip")
+        gossipIters, err := ioutil.ReadDir("/home/anvil/Desktop/anvil/config/gossip")
         if err != nil {
                 log.Println(err)
         }
-        certIters, err := ioutil.ReadDir("/root/anvil/config/certs")
+        certIters, err := ioutil.ReadDir("/home/anvil/Desktop/anvil/config/certs")
         if err != nil {
                 log.Println(err)
         }
@@ -410,14 +410,14 @@ func readACLFile(fpath string) []TokMap {
 
 func processCAs(iter int) []string {
 	hname, _ := os.Hostname()
-	topLvl, err := ioutil.ReadDir("/root/anvil/config/certs/"+strconv.Itoa(iter))
+	topLvl, err := ioutil.ReadDir("/home/anvil/Desktop/anvil/config/certs/"+strconv.Itoa(iter))
 	if err != nil {
 		log.Println(err)
 	}
 	var retList []string
 	for _, f := range topLvl {
 		if !strings.Contains(f.Name(), ".key") && f.Name() != hname+".crt" {
-			retList = append(retList, ("/root/anvil/config/certs/"+strconv.Itoa(iter)+"/"+f.Name()))
+			retList = append(retList, ("/home/anvil/Desktop/anvil/config/certs/"+strconv.Itoa(iter)+"/"+f.Name()))
 		}
 	}
 	if err != nil {
@@ -452,7 +452,7 @@ func processCAs(iter int) []string {
 	}
 	nodeType := string(body)
 	if nodeType == "server" {
-		retList = append(retList, "/root/anvil/config/certs/"+strconv.Itoa(iter)+"/"+hname+".crt")
+		retList = append(retList, "/home/anvil/Desktop/anvil/config/certs/"+strconv.Itoa(iter)+"/"+hname+".crt")
 	}
 	return retList
 }
