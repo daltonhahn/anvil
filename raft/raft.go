@@ -688,7 +688,7 @@ func startLeader() {
 						targets := []string{}
 						for _,e := range temptargets {
 							if e != hname {
-								addr, err := net.LookupIP(e+".anvil-controller_dev")
+								addr, err := net.LookupIP(e)
 								if err != nil {
 									fmt.Println("Lookup failed")
 								}
@@ -745,12 +745,12 @@ func startLeader() {
 							fmt.Println("Lookup failed")
 						}
 						for _,t := range CM.PeerIds {
-							targAddr, err := net.LookupIP(sendTarg+".anvil-controller_dev")
+							targAddr, err := net.LookupIP(sendTarg)
 							if err != nil {
 								fmt.Println("Lookup failed")
 							}
 							if t != sendTarg && t != targAddr[0].String() && t != hname && t != hostAddr[1].String() {
-								addr, err := net.LookupIP(t+".anvil-controller_dev")
+								addr, err := net.LookupIP(t)
 								if err != nil {
 									fmt.Println("Lookup failed")
 								}
