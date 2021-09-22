@@ -21,7 +21,7 @@ func MakeIpTables() {
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-N", "PROXY_INIT_OUTPUT").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "OUTPUT", "-m", "multiport", "-p", "tcp", "-o", "ens192", "!", "--dports",
 		"22,443", "-j", "REDIRECT", "--to-port", "444").Output()
-	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "OUTPUT", "-m", "multiport", "-p", "tcp", "-o", "ens192", "!", "--dport",
+	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "OUTPUT", "-m", "multiport", "-p", "tcp", "-o", "ens192", "!", "--dports",
 		"22,443", "-j", "PROXY_INIT_REDIRECT").Output()
 }
 
