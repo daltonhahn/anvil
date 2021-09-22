@@ -558,7 +558,7 @@ func startLeader() {
 					fmt.Println(" ---- PullCA ----- ")
 					err = retry.Do(
 						func() error {
-							resp, err := security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
+							resp, err := http.Post("http://" +ele+ ":8080/pullCA", "application/json", bytes.NewBuffer(jsonDat))
 							if err != nil || resp.StatusCode != http.StatusOK {
 								if err == nil {
 									fmt.Printf("\t\t%v\n", resp.StatusCode)
@@ -632,7 +632,8 @@ func startLeader() {
 						fmt.Printf(" ---- Assignment: %v ----- \n", CM.PeerIds[i])
 						err = retry.Do(
 							func() error {
-								resp, err := security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
+								resp, err := http.Post("http://" + CM.PeerIds[i] + ":8080/assignment", "application/json", bytes.NewBuffer(jsonDat))
+								//resp, err := security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
 								if err != nil || resp.StatusCode != http.StatusOK {
 									if err == nil {
 										return errors.New("BAD STATUS CODE FROM SERVER")
@@ -771,7 +772,8 @@ func startLeader() {
 						fmt.Printf(" ----- PrepBundle: %v ----- \n", sendTarg)
 						err = retry.Do(
 							func() error {
-								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/prepBundle", "rotation", "application/json", bytes.NewBuffer(jsonData))
+								resp, err := http.Post("http://" + sendTarg + ":8080/prepBundle", "application/json", bytes.NewBuffer(jsonData))
+								//resp, err := security.TLSPostReq(sendTarg, "/service/rotation/prepBundle", "rotation", "application/json", bytes.NewBuffer(jsonData))
 								if err != nil || resp.StatusCode != http.StatusOK {
 									if err == nil {
 										return errors.New("BAD STATUS CODE FROM SERVER")
@@ -851,7 +853,8 @@ func startLeader() {
 						fmt.Printf(" ----- CollectSignal: %v ----- \n", sendTarg)
 						err = retry.Do(
 							func() error {
-								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
+								resp, err := http.Post("http://" + sendTarg + ":8080/collectSignal", "application/json", bytes.NewBuffer(jsonData))
+								//resp, err := security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
 								if err != nil || resp.StatusCode != http.StatusOK {
 									if err == nil {
 										return errors.New("BAD STATUS CODE FROM SERVER")
@@ -928,7 +931,8 @@ func startLeader() {
 						fmt.Printf(" ----- FillCA: %v ----- \n", sendTarg)
 						err = retry.Do(
 							func() error {
-								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/fillCA", "rotation", "application/json", bytes.NewBuffer(jsonData))
+								resp, err := http.Post("http://" + sendTarg + ":8080/fillCA", "application/json", bytes.NewBuffer(jsonData))
+								//resp, err := security.TLSPostReq(sendTarg, "/service/rotation/fillCA", "rotation", "application/json", bytes.NewBuffer(jsonData))
 								if err != nil || resp.StatusCode != http.StatusOK {
 									if err == nil {
 										return errors.New("BAD STATUS CODE FROM SERVER")
