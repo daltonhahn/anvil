@@ -297,6 +297,7 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 }
 
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Landed in CatchOutbound")
 	var resp *http.Response
 	var err error
 	var body []byte
@@ -306,6 +307,8 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	if (r.Method == "POST") {
                 err = retry.Do(
                         func() error {
+				fmt.Println("Trying to make POST request to %s", target)
+
 				resp, err = security.TLSPostReq(target, target_uri, strings.Split(r.RequestURI, "/")[2], r.Header.Get("Content-Type"), r.Body)
                                 if err != nil || resp.StatusCode != http.StatusOK {
                                         if err == nil {
@@ -327,6 +330,8 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	} else {
 		err = retry.Do(
                         func() error {
+				fmt.Println("Trying to make GET request to %s", target)
+
 				resp, err = security.TLSGetReq(target, target_uri, strings.Split(r.RequestURI, "/")[2])
                                 if err != nil || resp.StatusCode != http.StatusOK {
                                         if err == nil {
