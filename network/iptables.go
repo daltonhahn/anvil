@@ -13,7 +13,9 @@ func MakeIpTables() {
 		"REDIRECT", "--to-port", "443").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "PROXY_INIT_REDIRECT", "-p", "tcp", "--dport", "23:442", "-j",
 		"REDIRECT", "--to-port", "443").Output()
-	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "PROXY_INIT_REDIRECT", "-p", "tcp", "--dport", "445:65389", "-j",
+	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "PROXY_INIT_REDIRECT", "-p", "tcp", "--dport", "445:8079", "-j",
+		"REDIRECT", "--to-port", "443").Output()
+	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "PROXY_INIT_REDIRECT", "-p", "tcp", "--dport", "8081:65389", "-j",
 		"REDIRECT", "--to-port", "443").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "PROXY_INIT_REDIRECT", "-p", "udp", "-j",
 		"REDIRECT", "--to-port", "443").Output()
