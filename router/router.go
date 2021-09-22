@@ -330,7 +330,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	} else {
 		err = retry.Do(
                         func() error {
-				fmt.Println("Trying to make GET request to %s", target)
+				fmt.Println("Trying to make GET request to ", target, target_uri, strings.Split(r.RequestURI, "/")[2])
 
 				resp, err = security.TLSGetReq(target, target_uri, strings.Split(r.RequestURI, "/")[2])
                                 if err != nil || resp.StatusCode != http.StatusOK {
@@ -350,6 +350,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
                         },
                         retry.Attempts(3),
                 )
+		fmt.Println(err)
 	}
 	fmt.Fprintf(w, string(body))
 }
