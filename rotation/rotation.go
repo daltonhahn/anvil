@@ -85,7 +85,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 	if err != nil {
 		log.Fatalln("Unable to make request")
 	}
-	resp.Body.Close()
+	defer resp.Body.Close()
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalln("Unable to parse response")
