@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"log"
+	"net"
 )
 
 func MakeIpTables() {
@@ -51,6 +52,9 @@ func SetHosts(hostName string) {
                 if strings.Contains(line, "127.0.0.1") {
                         lines[i] = "127.0.0.1\tlocalhost " + hostName
                 }
+		if strings.Contains(line, "127.0.1.1") {
+			lines[i] = GetOutboundIP().String() + "\t" + hostName
+		}
         }
         output := strings.Join(lines, "\n")
         err = ioutil.WriteFile("/etc/hosts.temp", []byte(output), 0644)
@@ -58,4 +62,16 @@ func SetHosts(hostName string) {
                 log.Fatalln(err)
         }
 	exec.Command("/bin/cp", "-f", "/etc/hosts.temp", "/etc/hosts").Output()
+}
+
+func GetOutboundIP() net.IP {
+    conn, err := net.Dial("udp", "8.8.8.8:80")
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer conn.Close()
+
+    localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+    return localAddr.IP
 }
