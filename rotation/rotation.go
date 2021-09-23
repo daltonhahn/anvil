@@ -516,7 +516,7 @@ func processCAs(iter int) []string {
                 retry.Attempts(3),
         )
 	*/
-	resp, err := http.Get("http://" + hname + "/anvil/type")
+	resp, err := http.Get("https://" + hname + "/anvil/type")
 	if err != nil {
 		log.Fatalln("Unable to retrieve node type")
 	}
