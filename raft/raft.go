@@ -744,6 +744,7 @@ func startLeader() {
 						if err != nil {
 							fmt.Println("Lookup failed")
 						}
+						fmt.Println("_____________: ", hostAddr)
 						for _,t := range CM.PeerIds {
 							targAddr, err := net.LookupIP(sendTarg)
 							if err != nil {
