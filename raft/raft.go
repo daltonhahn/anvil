@@ -989,7 +989,9 @@ func startLeader() {
 					}{Iteration: strconv.Itoa(iteration), Prefix: ele, QuorumMems: append(CM.PeerIds, hname)}
                                         jsonDat, err = json.Marshal(postVal)
                                         if err != nil {
+						fmt.Println("Failing here?")
                                                 log.Fatalln(err)
+						fmt.Println("YUP, HERE")
                                         }
 
 					fmt.Printf(" ----- Pull Rotation Files: %v ----- \n", ele)
