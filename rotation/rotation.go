@@ -8,7 +8,6 @@ import (
 	"log"
 	"bytes"
 	"encoding/json"
-	"net/http"
         "gopkg.in/yaml.v2"
         "strconv"
 	"strings"
@@ -516,9 +515,13 @@ func processCAs(iter int) []string {
                 retry.Attempts(3),
         )
 	*/
-	resp, err := http.Get("https://" + hname + "/anvil/type")
+	hname, err = os.Hostname()
 	if err != nil {
-		log.Fatalln("Unable to retrieve node type")
+		log.Fatalln("Unable to get hostname")
+	}
+	resp, err := security.TLSGetReq(hname, "/anvil/type", "")
+	if err != nil {
+		log.Fatalln("Unable to get node type")
 	}
 	defer resp.Body.Close()
 	body, err = ioutil.ReadAll(resp.Body)
@@ -527,6 +530,7 @@ func processCAs(iter int) []string {
 	}
 
 	nodeType := string(body)
+	fmt.Println(nodeType)
 	if nodeType == "server" {
 		retList = append(retList, "/home/anvil/Desktop/anvil/config/certs/"+strconv.Itoa(iter)+"/"+hname+".crt")
 	}
