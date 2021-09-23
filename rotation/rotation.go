@@ -57,7 +57,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 	}
 	postVal := bytes.NewBuffer(jsonData)
 
-	fmt.Println("Making request to ", qMem)
+	fmt.Printf("Making request to %s for %s", qMem, string(jsonData))
 	var body []byte
 	err = retry.Do(
 		func() error {
