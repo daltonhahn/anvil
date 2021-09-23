@@ -57,5 +57,5 @@ func SetHosts(hostName string) {
         if err != nil {
                 log.Fatalln(err)
         }
-	exec.Command("/usr/bin/cp", "-f", "/etc/hosts.temp", "/etc/hosts").Output()
+	exec.Command("/bin/cp", "-f", "/etc/hosts.temp", "/etc/hosts").Output()
 }
