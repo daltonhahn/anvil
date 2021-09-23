@@ -151,6 +151,7 @@ func GetType(w http.ResponseWriter, r *http.Request) {
 	anv_catalog := catalog.GetCatalog()
 	hname, _ := os.Hostname()
 	nodeType := anv_catalog.GetNodeType(hname)
+	fmt.Println("-----" + nodeType + "----")
 	if nodeType == "server" || nodeType == "leader" {
 		fmt.Fprint(w, "server")
 	} else {
