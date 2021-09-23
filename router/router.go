@@ -303,7 +303,6 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	anv_catalog := catalog.GetCatalog()
 	target := anv_catalog.GetSvcHost(r.Host)
 	target_uri := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
-	fmt.Printf("Caught outbound request headed for %s and endpoint %s\n", target, target_uri)
 	if (r.Method == "POST") {
                 err = retry.Do(
                         func() error {
@@ -347,7 +346,6 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
                         retry.Attempts(3),
                 )
 	}
-	fmt.Printf("BODY SENDING BACK %s\n", body)
 	fmt.Fprintf(w, string(body))
 }
 
