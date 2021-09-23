@@ -1,6 +1,7 @@
 package rotation
 
 import (
+	"fmt"
 	"os"
 	"io/ioutil"
 	"path/filepath"
@@ -56,6 +57,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 	}
 	postVal := bytes.NewBuffer(jsonData)
 
+	fmt.Println("Making request to ", qMem)
 	var body []byte
 	err = retry.Do(
 		func() error {
@@ -77,6 +79,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 		},
 		retry.Attempts(3),
 	)
+	fmt.Printf("GOT: %s from %s\n", string(body), qMem)
 
 
 	out, err := os.Create("/home/anvil/Desktop/anvil/config/gossip/"+iter+"/"+fMess.FilePath)
