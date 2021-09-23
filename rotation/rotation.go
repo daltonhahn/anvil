@@ -352,6 +352,7 @@ func updateRunningConfig(yamlOut string) {
 }
 
 func rewriteYaml(indA int) {
+	fmt.Println("Trying to rewrite my Yaml file")
         yamlFile, err := ioutil.ReadFile("/home/anvil/Desktop/anvil/config/test_config.yaml")
         if err != nil {
                 log.Printf("Read file error #%v", err)
@@ -413,6 +414,7 @@ func rewriteYaml(indA int) {
                         panic(err)
                 }
         }
+	fmt.Println("Trying to update the runnign active config")
 	updateRunningConfig(string(yamlOut))
 }
 
