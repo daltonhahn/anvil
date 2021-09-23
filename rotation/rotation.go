@@ -111,6 +111,8 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 	}
 	postVal = bytes.NewBuffer(jsonData)
 
+	fmt.Printf("2. Making request to %s for %s", qMem, string(jsonData))
+	/*
 	err = retry.Do(
                 func() error {
 			resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
@@ -131,6 +133,19 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
                 },
                 retry.Attempts(3),
         )
+	*/
+	resp, err = security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+	if err != nil {
+		log.Fatalln("Unable to make request")
+	}
+	defer resp.Body.Close()
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln("Unable to parse response")
+	}
+
+	fmt.Printf("GOT: %s from %s\n", string(body), qMem)
+
 
 
 	out, err = os.Create("/home/anvil/Desktop/anvil/config/acls/"+iter+"/acl.yaml")
