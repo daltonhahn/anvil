@@ -53,6 +53,7 @@ func SetHosts(hostName string) {
                         lines[i] = "127.0.0.1\tlocalhost " + hostName
                 }
 		if strings.Contains(line, "127.0.1.1") {
+			fmt.Println("FOUND MY LINE")
 			lines[i] = GetOutboundIP().String() + "\t" + hostName
 		}
         }
