@@ -13,11 +13,11 @@ import (
         "strconv"
 	"strings"
         "reflect"
-	"errors"
+	//"errors"
 
 	"github.com/daltonhahn/anvil/security"
 	"github.com/daltonhahn/anvil/catalog"
-	"github.com/avast/retry-go/v3"
+	//"github.com/avast/retry-go/v3"
 )
 
 type SecConfig struct {
@@ -494,6 +494,7 @@ func processCAs(iter int) []string {
 	}
 
 	var body []byte
+	/*
         err = retry.Do(
                 func() error {
 			resp, err := security.TLSGetReq(hname, "/anvil/type", "")
@@ -514,11 +515,17 @@ func processCAs(iter int) []string {
                 },
                 retry.Attempts(3),
         )
-
-
+	*/
+	resp, err := http.Get("http://" + hname + "/anvil/type")
 	if err != nil {
 		log.Fatalln("Unable to retrieve node type")
 	}
+	defer resp.Body.Close()
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln("Unable to parse response")
+	}
+
 	nodeType := string(body)
 	if nodeType == "server" {
 		retList = append(retList, "/home/anvil/Desktop/anvil/config/certs/"+strconv.Itoa(iter)+"/"+hname+".crt")
