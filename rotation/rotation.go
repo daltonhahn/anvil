@@ -413,7 +413,6 @@ func rewriteYaml(indA int) {
                         panic(err)
                 }
         }
-	fmt.Println("Trying to update the runnign active config")
 	updateRunningConfig(string(yamlOut))
 }
 
@@ -530,7 +529,6 @@ func processCAs(iter int) []string {
 	}
 
 	nodeType := string(body)
-	fmt.Println(nodeType)
 	if nodeType == "server" {
 		retList = append(retList, "/home/anvil/Desktop/anvil/config/certs/"+strconv.Itoa(iter)+"/"+hname+".crt")
 	}
