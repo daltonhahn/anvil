@@ -706,6 +706,7 @@ func startLeader() {
 						}
 
 						fmt.Println(" ----- PrepBundle ----- ")
+						fmt.Println(collectMap)
 						err = retry.Do(
 							func() error {
 								resp, err := http.Post("http://" + hname + ":8080/prepBundle", "application/json", bytes.NewBuffer(jsonData))
@@ -769,6 +770,7 @@ func startLeader() {
 						}
 
 						fmt.Printf(" ----- PrepBundle: %v ----- \n", sendTarg)
+						fmt.Println(collectMap)
 						err = retry.Do(
 							func() error {
 								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/prepBundle", "rotation", "application/json", bytes.NewBuffer(jsonData))
