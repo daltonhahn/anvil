@@ -688,7 +688,7 @@ func startLeader() {
 						targets := []string{}
 						for _,e := range temptargets {
 							if e != hname {
-								addr, err := net.LookupIP(e+".localdomain")
+								addr, err := net.LookupIP(e)
 								if err != nil {
 									fmt.Println("Lookup failed")
 								}
