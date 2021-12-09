@@ -3,7 +3,5 @@
   name: s2r
   sname: login
   val: RVJBSklPWG5UU1RkcXpEYm9zMVdYWjdRSFpmSEVJYm9KWklaNkJQejVZdml1NmF2Z2tSR3dXMUFSMTZaT1ZRaw==
-  services:
-    - auth:
-      - sername: auth
-        serchain: login,auth,db
+  sername: auth
+  serchain: login,auth,db

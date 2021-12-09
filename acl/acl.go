@@ -11,18 +11,14 @@ import (
         "gopkg.in/yaml.v2"
 )
 
-type ServiceMap struct {
-	TargetService	string	`yaml:"sername,omitempty"`
-	ServiceChain	string	`yaml:"serchain,omitempty"`
-}
-
-
 type ACLEntry struct {
 	Name		string			`yaml:"name,omitempty"`
 	TokenValue	string			`yaml:"val,omitempty"`
 	CreationTime	time.Time
 	ExpirationTime	time.Time
-	Chains		map[string]ServiceMap	`yaml:"services,omitempty"`
+	TargetService	string	`yaml:"sername,omitempty"`
+	ServiceChain	string	`yaml:"serchain,omitempty"`
+	//Chains		map[string]ServiceMap	`yaml:"services,omitempty"`
 }
 
 func ACLIngest(filepath string) ([]ACLEntry, error) {
