@@ -12,8 +12,8 @@ import (
 )
 
 type ServiceMap struct {
-	TargetService	string
-	ServiceChain	[]string
+	TargetService	string	`yaml:"sername,omitempty"`
+	ServiceChain	string	`yaml:"serchain,omitempty"`
 }
 
 type chains map[string]ServiceMap
