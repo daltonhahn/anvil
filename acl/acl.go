@@ -37,6 +37,7 @@ func ACLIngest(filepath string) ([]ACLEntry, error) {
 	}
 
 	var retList []ACLEntry
+	fmt.Printf("%v\n", tempList)
 	/*
 	for _,ele := range tempList {
 		tokVal := ele.TokenValue
