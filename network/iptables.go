@@ -32,7 +32,7 @@ func CleanTables() {
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-F", "PROXY_INIT_OUTPUT").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-D", "OUTPUT", "3").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-D", "OUTPUT", "2").Output()
-	exec.Command("/usr/sbin/iptables", "-t", "nat", "-D", "OUTPUT", "1").Output()
+	//exec.Command("/usr/sbin/iptables", "-t", "nat", "-D", "OUTPUT", "1").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "--delete-chain", "PROXY_INIT_REDIRECT").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "--delete-chain", "PROXY_INIT_OUTPUT").Output()
 }
