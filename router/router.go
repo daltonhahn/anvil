@@ -24,6 +24,13 @@ import (
 	"github.com/daltonhahn/anvil/rotation"
 )
 
+type TempTokStore struct {
+	// originating service
+	// next dest
+	// time received
+	// token val
+}
+
 type Message struct {
         NodeName string `json:"nodename"`
         Nodes []catalog.Node `json:"nodes"`
@@ -297,6 +304,7 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 }
 
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
+	// Need to consult TempTokStore in case there is a partial token chain
 	var resp *http.Response
 	var err error
 	var body []byte
@@ -350,6 +358,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
+	// Need to parse the token chain instead of just the raw token
         target_svc := strings.Split(r.RequestURI, "/")[2]
         tok_recv := r.Header["Authorization"][0]
         anv_catalog := catalog.GetCatalog()

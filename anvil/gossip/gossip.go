@@ -134,11 +134,13 @@ func CheckHealth(conn *net.UDPConn) {
 			//time.Sleep(5*time.Second)
 		}
 
-		target := rand.Intn(len(receivedStuff.Nodes))
-		if(receivedStuff.Nodes[target].Name != hname) {
-			status := sendHealthProbe(conn, receivedStuff.Nodes[target].Name)
-			if (status != true) {
-				catalog.Deregister(receivedStuff.Nodes[target].Name)
+		if (len(receivedStuff.Nodes) > 0) {
+			target := rand.Intn(len(receivedStuff.Nodes))
+			if(receivedStuff.Nodes[target].Name != hname) {
+				status := sendHealthProbe(conn, receivedStuff.Nodes[target].Name)
+				if (status != true) {
+					catalog.Deregister(receivedStuff.Nodes[target].Name)
+				}
 			}
 		}
 		time.Sleep(200 * time.Millisecond)

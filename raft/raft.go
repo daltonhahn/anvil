@@ -125,7 +125,10 @@ func GetLog() {
 	}
 }
 
+// Change from single token to token map
+// Traverse the existing token map to make sure that the path checks out thus far
 func TokenLookup(token string, targetSvc string, requestTime time.Time) bool {
+	/*
 	bounds := CM.aclBounds
 	log := CM.log
 	if bounds[2] == 0 {
@@ -134,13 +137,14 @@ func TokenLookup(token string, targetSvc string, requestTime time.Time) bool {
 	//for _, ele := range log[bounds[0]:bounds[2]+1] {
 	for _, ele := range log[bounds[0]:] {
 		if ele.ACLObj.TokenValue == token {
-			for _,svc := range ele.ACLObj.ServiceList {
+			for _,svc := range ele.ACLObj.Chains.TargetService {
 				if svc == targetSvc && requestTime.Before(ele.ACLObj.ExpirationTime) {
 					return true
 				}
 			}
 		}
 	}
+	*/
 	return false
 }
 
