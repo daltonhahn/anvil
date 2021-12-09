@@ -21,7 +21,7 @@ type ACLEntry struct {
 	TokenValue	string		`yaml:"val,omitempty"`
 	CreationTime	time.Time
 	ExpirationTime	time.Time
-	Chains		[]ServiceMap
+	Chains		[]ServiceMap	`yaml:"services,omitempty"`
 }
 
 func ACLIngest(filepath string) ([]ACLEntry, error) {
