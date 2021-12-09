@@ -4,5 +4,6 @@
   sname: login
   val: RVJBSklPWG5UU1RkcXpEYm9zMVdYWjdRSFpmSEVJYm9KWklaNkJQejVZdml1NmF2Z2tSR3dXMUFSMTZaT1ZRaw==
   services:
-    - auth
-    - [login,auth,db] 
+    auth:
+      - auth
+      - login,auth,db
