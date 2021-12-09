@@ -121,7 +121,7 @@ func GetPeers() {
 
 func GetLog() {
 	for _, ele := range CM.log {
-		fmt.Println(ele.ACLObj.Name + "-----" + ele.ACLObj.TokenValue)
+		fmt.Println(ele.ACLObj.Name + " [" + ele.ACLObj.ServiceChain + "] " + "-----" + ele.ACLObj.TokenValue)
 	}
 }
 

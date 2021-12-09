@@ -34,8 +34,6 @@ func ACLIngest(filepath string) ([]ACLEntry, error) {
 	}
 
 	var retList []ACLEntry
-	fmt.Printf("%v\n", tempList)
-	/*
 	for _,ele := range tempList {
 		tokVal := ele.TokenValue
 		if len(tokVal) == 0 {
@@ -44,9 +42,8 @@ func ACLIngest(filepath string) ([]ACLEntry, error) {
 		createTime := time.Now()
 		expTime := time.Now().Add(24*time.Hour)
 		retList = append(retList, ACLEntry{Name: ele.Name, TokenValue: tokVal, CreationTime: createTime,
-				ExpirationTime: expTime, ServiceList: ele.ServiceList})
+			ExpirationTime: expTime, TargetService: ele.TargetService, ServiceChain: ele.ServiceChain})
 	}
-	*/
 	return retList, nil
 }
 
