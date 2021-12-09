@@ -45,7 +45,7 @@ func (cw *CertWatcher) Watch() error {
 	if cw.watcher, err = fsnotify.NewWatcher(); err != nil {
 		return errors.Wrap(err, "certman: can't create watcher")
 	}
-	if err = cw.watcher.Add("/home/anvil/Desktop/anvil/config/test_config.yaml"); err != nil {
+	if err = cw.watcher.Add("/root/anvil/config/test_config.yaml"); err != nil {
 		return errors.Wrap(err, "certman: can't watch cert file")
 	}
 	if err := cw.load(); err != nil {

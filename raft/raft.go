@@ -955,7 +955,7 @@ func startLeader() {
 					}
 				}
 
-				aclEntries,_ := acl.ACLIngest("/home/anvil/Desktop/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/acls.yaml")
+				aclEntries,_ := acl.ACLIngest("/root/anvil/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/acls.yaml")
 				for _, ele := range aclEntries {
 					postBody, _ := json.Marshal(ele)
 					responseBody := bytes.NewBuffer(postBody)
