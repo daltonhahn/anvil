@@ -180,7 +180,7 @@ func Submit(command acl.ACLEntry) bool {
 	//dlog(fmt.Sprintf("Submit received by %v: %v", CM.state, command))
 	if CM.state == Leader {
 		CM.log = append(CM.log, LogEntry{ACLObj: command, Term: CM.currentTerm})
-		//dlog(fmt.Sprintf("... log=%v", CM.log))
+		dlog(fmt.Sprintf("... log=%v", CM.log))
 		CM.currentTerm += 1
 		return true
 	}
