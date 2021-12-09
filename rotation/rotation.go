@@ -59,7 +59,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 	var body []byte
 	err = retry.Do(
 		func() error {
-			resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+			resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal, "")
 			if err != nil || resp.StatusCode != http.StatusOK {
 				if err == nil {
 					return errors.New("BAD STATUS CODE FROM SERVER")
@@ -98,7 +98,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 
 	err = retry.Do(
                 func() error {
-			resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+			resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal, "")
                         if err != nil || resp.StatusCode != http.StatusOK {
                                 if err == nil {
                                         return errors.New("BAD STATUS CODE FROM SERVER")
@@ -137,7 +137,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 
 	err = retry.Do(
                 func() error {
-			resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+			resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal, "")
                         if err != nil || resp.StatusCode != http.StatusOK {
                                 if err == nil {
                                         return errors.New("BAD STATUS CODE FROM SERVER")
@@ -175,7 +175,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 
         err = retry.Do(
                 func() error {
-			resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+			resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal, "")
                         if err != nil || resp.StatusCode != http.StatusOK {
                                 if err == nil {
                                         return errors.New("BAD STATUS CODE FROM SERVER")
@@ -215,7 +215,7 @@ func CollectFiles(iter string, nodeName string, qMems []string) bool {
 
 		err = retry.Do(
 			func() error {
-				resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal)
+				resp, err := security.TLSPostReq(qMem, "/service/rotation/bundle/"+iter, "rotation", "application/json", postVal, "")
 				if err != nil || resp.StatusCode != http.StatusOK {
 					if err == nil {
 						return errors.New("BAD STATUS CODE FROM SERVER")
@@ -427,7 +427,7 @@ func processCAs(iter int) []string {
 	var body []byte
         err = retry.Do(
                 func() error {
-			resp, err := security.TLSGetReq(hname, "/anvil/type", "")
+			resp, err := security.TLSGetReq(hname, "/anvil/type", "", "")
                         if err != nil || resp.StatusCode != http.StatusOK {
                                 if err == nil {
                                         return errors.New("BAD STATUS CODE FROM SERVER")

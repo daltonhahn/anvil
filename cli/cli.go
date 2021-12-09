@@ -66,7 +66,7 @@ func CLI() {
 					log.Fatalln("Unable to get hostname")
 				}
 				//_, err = http.Get("http://" + hname + ":443/anvil/catalog/nodes")
-				_, err = security.TLSGetReq(hname, "/anvil/catalog/nodes", "")
+				_, err = security.TLSGetReq(hname, "/anvil/catalog/nodes", "", "")
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -87,7 +87,7 @@ func CLI() {
 				if err != nil {
 					log.Fatalln("Unable to get hostname")
 				}
-				_, err = security.TLSGetReq(hname, "/anvil/catalog/services", "")
+				_, err = security.TLSGetReq(hname, "/anvil/catalog/services", "", "")
 				//_, err = http.Get("http://" + hname + ":443/anvil/catalog/services")
 				if err != nil {
 					log.Fatalln(err)
@@ -109,7 +109,7 @@ func CLI() {
 				if err != nil {
 					log.Fatalln("Unable to get hostname")
 				}
-				_, err = security.TLSGetReq(hname, "/anvil/raft/peers", "")
+				_, err = security.TLSGetReq(hname, "/anvil/raft/peers", "", "")
 				//_, err = http.Get("http://" + hname + ":443/anvil/raft/peers")
 				if err != nil {
 					log.Fatalln(err)
@@ -168,7 +168,7 @@ func CLI() {
                                 if err != nil {
                                         log.Fatalln("Unable to get hostname")
                                 }
-                                _, err = security.TLSGetReq(hname, "/anvil/raft/getACL", "")
+                                _, err = security.TLSGetReq(hname, "/anvil/raft/getACL", "", "")
                                 //_, err = http.Get("http://" + hname + ":443/anvil/raft/getACL")
                                 if err != nil {
                                         log.Fatalln(err)

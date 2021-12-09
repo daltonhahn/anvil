@@ -99,7 +99,7 @@ func CheckHealth(conn *net.UDPConn) {
 		var body []byte
 		err = retry.Do(
 			func() error {
-				resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
+				resp, err := security.TLSGetReq(hname, "/anvil/catalog", "", "")
 				if err != nil || resp.StatusCode != http.StatusOK {
 					if err == nil {
 						return errors.New("BAD STATUS CODE FROM SERVER")
@@ -160,7 +160,7 @@ func PropagateCatalog(conn *net.UDPConn) {
 		var body []byte
 		err = retry.Do(
 			func() error {
-				resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
+				resp, err := security.TLSGetReq(hname, "/anvil/catalog", "", "")
 				if err != nil || resp.StatusCode != http.StatusOK {
 					if err == nil {
 						return errors.New("BAD STATUS CODE FROM SERVER")

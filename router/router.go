@@ -24,11 +24,11 @@ import (
 	"github.com/daltonhahn/anvil/rotation"
 )
 
+var tempToks []TempTokStore
+
 type TempTokStore struct {
-	// originating service
-	// next dest
-	// time received
-	// token val
+	Next		string
+	PrevChain	string
 }
 
 type Message struct {
@@ -57,7 +57,7 @@ func RegisterNode(w http.ResponseWriter, r *http.Request) {
                 log.Fatalln("Unable to get hostname")
         }
 	//resp, err := http.Get("http://" + hname + ":443/anvil/catalog")
-	resp, err := security.TLSGetReq(hname, "/anvil/catalog", "")
+	resp, err := security.TLSGetReq(hname, "/anvil/catalog", "", "")
         if err != nil {
                 log.Println("Unable to get response")
         }
@@ -247,16 +247,16 @@ func GetACL(w http.ResponseWriter, r *http.Request) {
 }
 
 func TokenLookup(w http.ResponseWriter, r *http.Request) {
-	serviceTarget := mux.Vars(r)["service"]
+	//serviceTarget := mux.Vars(r)["service"]
 	b, err := ioutil.ReadAll(r.Body)
         r.Body.Close()
         if err != nil {
                 http.Error(w, err.Error(), 500)
                 return
         }
-	var lookupDat string
+	var lookupDat []raft.LookupMap
 	err = json.Unmarshal(b, &lookupDat)
-	result := raft.TokenLookup(lookupDat, serviceTarget, time.Now())
+	result := raft.TokenLookup(lookupDat, time.Now())
 	fmt.Fprintf(w, strconv.FormatBool(result))
 }
 
@@ -310,11 +310,18 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	var body []byte
 	anv_catalog := catalog.GetCatalog()
 	target := anv_catalog.GetSvcHost(r.Host)
+	var tokChain string
+	for _, ele := range tempToks {
+		if ele.Next == target {
+			tokChain = ele.PrevChain
+		}
+	}
+
 	target_uri := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
 	if (r.Method == "POST") {
                 err = retry.Do(
                         func() error {
-				resp, err = security.TLSPostReq(target, target_uri, strings.Split(r.RequestURI, "/")[2], r.Header.Get("Content-Type"), r.Body)
+				resp, err = security.TLSPostReq(target, target_uri, strings.Split(r.RequestURI, "/")[2], r.Header.Get("Content-Type"), r.Body, tokChain)
                                 if err != nil || resp.StatusCode != http.StatusOK {
                                         if err == nil {
                                                 return errors.New("BAD STATUS CODE FROM SERVER")
@@ -335,7 +342,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	} else {
 		err = retry.Do(
                         func() error {
-				resp, err = security.TLSGetReq(target, target_uri, strings.Split(r.RequestURI, "/")[2])
+				resp, err = security.TLSGetReq(target, target_uri, strings.Split(r.RequestURI, "/")[2], tokChain)
                                 if err != nil || resp.StatusCode != http.StatusOK {
                                         if err == nil {
                                                 return errors.New("BAD STATUS CODE FROM SERVER")
@@ -358,9 +365,10 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 }
 
 func RerouteService(w http.ResponseWriter, r *http.Request) {
-	// Need to parse the token chain instead of just the raw token
         target_svc := strings.Split(r.RequestURI, "/")[2]
         tok_recv := r.Header["Authorization"][0]
+	newTok := TempTokStore{target_svc, tok_recv}
+	tempToks = append(tempToks, newTok)
         anv_catalog := catalog.GetCatalog()
         verifier := anv_catalog.GetQuorumMem()
         var resp *http.Response
@@ -370,7 +378,7 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
         responseBody := bytes.NewBuffer(postBody)
 	err = retry.Do(
 		func() error {
-			resp, err = security.TLSPostReq(verifier, "/anvil/raft/acl/"+target_svc, "", "application/json", responseBody)
+			resp, err = security.TLSPostReq(verifier, "/anvil/raft/acl/"+target_svc, "", "application/json", responseBody, "")
 			if err != nil || resp.StatusCode != http.StatusOK {
 				if err == nil {
 					return errors.New("BAD STATUS CODE FROM SERVER")

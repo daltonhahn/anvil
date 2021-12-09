@@ -64,22 +64,22 @@ func DecData(input_ciphertext string) ([]byte,error) {
 	return res1, nil
 }
 
-func TLSGetReq(target string, path string, origin string) (*http.Response,error) {
+func TLSGetReq(target string, path string, origin string, prevChain string) (*http.Response,error) {
 	ReadSecConfig()
-	res1, err1 := TLSGetReqSvc(target, path, origin)
+	res1, err1 := TLSGetReqSvc(target, path, origin, prevChain)
 	if err1 != nil {
 		return &http.Response{},err1
 	}
 	return res1, nil
 }
 
-func TLSPostReq(target string, path string, origin string, options string, body io.Reader) (*http.Response, error) {
+func TLSPostReq(target string, path string, origin string, options string, body io.Reader, prevChain string) (*http.Response, error) {
 	ReadSecConfig()
 	b, err := ioutil.ReadAll(body)
 	if err != nil {
 		log.Println("Body read failure")
 	}
-	res1, err1 := TLSPostReqSvc(target, path, origin, options, string(b))
+	res1, err1 := TLSPostReqSvc(target, path, origin, options, string(b), prevChain)
 	if err1 != nil {
 		return &http.Response{},err1
 	}

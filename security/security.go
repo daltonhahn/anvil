@@ -59,7 +59,7 @@ func DecDataSvc(input_ciphertext string) ([]byte,error) {
     return plaintext,nil
 }
 
-func TLSGetReqSvc(target string, path string, origin string) (*http.Response,error) {
+func TLSGetReqSvc(target string, path string, origin string, prevChain string) (*http.Response,error) {
 	caCertPaths := SecConf.CACert
 	caCertPool := x509.NewCertPool()
         for _, fp := range caCertPaths {
@@ -83,7 +83,8 @@ func TLSGetReqSvc(target string, path string, origin string) (*http.Response,err
 		},
 	}
 
-	bearer := attachToken(origin)
+	targetSvc := strings.Split(path, "/")[2]
+	bearer := attachToken(origin, targetSvc, prevChain)
 	req, err := http.NewRequest("GET", ("https://"+target+path), nil)
 	req.Header.Add("Authorization", bearer)
 
@@ -95,7 +96,7 @@ func TLSGetReqSvc(target string, path string, origin string) (*http.Response,err
 	return resp, nil
 }
 
-func TLSPostReqSvc(target string, path string, origin string, options string, body string) (*http.Response, error) {
+func TLSPostReqSvc(target string, path string, origin string, options string, body string, prevChain string) (*http.Response, error) {
         caCertPaths := SecConf.CACert
 	caCertPool := x509.NewCertPool()
         for _, fp := range caCertPaths {
@@ -119,7 +120,8 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
                 },
         }
 
-	bearer := attachToken(origin)
+	targetSvc := strings.Split(path, "/")[2]
+	bearer := attachToken(origin, targetSvc, prevChain)
 	req, err := http.NewRequest("POST", ("https://"+target+path), strings.NewReader(body))
 	req.Header.Set("Content-type", options)
 	req.Header.Add("Authorization", bearer)
@@ -133,10 +135,20 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
         return resp, nil
 }
 
-func attachToken(originSvc string) string {
-	for _, ele := range SecConf.Tokens {
-		if ele.ServiceName == originSvc {
-			return ele.TokenVal
+func attachToken(originSvc string, targetSvc string, prevChain string) string {
+	// Take prevChain data and parse it out
+	// Format everything into a JSON string
+	if (len(prevChain) <= 0) {
+		for _, ele := range SecConf.Tokens {
+			if ele.ServiceName == originSvc {
+				return "{ \"map\": [{\"token\":"+ele.TokenVal+",\"service\":"+targetSvc+"}]}"
+			}
+		}
+	} else {
+		for _, ele := range SecConf.Tokens {
+			if ele.ServiceName == originSvc {
+				return prevChain[:len(prevChain)-3] + ",{\"token\":"+ele.TokenVal+",\"service\":"+targetSvc+"}]}"
+			}
 		}
 	}
 	return ""

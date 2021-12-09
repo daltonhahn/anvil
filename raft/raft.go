@@ -39,6 +39,11 @@ type ACLMap struct {
 	Valid		[]string
 }
 
+type LookupMap struct {
+	Token	string
+	Target	string
+}
+
 const DebugCM = 1
 
 type LogEntry struct {
@@ -121,31 +126,38 @@ func GetPeers() {
 
 func GetLog() {
 	for _, ele := range CM.log {
-		fmt.Println(ele.ACLObj.Name + ele.ACLObj.TargetService + " [" + ele.ACLObj.ServiceChain + "]" + " ----- " + ele.ACLObj.TokenValue)
+		fmt.Println(ele.ACLObj.Name + " " + ele.ACLObj.TargetService + " [" + ele.ACLObj.ServiceChain + "]" + " ----- " + ele.ACLObj.TokenValue)
 	}
 }
 
 // Change from single token to token map
 // Traverse the existing token map to make sure that the path checks out thus far
-func TokenLookup(token string, targetSvc string, requestTime time.Time) bool {
-	/*
+// Do recursive call for token lookup after drilling down into the full chain
+func TokenLookup(recvTokens []LookupMap, requestTime time.Time) bool {
 	bounds := CM.aclBounds
 	log := CM.log
 	if bounds[2] == 0 {
 		bounds[2] = len(log)
 	}
-	//for _, ele := range log[bounds[0]:bounds[2]+1] {
-	for _, ele := range log[bounds[0]:] {
-		if ele.ACLObj.TokenValue == token {
-			for _,svc := range ele.ACLObj.Chains.TargetService {
-				if svc == targetSvc && requestTime.Before(ele.ACLObj.ExpirationTime) {
+
+	if (len(recvTokens) > 1) {
+		tempRes := TokenLookup(recvTokens[1:], requestTime)
+		if (tempRes == false) {
+			return false
+		} else {
+			return true
+		}
+	} else {
+		for _, ele := range log[bounds[0]:] {
+			// Find token value in the log and pull data
+			if ele.ACLObj.TokenValue == recvTokens[0].Token {
+				if ele.ACLObj.TargetService == recvTokens[0].Target && requestTime.Before(ele.ACLObj.ExpirationTime) {
 					return true
 				}
 			}
 		}
+		return false
 	}
-	*/
-	return false
 }
 
 
@@ -493,7 +505,7 @@ func startLeader() {
 				var body []byte
 				err = retry.Do(
                                         func() error {
-						resp, err := security.TLSGetReq(hname, "/anvil/catalog/clients", "")
+						resp, err := security.TLSGetReq(hname, "/anvil/catalog/clients", "", "")
 						if err != nil || resp.StatusCode != http.StatusOK {
 							if err == nil {
 								return errors.New("BAD STATUS CODE FROM SERVER")
@@ -562,7 +574,7 @@ func startLeader() {
 					fmt.Println(" ---- PullCA ----- ")
 					err = retry.Do(
 						func() error {
-							resp, err := security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat))
+							resp, err := security.TLSPostReq(ele, "/service/rotation/pullCA", "rotation", "application/json", bytes.NewBuffer(jsonDat), "")
 							if err != nil || resp.StatusCode != http.StatusOK {
 								if err == nil {
 									fmt.Printf("\t\t%v\n", resp.StatusCode)
@@ -636,7 +648,7 @@ func startLeader() {
 						fmt.Printf(" ---- Assignment: %v ----- \n", CM.PeerIds[i])
 						err = retry.Do(
 							func() error {
-								resp, err := security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat))
+								resp, err := security.TLSPostReq(CM.PeerIds[i], "/service/rotation/assignment", "rotation", "application/json", bytes.NewBuffer(jsonDat), "")
 								if err != nil || resp.StatusCode != http.StatusOK {
 									if err == nil {
 										return errors.New("BAD STATUS CODE FROM SERVER")
@@ -665,7 +677,7 @@ func startLeader() {
 						fmt.Printf(" ---- PeerList ----- \n")
 						err = retry.Do(
 							func() error {
-								resp, err := security.TLSGetReq(hname, "/anvil/raft/peerList", "")
+								resp, err := security.TLSGetReq(hname, "/anvil/raft/peerList", "", "")
 								if err != nil || resp.StatusCode != http.StatusOK {
 									if err == nil {
 										return errors.New("BAD STATUS CODE FROM SERVER")
@@ -775,7 +787,7 @@ func startLeader() {
 						fmt.Printf(" ----- PrepBundle: %v ----- \n", sendTarg)
 						err = retry.Do(
 							func() error {
-								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/prepBundle", "rotation", "application/json", bytes.NewBuffer(jsonData))
+								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/prepBundle", "rotation", "application/json", bytes.NewBuffer(jsonData), "")
 								if err != nil || resp.StatusCode != http.StatusOK {
 									if err == nil {
 										return errors.New("BAD STATUS CODE FROM SERVER")
@@ -855,7 +867,7 @@ func startLeader() {
 						fmt.Printf(" ----- CollectSignal: %v ----- \n", sendTarg)
 						err = retry.Do(
 							func() error {
-								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData))
+								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/collectSignal", "rotation", "application/json", bytes.NewBuffer(jsonData), "")
 								if err != nil || resp.StatusCode != http.StatusOK {
 									if err == nil {
 										return errors.New("BAD STATUS CODE FROM SERVER")
@@ -932,7 +944,7 @@ func startLeader() {
 						fmt.Printf(" ----- FillCA: %v ----- \n", sendTarg)
 						err = retry.Do(
 							func() error {
-								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/fillCA", "rotation", "application/json", bytes.NewBuffer(jsonData))
+								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/fillCA", "rotation", "application/json", bytes.NewBuffer(jsonData), "")
 								if err != nil || resp.StatusCode != http.StatusOK {
 									if err == nil {
 										return errors.New("BAD STATUS CODE FROM SERVER")
@@ -959,7 +971,7 @@ func startLeader() {
 				for _, ele := range aclEntries {
 					postBody, _ := json.Marshal(ele)
 					responseBody := bytes.NewBuffer(postBody)
-					resp, err := security.TLSPostReq(hname, "/anvil/raft/pushACL", "", "application/json", responseBody)
+					resp, err := security.TLSPostReq(hname, "/anvil/raft/pushACL", "", "application/json", responseBody, "")
 					if err != nil || resp.StatusCode != http.StatusOK {
 						fmt.Println(resp.StatusCode)
 						log.Fatalln("Unable to post content")
@@ -998,7 +1010,7 @@ func startLeader() {
 					fmt.Printf(" ----- Pull Rotation Files: %v ----- \n", ele)
 					err = retry.Do(
 						func() error {
-							resp, err := security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat))
+							resp, err := security.TLSPostReq(ele, "/anvil/rotation", "", "application/json", bytes.NewBuffer(jsonDat), "")
 							if err != nil || resp.StatusCode != http.StatusOK {
 								if err == nil {
 									return errors.New("BAD STATUS CODE FROM SERVER")
@@ -1026,7 +1038,7 @@ func startLeader() {
 					fmt.Printf(" ----- Rotation Config: %v ----- \n", ele)
 					err = retry.Do(
 						func() error {
-							resp, err := security.TLSGetReq(ele, "/anvil/rotation/config", "")
+							resp, err := security.TLSGetReq(ele, "/anvil/rotation/config", "", "")
 							if err != nil || resp.StatusCode != http.StatusOK {
 								if err == nil {
 									return errors.New("BAD STATUS CODE FROM SERVER")
@@ -1055,7 +1067,7 @@ func startLeader() {
 						fmt.Printf(" ----- Rotation Config ----- \n")
 						_ = retry.Do(
 							func() error {
-								resp, err := security.TLSGetReq(hname, "/anvil/rotation/config", "")
+								resp, err := security.TLSGetReq(hname, "/anvil/rotation/config", "", "")
 								if err != nil || resp.StatusCode != http.StatusOK {
 									if err == nil {
 										return errors.New("BAD STATUS CODE FROM SERVER")
@@ -1080,7 +1092,7 @@ func startLeader() {
 						fmt.Printf(" ----- Rotation Config: %v ----- \n", sendTarg)
 						err = retry.Do(
 							func() error {
-								resp, err := security.TLSGetReq(sendTarg, "/anvil/rotation/config", "")
+								resp, err := security.TLSGetReq(sendTarg, "/anvil/rotation/config", "", "")
 								if err != nil || resp.StatusCode != http.StatusOK {
 									if err == nil {
 										return errors.New("BAD STATUS CODE FROM SERVER")
@@ -1200,7 +1212,7 @@ func leaderSendHeartbeats() {
 }
 
 func getLeader(target string) (string) {
-        resp, err := security.TLSGetReq(target, "/anvil/catalog/leader", "")
+        resp, err := security.TLSGetReq(target, "/anvil/catalog/leader", "", "")
         if err != nil {
                 return ""
         }
@@ -1221,7 +1233,7 @@ func UpdateLeader(target string, newLeader string) {
 	postBody := bytes.NewBuffer(reqBody)
 
 	//resp, err := http.Post("http://" + target + ":443/anvil/raft/updateleader", "application/json", postBody)
-	resp, err := security.TLSPostReq(target, "/anvil/raft/updateleader", "", "application/json", postBody)
+	resp, err := security.TLSPostReq(target, "/anvil/raft/updateleader", "", "application/json", postBody, "")
 	if err != nil {
 		return
 	}
@@ -1233,7 +1245,7 @@ func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntrie
         reqBody, _ := json.Marshal(args)
         postBody := bytes.NewBuffer(reqBody)
 	//resp, err := http.Post("http://" + target + ":443/anvil/raft/appendentries", "application/json", postBody)
-	resp, err := security.TLSPostReq(target, "/anvil/raft/appendentries", "", "application/json", postBody)
+	resp, err := security.TLSPostReq(target, "/anvil/raft/appendentries", "", "application/json", postBody, "")
         if err != nil {
 		return errors.New("No HTTP response"), AppendEntriesReply{}
         }
@@ -1253,7 +1265,7 @@ func SendAppendEntry(target string, args AppendEntriesArgs) (error, AppendEntrie
 
 func BacklogRequest(leader string) (error, []LogEntry) {
 	//resp, err := http.Get("http://" + leader + ":443/anvil/raft/backlog/" + strconv.Itoa(CM.commitIndex))
-	resp, err := security.TLSGetReq(leader, "/anvil/raft/backlog/" + strconv.Itoa(CM.commitIndex), "")
+	resp, err := security.TLSGetReq(leader, "/anvil/raft/backlog/" + strconv.Itoa(CM.commitIndex), "", "")
         if err != nil {
 		return errors.New("No HTTP response"), []LogEntry{}
         }
@@ -1281,7 +1293,7 @@ func SendVoteReq(target string, args RequestVoteArgs) (error, RequestVoteReply) 
         reqBody, _ := json.Marshal(args)
         postBody := bytes.NewBuffer(reqBody)
 	//resp, err := http.Post("http://" + target + ":443/anvil/raft/requestvote", "application/json", postBody)
-	resp, err := security.TLSPostReq(target, "/anvil/raft/requestvote", "", "application/json", postBody)
+	resp, err := security.TLSPostReq(target, "/anvil/raft/requestvote", "", "application/json", postBody, "")
         if err != nil {
 		return errors.New("No HTTP response"), RequestVoteReply{}
         }

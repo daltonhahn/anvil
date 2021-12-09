@@ -70,7 +70,7 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 						log.Fatalln("Unable to get hostname")
 					}
 					//http.Post("http://"+hname+":443/anvil/catalog/register", "application/json", responseBody)
-					security.TLSPostReq(hname, "/anvil/catalog/register", "", "application/json", responseBody)
+					security.TLSPostReq(hname, "/anvil/catalog/register", "", "application/json", responseBody, "")
 					tempCatalog = catalog.Catalog{}
 				}
 			}
