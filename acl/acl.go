@@ -13,7 +13,7 @@ import (
 
 type ServiceMap struct {
 	TargetService	string
-	ServiceChain	string
+	ServiceChain	[]string
 }
 
 type chains map[string]ServiceMap
