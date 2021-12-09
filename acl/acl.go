@@ -16,14 +16,13 @@ type ServiceMap struct {
 	ServiceChain	string	`yaml:"serchain,omitempty"`
 }
 
-type chains map[string]ServiceMap
 
 type ACLEntry struct {
 	Name		string			`yaml:"name,omitempty"`
 	TokenValue	string			`yaml:"val,omitempty"`
 	CreationTime	time.Time
 	ExpirationTime	time.Time
-	Chains		map[string]chains	`yaml:"services,omitempty"`
+	Chains		map[string]ServiceMap	`yaml:"services,omitempty"`
 }
 
 func ACLIngest(filepath string) ([]ACLEntry, error) {
