@@ -168,7 +168,7 @@ func CLI() {
                                 if err != nil {
                                         log.Fatalln("Unable to get hostname")
                                 }
-                                _, err = security.TLSGetReq(hname, "/anvil/raft/peers", "")
+                                _, err = security.TLSGetReq(hname, "/anvil/raft/getACL", "")
                                 //_, err = http.Get("http://" + hname + ":443/anvil/raft/getACL")
                                 if err != nil {
                                         log.Fatalln(err)
