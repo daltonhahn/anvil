@@ -314,7 +314,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	target := anv_catalog.GetSvcHost(r.Host)
 	var tokChain string
 	for _, ele := range tempToks {
-		if ele.Next == target {
+		if ele.Next == strings.Split(r.RequestURI, "/")[2] {
 			tokChain = ele.PrevChain
 		}
 	}

@@ -163,6 +163,7 @@ func attachToken(originSvc string, targetSvc string, prevChain string) string {
 			}
 		}
 	} else {
+		fmt.Printf("In the longer chain because I have a prevChain")
 		for _, ele := range SecConf.Tokens {
 			if ele.ServiceName == targetSvc {
 				fmt.Printf("My target: %v -- Checking target: %v\n", targetSvc, ele.ServiceName)
