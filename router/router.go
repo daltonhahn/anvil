@@ -247,7 +247,7 @@ func GetACL(w http.ResponseWriter, r *http.Request) {
 }
 
 func TokenLookup(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Need to do a token lookup\n")
+	fmt.Printf("In Token Lookup\n")
 	//serviceTarget := mux.Vars(r)["service"]
 	b, err := ioutil.ReadAll(r.Body)
         r.Body.Close()
@@ -307,20 +307,20 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	// Need to consult TempTokStore in case there is a partial token chain
-	fmt.Printf("Caught an outbound request to host: %v\n", r.Host)
 	var resp *http.Response
 	var err error
 	var body []byte
 	anv_catalog := catalog.GetCatalog()
 	target := anv_catalog.GetSvcHost(r.Host)
-	fmt.Printf("Target of outbound: %v\n", target)
 	var tokChain string
 	for _, ele := range tempToks {
 		if ele.Next == target {
 			tokChain = ele.PrevChain
 		}
 	}
-	fmt.Printf("Found tokChain: %v\n", tokChain)
+	if tokChain != "" {
+		fmt.Printf("Found tokChain: %v\n", tokChain)
+	}
 
 	target_uri := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
 	if (r.Method == "POST") {
@@ -375,6 +375,7 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("RECEIVED TOKEN: %v\n", tok_recv)
 	newTok := TempTokStore{target_svc, tok_recv}
 	tempToks = append(tempToks, newTok)
+	fmt.Printf("TOKS: %v\n", tempToks)
         anv_catalog := catalog.GetCatalog()
         verifier := anv_catalog.GetQuorumMem()
         var resp *http.Response
@@ -382,8 +383,10 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 	var appbody []byte
         postBody, _ := json.Marshal(tok_recv)
         responseBody := bytes.NewBuffer(postBody)
+	fmt.Printf("PAYLOAD FOR VERIFICATION: %v\n", responseBody)
 	err = retry.Do(
 		func() error {
+			fmt.Printf("Contacting: %v for approval\n", verifier)
 			resp, err = security.TLSPostReq(verifier, "/anvil/raft/acl/"+target_svc, "", "application/json", responseBody, "")
 			if err != nil || resp.StatusCode != http.StatusOK {
 				if err == nil {
@@ -403,6 +406,7 @@ func RerouteService(w http.ResponseWriter, r *http.Request) {
 		retry.Attempts(3),
 	)
         approval, _ := strconv.ParseBool(string(appbody))
+	fmt.Printf("Was it approved?: %v\n", approval)
         if (approval) {
 		var body []byte
                 target_port := anv_catalog.GetSvcPort(strings.Split(r.RequestURI, "/")[2])

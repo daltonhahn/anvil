@@ -1,3 +1,6 @@
 while true; do echo -e "HTTP/1.1 200 OK\n\n LOGIN: $(date)" | nc -l -q 1 -p 8881 ; done
 while true; do echo -e "HTTP/1.1 200 OK\n\n AUTH: $(date)" | nc -l -q 1 -p 8882 ; done
 while true; do echo -e "HTTP/1.1 200 OK\n\n DB: $(date)" | nc -l -q 1 -p 8883 ; done
+
+
+When making inter-service requests, use raw IP with no port attached (i.e. 172.18.0.3/service/xxxx)

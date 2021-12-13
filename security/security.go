@@ -156,20 +156,17 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
 func attachToken(originSvc string, targetSvc string, prevChain string) string {
 	// Take prevChain data and parse it out
 	// Format everything into a JSON string
-	fmt.Printf("In attach token\n")
 	if (len(prevChain) <= 0) {
 		for _, ele := range SecConf.Tokens {
-			fmt.Printf("CUR TOK CHECK: %v -- My target: %v\n", ele, targetSvc)
 			if ele.ServiceName == targetSvc {
 				return "{ \"map\": [{\"token\":"+ele.TokenVal+",\"service\":"+targetSvc+"}]}"
 			}
 		}
 	} else {
 		for _, ele := range SecConf.Tokens {
-			fmt.Printf("CUR TOK CHECK: %v\n", ele)
 			if ele.ServiceName == targetSvc {
 				fmt.Printf("My target: %v -- Checking target: %v\n", targetSvc, ele.ServiceName)
-				fmt.Printf("Matched a service with the origin\n")
+				fmt.Printf("Matched a service with the target\n")
 				return prevChain[:len(prevChain)-3] + ",{\"token\":"+ele.TokenVal+",\"service\":"+targetSvc+"}]}"
 			}
 		}
