@@ -86,7 +86,9 @@ func TLSGetReqSvc(target string, path string, origin string, prevChain string) (
 
 	targetSvc := strings.Split(path, "/")[2]
 	bearer := attachToken(origin, targetSvc, prevChain)
-	fmt.Printf("BEARER BEING ATTACHED: %v\n", bearer)
+	if (len(bearer) >= 1) {
+		fmt.Printf("BEARER BEING ATTACHED: %v\n", bearer)
+	}
 	req, err := http.NewRequest("GET", ("https://"+target+path), nil)
 	req.Header.Add("Authorization", bearer)
 
@@ -124,7 +126,9 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
 
 	targetSvc := strings.Split(path, "/")[2]
 	bearer := attachToken(origin, targetSvc, prevChain)
-	fmt.Printf("BEARER BEING ATTACHED: %v\n", bearer)
+	if (len(bearer) >= 1) {
+		fmt.Printf("BEARER BEING ATTACHED: %v\n", bearer)
+	}
 	req, err := http.NewRequest("POST", ("https://"+target+path), strings.NewReader(body))
 	req.Header.Set("Content-type", options)
 	req.Header.Add("Authorization", bearer)
