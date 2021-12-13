@@ -33,7 +33,7 @@ func sendCatalogSync(conn *net.UDPConn, target string, catalogCopy []byte) {
 		return
         }
 	encMessage,_ := security.EncData(("gossip -- " + string(catalogCopy)))
-	//fmt.Printf("LEN OF CATALOG: %v\n", len([]byte(encMessage)))
+	fmt.Printf("MSG: %v\n", encMessage)
 	_,err = conn.WriteTo([]byte(encMessage), addr)
 	if err != nil {
 		fmt.Printf("SCS: Couldn't send response %v", err)
@@ -43,6 +43,7 @@ func sendCatalogSync(conn *net.UDPConn, target string, catalogCopy []byte) {
 func sendHealthResp(conn *net.UDPConn, addr *net.UDPAddr) {
 	dt := time.Now().UTC()
 	encMessage,_ := security.EncData("OK -- " + dt.String())
+	fmt.Printf("RESP: %v\n", encMessage)
 	_,err := conn.WriteTo([]byte(encMessage), addr)
 	if err != nil {
 		fmt.Printf("SHR: Couldn't send response %v", err)
@@ -57,6 +58,7 @@ func sendHealthProbe(conn *net.UDPConn, target string) bool {
 		return false
 	}
 	encMessage,_ := security.EncData(("Health Check -- REQ -- " + target))
+	fmt.Printf("MSG: %v\n", encMessage)
 	_, err = conn.WriteTo([]byte(encMessage), addr)
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
 	buf := make([]byte, 4096)
