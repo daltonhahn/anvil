@@ -84,8 +84,10 @@ func TLSGetReqSvc(target string, path string, origin string, prevChain string) (
 		},
 	}
 
+	fmt.Printf("In Sec, forming GET request\n")
 	req, err := http.NewRequest("GET", ("https://"+target+path), nil)
 	if (len(strings.Split(path, "/")) > 3) {
+		fmt.Printf("Complex request path, searching for token\n")
 		targetSvc := strings.Split(path, "/")[2]
 		bearer := attachToken(origin, targetSvc, prevChain)
 		if (len(bearer) >= 1) {
@@ -149,6 +151,7 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
 func attachToken(originSvc string, targetSvc string, prevChain string) string {
 	// Take prevChain data and parse it out
 	// Format everything into a JSON string
+	fmt.Printf("In attach token\n")
 	if (len(prevChain) <= 0) {
 		for _, ele := range SecConf.Tokens {
 			if ele.ServiceName == originSvc {
@@ -158,6 +161,7 @@ func attachToken(originSvc string, targetSvc string, prevChain string) string {
 	} else {
 		for _, ele := range SecConf.Tokens {
 			if ele.ServiceName == originSvc {
+				fmt.Printf("Matched a service with the origin\n")
 				return prevChain[:len(prevChain)-3] + ",{\"token\":"+ele.TokenVal+",\"service\":"+targetSvc+"}]}"
 			}
 		}
