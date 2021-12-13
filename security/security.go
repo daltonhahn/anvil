@@ -158,16 +158,16 @@ func attachToken(originSvc string, targetSvc string, prevChain string) string {
 	fmt.Printf("In attach token\n")
 	if (len(prevChain) <= 0) {
 		for _, ele := range SecConf.Tokens {
-			fmt.Printf("CUR TOK CHECK: %v -- My origin: %v\n", ele, originSvc)
-			if ele.ServiceName == originSvc {
+			fmt.Printf("CUR TOK CHECK: %v -- My target: %v\n", ele, targetSvc)
+			if ele.ServiceName == targetSvc {
 				return "{ \"map\": [{\"token\":"+ele.TokenVal+",\"service\":"+targetSvc+"}]}"
 			}
 		}
 	} else {
 		for _, ele := range SecConf.Tokens {
 			fmt.Printf("CUR TOK CHECK: %v\n", ele)
-			if ele.ServiceName == originSvc {
-				fmt.Printf("My origin: %v -- Checking origin: %v\n", originSvc, ele.ServiceName)
+			if ele.ServiceName == targetSvc {
+				fmt.Printf("My target: %v -- Checking target: %v\n", targetSvc, ele.ServiceName)
 				fmt.Printf("Matched a service with the origin\n")
 				return prevChain[:len(prevChain)-3] + ",{\"token\":"+ele.TokenVal+",\"service\":"+targetSvc+"}]}"
 			}
