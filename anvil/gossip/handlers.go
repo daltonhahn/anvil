@@ -33,7 +33,7 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 			} else {
 				//fmt.Println("Got a DNS packet?, sending to DNS server")
 				//fmt.Printf("%v\n", tcp)
-				//serveDNS(ser, remoteaddr, tcp)
+				serveDNS(ser, remoteaddr, tcp)
 			}
 		} else {
 			if strings.Contains(string(decMessage), "Health Check -- REQ --") {
@@ -78,7 +78,6 @@ func HandleUDP(p []byte, ser *net.UDPConn) {
 	}
 }
 
-/*
 func serveDNS(u *net.UDPConn, clientAddr net.Addr, request *layers.DNS) {
 	replyMess := request
 	var dnsAnswer layers.DNSResourceRecord
@@ -110,4 +109,3 @@ func serveDNS(u *net.UDPConn, clientAddr net.Addr, request *layers.DNS) {
 	}
 	u.WriteTo(buf.Bytes(), clientAddr)
 }
-*/
