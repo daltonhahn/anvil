@@ -168,7 +168,7 @@ func attachToken(originSvc string, targetSvc string, prevChain string) string {
 			if ele.ServiceName == targetSvc {
 				fmt.Printf("My target: %v -- Checking target: %v\n", targetSvc, ele.ServiceName)
 				fmt.Printf("Matched a service with the target\n")
-				return prevChain[:len(prevChain)-3] + ",{\"token\":"+ele.TokenVal+",\"service\":"+targetSvc+"}]}"
+				return prevChain[:len(prevChain)-3] + "`[{ \"Token\": \""+ele.TokenVal+"\", \"Target\": \""+targetSvc+"\" }]`"
 			}
 		}
 	}
