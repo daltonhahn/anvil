@@ -313,6 +313,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	var body []byte
 	anv_catalog := catalog.GetCatalog()
 	target := anv_catalog.GetSvcHost(r.Host)
+	fmt.Printf("Target of outbound: %v\n", target)
 	var tokChain string
 	for _, ele := range tempToks {
 		if ele.Next == target {
