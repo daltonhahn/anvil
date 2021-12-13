@@ -169,6 +169,7 @@ func (catalog *Catalog) GetNodes() ([]Node) {
 }
 
 func (catalog *Catalog) GetSvcHost(addr string) (string) {
+	fmt.Printf("Finding addr: %v\n", addr)
 	for _,ele := range AnvilCatalog.Nodes {
 		if ele.Address == addr {
 			return ele.Name

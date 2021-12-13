@@ -307,7 +307,7 @@ func RaftBacklog(w http.ResponseWriter, r *http.Request) {
 
 func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	// Need to consult TempTokStore in case there is a partial token chain
-	fmt.Printf("Caught an outbound request\n")
+	fmt.Printf("Caught an outbound request to host: %v\n", r.Host)
 	var resp *http.Response
 	var err error
 	var body []byte
