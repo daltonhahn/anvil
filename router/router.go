@@ -254,7 +254,7 @@ func TokenLookup(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, err.Error(), 500)
                 return
         }
-	fmt.Printf("Token Lookup data: %v\n", b)
+	fmt.Printf("Token Lookup data: %v\n", string(b))
 	var lookupDat []raft.LookupMap
 	err = json.Unmarshal(b, &lookupDat)
 	fmt.Printf("Object: %v\n", lookupDat)
