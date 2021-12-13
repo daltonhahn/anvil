@@ -248,7 +248,6 @@ func GetACL(w http.ResponseWriter, r *http.Request) {
 
 func TokenLookup(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("In Token Lookup\n")
-	//serviceTarget := mux.Vars(r)["service"]
 	b, err := ioutil.ReadAll(r.Body)
         r.Body.Close()
         if err != nil {
@@ -258,6 +257,8 @@ func TokenLookup(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Token Lookup data: %v\n", b)
 	var lookupDat []raft.LookupMap
 	err = json.Unmarshal(b, &lookupDat)
+	fmt.Printf("Object: %v\n", lookupDat)
+	fmt.Printf("After marshalling tok lookup data: %v\n", err)
 	result := raft.TokenLookup(lookupDat, time.Now())
 	fmt.Fprintf(w, strconv.FormatBool(result))
 }
