@@ -254,13 +254,10 @@ func TokenLookup(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, err.Error(), 500)
                 return
         }
-	fmt.Printf("Token Lookup data: %v\n", string(b))
 	var lookupDat []raft.LookupMap
 	stripped := []byte(strings.Replace(string(b), "\\", "", -1))
-	fmt.Printf("Stripped string: %v\n", string(stripped[1:len(stripped)-1]))
+	fmt.Printf("\tStripped string: %v\n", string(stripped[1:len(stripped)-1]))
 	err = json.Unmarshal(stripped[2:len(stripped)-2], &lookupDat)
-	fmt.Printf("Object: %v\n", lookupDat)
-	fmt.Printf("After marshalling tok lookup data: %v\n", err)
 	result := raft.TokenLookup(lookupDat, time.Now())
 	fmt.Fprintf(w, strconv.FormatBool(result))
 }
