@@ -1,5 +1,11 @@
 ---
 services:
-        - 
-                name: rotation
-                port: 8080
+  - 
+    name: login
+    port: 8881
+  -
+    name: auth
+    port: 8882
+  -
+    name: db
+    port: 8883

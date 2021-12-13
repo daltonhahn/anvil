@@ -247,6 +247,7 @@ func GetACL(w http.ResponseWriter, r *http.Request) {
 }
 
 func TokenLookup(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("Need to do a token lookup\n")
 	//serviceTarget := mux.Vars(r)["service"]
 	b, err := ioutil.ReadAll(r.Body)
         r.Body.Close()
@@ -254,6 +255,7 @@ func TokenLookup(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, err.Error(), 500)
                 return
         }
+	fmt.Printf("Token Lookup data: %v\n", b)
 	var lookupDat []raft.LookupMap
 	err = json.Unmarshal(b, &lookupDat)
 	result := raft.TokenLookup(lookupDat, time.Now())
@@ -316,6 +318,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 			tokChain = ele.PrevChain
 		}
 	}
+	fmt.Printf("Found tokChain: %v\n", tokChain)
 
 	target_uri := "/"+strings.Join(strings.Split(r.RequestURI, "/")[3:], "/")
 	if (r.Method == "POST") {
@@ -367,6 +370,7 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 func RerouteService(w http.ResponseWriter, r *http.Request) {
         target_svc := strings.Split(r.RequestURI, "/")[2]
         tok_recv := r.Header["Authorization"][0]
+	fmt.Printf("RECEIVED TOKEN: %v\n", tok_recv)
 	newTok := TempTokStore{target_svc, tok_recv}
 	tempToks = append(tempToks, newTok)
         anv_catalog := catalog.GetCatalog()
