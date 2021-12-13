@@ -159,7 +159,7 @@ func attachToken(originSvc string, targetSvc string, prevChain string) string {
 	if (len(prevChain) <= 0) {
 		for _, ele := range SecConf.Tokens {
 			if ele.ServiceName == targetSvc {
-				return "[{\"token\": \""+ele.TokenVal+"\", \"service\": \""+targetSvc+"\"}]"
+				return "[{ \"token\": \""+ele.TokenVal+"\", \"service\": \""+targetSvc+"\" }]"
 			}
 		}
 	} else {
