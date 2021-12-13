@@ -87,12 +87,14 @@ func TLSGetReqSvc(target string, path string, origin string, prevChain string) (
 	req, err := http.NewRequest("GET", ("https://"+target+path), nil)
 	if (len(strings.Split(path, "/")) >= 3) {
 		fmt.Printf("Complex request path, searching for token\n")
-		targetSvc := strings.Split(path, "/")[2]
-		bearer := attachToken(origin, targetSvc, prevChain)
-		if (len(bearer) >= 1) {
-			fmt.Printf("BEARER BEING ATTACHED: %v\n", bearer)
+		if (strings.Split(path, "/")[1] != "anvil") {
+			targetSvc := strings.Split(path, "/")[2]
+			bearer := attachToken(origin, targetSvc, prevChain)
+			if (len(bearer) >= 1) {
+				fmt.Printf("BEARER BEING ATTACHED: %v\n", bearer)
+			}
+			req.Header.Add("Authorization", bearer)
 		}
-		req.Header.Add("Authorization", bearer)
 	}
 
 	resp, err := client.Do(req)
@@ -130,12 +132,15 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
 	req, err := http.NewRequest("POST", ("https://"+target+path), strings.NewReader(body))
 	req.Header.Set("Content-type", options)
 	if (len(strings.Split(path, "/")) >= 3) {
-		targetSvc := strings.Split(path, "/")[2]
-		bearer := attachToken(origin, targetSvc, prevChain)
-		if (len(bearer) >= 1) {
-			fmt.Printf("BEARER BEING ATTACHED: %v\n", bearer)
+		fmt.Printf("Complex request path, searching for token\n")
+		if (strings.Split(path, "/")[1] != "anvil") {
+			targetSvc := strings.Split(path, "/")[2]
+			bearer := attachToken(origin, targetSvc, prevChain)
+			if (len(bearer) >= 1) {
+				fmt.Printf("BEARER BEING ATTACHED: %v\n", bearer)
+			}
+			req.Header.Add("Authorization", bearer)
 		}
-		req.Header.Add("Authorization", bearer)
 	}
 
         resp, err := client.Do(req)
