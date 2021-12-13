@@ -313,7 +313,9 @@ func CatchOutbound(w http.ResponseWriter, r *http.Request) {
 	anv_catalog := catalog.GetCatalog()
 	target := anv_catalog.GetSvcHost(r.Host)
 	var tokChain string
+	fmt.Printf("ORIGINATING SERVICE: %v\n", strings.Split(r.RequestURI, "/")[2])
 	for _, ele := range tempToks {
+		fmt.Printf("TOKEN STORE ORIGINATOR: %v\n", ele.Next)
 		if ele.Next == strings.Split(r.RequestURI, "/")[2] {
 			tokChain = ele.PrevChain
 		}
