@@ -86,8 +86,8 @@ func TLSGetReqSvc(target string, path string, origin string, prevChain string) (
 
 	req, err := http.NewRequest("GET", ("https://"+target+path), nil)
 	if (len(strings.Split(path, "/")) >= 3) {
-		fmt.Printf("Complex request path, searching for token\n")
 		if (strings.Split(path, "/")[1] != "anvil") {
+			fmt.Printf("Complex request path, searching for token\n")
 			targetSvc := strings.Split(path, "/")[2]
 			bearer := attachToken(origin, targetSvc, prevChain)
 			if (len(bearer) >= 1) {
@@ -132,8 +132,8 @@ func TLSPostReqSvc(target string, path string, origin string, options string, bo
 	req, err := http.NewRequest("POST", ("https://"+target+path), strings.NewReader(body))
 	req.Header.Set("Content-type", options)
 	if (len(strings.Split(path, "/")) >= 3) {
-		fmt.Printf("Complex request path, searching for token\n")
 		if (strings.Split(path, "/")[1] != "anvil") {
+			fmt.Printf("Complex request path, searching for token\n")
 			targetSvc := strings.Split(path, "/")[2]
 			bearer := attachToken(origin, targetSvc, prevChain)
 			if (len(bearer) >= 1) {
