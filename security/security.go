@@ -164,7 +164,9 @@ func attachToken(originSvc string, targetSvc string, prevChain string) string {
 		}
 	} else {
 		for _, ele := range SecConf.Tokens {
+			fmt.Printf("CUR TOK CHECK: %v\n", ele)
 			if ele.ServiceName == originSvc {
+				fmt.Printf("My origin: %v -- Checking origin: %v\n", originSvc, ele.ServiceName)
 				fmt.Printf("Matched a service with the origin\n")
 				return prevChain[:len(prevChain)-3] + ",{\"token\":"+ele.TokenVal+",\"service\":"+targetSvc+"}]}"
 			}
