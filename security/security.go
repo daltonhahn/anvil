@@ -84,7 +84,6 @@ func TLSGetReqSvc(target string, path string, origin string, prevChain string) (
 		},
 	}
 
-	fmt.Printf("In Sec, forming GET request\n")
 	req, err := http.NewRequest("GET", ("https://"+target+path), nil)
 	if (len(strings.Split(path, "/")) > 3) {
 		fmt.Printf("Complex request path, searching for token\n")
