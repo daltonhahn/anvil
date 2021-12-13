@@ -94,10 +94,10 @@ func TLSGetReqSvc(target string, path string, origin string, prevChain string) (
 				fmt.Printf("BEARER BEING ATTACHED: %v\n", bearer)
 			}
 			req.Header.Add("Authorization", bearer)
+			fmt.Printf("TARGET: %v -- PATH: %v\n", target, path)
 		}
 	}
 
-	fmt.Printf("Making request: %v\n", req)
 	resp, err := client.Do(req)
 	if err != nil {
 		return &http.Response{}, errors.New("No HTTPS response")
