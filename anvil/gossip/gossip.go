@@ -136,6 +136,7 @@ func CheckHealth(conn *net.UDPConn) {
 
 		if (len(receivedStuff.Nodes) > 0) {
 			target := rand.Intn(len(receivedStuff.Nodes))
+			fmt.Printf("Gonna gossip to: %v\n", target)
 			if(receivedStuff.Nodes[target].Name != hname) {
 				status := sendHealthProbe(conn, receivedStuff.Nodes[target].Name)
 				if (status != true) {
