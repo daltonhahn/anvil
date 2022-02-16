@@ -317,11 +317,11 @@ func AppendEntries(args AppendEntriesArgs) AppendEntriesReply {
 
 
 func electionTimeout() time.Duration {
-	duration := 20
+	duration := 65
 	if len(os.Getenv("RAFT_FORCE_MORE_REELECTION")) > 0 && rand.Intn(3) == 0 {
 		return time.Duration(duration) * time.Second
 	} else {
-		return time.Duration(duration+rand.Intn(150)) * time.Second
+		return time.Duration(duration+rand.Intn(10)) * time.Second
 	}
 }
 
@@ -450,7 +450,7 @@ func startLeader() {
 	}
 
 	go func() {
-		ticker := time.NewTicker(3 * time.Second)
+		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
 
 		for {
@@ -466,7 +466,7 @@ func startLeader() {
 		}
 	}()
 	go func() {
-		rotateTicker := time.NewTicker(5 * time.Minute)
+		rotateTicker := time.NewTicker(3 * time.Minute)
 		defer rotateTicker.Stop()
 		for {
 			CM.mu.Lock()
@@ -688,7 +688,7 @@ func startLeader() {
 						targets := []string{}
 						for _,e := range temptargets {
 							if e != hname {
-								addr, err := net.LookupIP(e+".anvil-controller_dev")
+								addr, err := net.LookupIP(e)
 								if err != nil {
 									fmt.Println("Lookup failed")
 								}
@@ -706,6 +706,7 @@ func startLeader() {
 						}
 
 						fmt.Println(" ----- PrepBundle ----- ")
+						fmt.Println(collectMap)
 						err = retry.Do(
 							func() error {
 								resp, err := http.Post("http://" + hname + ":8080/prepBundle", "application/json", bytes.NewBuffer(jsonData))
@@ -745,12 +746,12 @@ func startLeader() {
 							fmt.Println("Lookup failed")
 						}
 						for _,t := range CM.PeerIds {
-							targAddr, err := net.LookupIP(sendTarg+".anvil-controller_dev")
+							targAddr, err := net.LookupIP(sendTarg)
 							if err != nil {
 								fmt.Println("Lookup failed")
 							}
 							if t != sendTarg && t != targAddr[0].String() && t != hname && t != hostAddr[1].String() {
-								addr, err := net.LookupIP(t+".anvil-controller_dev")
+								addr, err := net.LookupIP(t)
 								if err != nil {
 									fmt.Println("Lookup failed")
 								}
@@ -769,6 +770,7 @@ func startLeader() {
 						}
 
 						fmt.Printf(" ----- PrepBundle: %v ----- \n", sendTarg)
+						fmt.Println(collectMap)
 						err = retry.Do(
 							func() error {
 								resp, err := security.TLSPostReq(sendTarg, "/service/rotation/prepBundle", "rotation", "application/json", bytes.NewBuffer(jsonData))
@@ -951,7 +953,7 @@ func startLeader() {
 					}
 				}
 
-				aclEntries,_ := acl.ACLIngest("/root/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/acls.yaml")
+				aclEntries,_ := acl.ACLIngest("/home/anvil/Desktop/anvil-rotation/artifacts/"+strconv.Itoa(iteration)+"/acls.yaml")
 				for _, ele := range aclEntries {
 					postBody, _ := json.Marshal(ele)
 					responseBody := bytes.NewBuffer(postBody)
