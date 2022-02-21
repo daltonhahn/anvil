@@ -35,6 +35,10 @@ func InitLog() {
 	InfoLogger.Println("--------------------------------")
 }
 
+func Spacer() string {
+	return "----------------------------"
+}
+
 func CatalogLogInit() {
 	// Add a parameter for a user-defined path, otherwise, make the greedy log location in run_out next to current running term
 	if _, err := os.Stat(DefPath); errors.Is(err, os.ErrNotExist) {

@@ -22,7 +22,7 @@ func CheckTables() bool {
 	if err != nil {
 		logging.InfoLogger.Println("NAT chain does not exist in iptables")
 	}
-	logging.InfoLogger.Println("Available iptables chains: %v", originalChainList)
+	logging.InfoLogger.Printf("Available iptables chains: %v\n", originalChainList)
 	return true
 }
 
@@ -35,7 +35,7 @@ func SaveIpTables() {
 	if err != nil {
 		logging.InfoLogger.Println("NAT chain does not exist in iptables")
 	}
-	logging.InfoLogger.Println("Available iptables chains: %v", chains)
+	logging.InfoLogger.Printf("Available iptables chains: %v\n", chains)
 
 	for _, c := range chains {
 		rules, err := tables.List("nat", c)
@@ -44,10 +44,11 @@ func SaveIpTables() {
 			break
 		} else {
 			for _, rule := range rules {
-				logging.InfoLogger.Println("\t%v", rule)
+				logging.InfoLogger.Printf("\t%v\n", rule)
 			}
 		}
 	}
+	logging.InfoLogger.Printf(logging.Spacer())
 }
 
 
