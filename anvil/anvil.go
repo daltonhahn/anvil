@@ -38,6 +38,7 @@ var DataDir string
 
 func Cleanup() {
     logging.InfoLogger.Println("Caught Ctrl+C, cleaning up and ending")
+	network.RestoreIpTables()
 }
 
 func readServiceConfig() (*struct{Services []service.Service}, error) {

@@ -12,33 +12,32 @@ import (
 	"github.com/daltonhahn/anvil/logging"
 )
 
+var GlobalIpTable *iptables.IPTables
+var SavedRules []string
+
 func CheckTables() bool {
-	ipt, err := iptables.New()
+	GlobalIpTable, err := iptables.New()
 	if err != nil {
 		log.Fatalln("IPTables not available, try running as root, or install the iptables utility")
 		return false
 	}
-	originalChainList, err := ipt.ListChains("nat")
+	_, err = GlobalIpTable.ListChains("nat")
 	if err != nil {
 		logging.InfoLogger.Println("NAT chain does not exist in iptables")
 	}
-	logging.InfoLogger.Printf("Available iptables chains: %v\n", originalChainList)
 	return true
 }
 
 func SaveIpTables() {
-	tables, err := iptables.New()
-	if err != nil {
-		log.Fatalln("IPTables not available, try running as root, or install the iptables utility")
-	}
-	chains, err := tables.ListChains("nat")
+	chains, err := GlobalIpTable.ListChains("nat")
 	if err != nil {
 		logging.InfoLogger.Println("NAT chain does not exist in iptables")
 	}
+	logging.InfoLogger.Printf(logging.Spacer())
 	logging.InfoLogger.Printf("Available iptables chains: %v\n", chains)
 
 	for _, c := range chains {
-		rules, err := tables.List("nat", c)
+		rules, err := GlobalIpTable.List("nat", c)
 		if err != nil {
 			logging.InfoLogger.Println("Unable to get rules from chain")
 			break
@@ -46,9 +45,14 @@ func SaveIpTables() {
 			for _, rule := range rules {
 				logging.InfoLogger.Printf("\t%v\n", rule)
 			}
+			SavedRules = rules
 		}
 	}
 	logging.InfoLogger.Printf(logging.Spacer())
+}
+
+func RestoreIpTables() {
+	logging.InfoLogger.Printf("%v\n", GlobalIpTable)
 }
 
 
