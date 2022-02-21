@@ -2,12 +2,12 @@ package cli
 
 import (
 	"log"
-	//"net/http"
 	"fmt"
 	"os"
 	"github.com/daltonhahn/anvil/anvil"
 	"github.com/daltonhahn/anvil/security"
 	"github.com/thatisuday/commando"
+	"github.com/daltonhahn/anvil/logging"
 )
 
 func CLI() {
@@ -19,7 +19,7 @@ func CLI() {
 	commando.
 		Register(nil).
 		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
-			fmt.Println("Welcome to Anvil Service Mesh\n")
+			fmt.Println("Welcome to Anvil Service Mesh")
 		})
 
 	commando.
@@ -27,13 +27,30 @@ func CLI() {
 		SetDescription("This command initializes and begins the Anvil service mesh processes.").
 		SetShortDescription("runs anvil service mesh").
 		AddFlag("server,s", "Registers this node as part of the Raft consensus protocol", commando.Bool, nil).
+		AddFlag("security", "Enables/disables use of cryptography and security on this Anvil node", commando.Bool, nil).
+		AddFlag("config-dir", "Specifies the directory where configuration files are stored", commando.String, "config/").
+		AddFlag("data-dir", "Specifies the directory where runtime data is stored", commando.String, "data/").
 		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
 			servFlag, _ := flags["server"].GetBool()
-			if servFlag == true {
-				anvil.AnvilInit("server")
+			secFlag, _ := flags["security"].GetBool()
+			configDir, _ := flags["config-dir"].GetString()
+			dataDir, _ := flags["data-dir"].GetString()
+			if servFlag {
+				anvil.AnvilInit("server", secFlag, configDir, dataDir)
+				logging.QuorumLogInit()
+				logging.CatalogLogInit()
 			} else {
-				anvil.AnvilInit("client")
+				anvil.AnvilInit("client", secFlag, configDir, dataDir)
+				logging.CatalogLogInit()
 			}
+		})
+
+	commando.
+		Register("clean").
+		SetDescription("This command clears the default Anvil log files.").
+		SetShortDescription("clears Anvil logs").
+		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
+			logging.ClearDefaultLogs()
 		})
 
 	commando.

@@ -2,33 +2,42 @@ package anvil
 
 import (
 	"os"
+	"os/signal"
+	"syscall"
 	"log"
 	"net"
-	"net/http"
+	//"net/http"
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"gopkg.in/yaml.v2"
-	"sync"
-	"context"
-	"time"
+	//"sync"
+	//"context"
+	//"time"
 
 	_ "net/http/pprof"
 
 	"github.com/daltonhahn/anvil/network"
 	"github.com/daltonhahn/anvil/router"
 	"github.com/daltonhahn/anvil/anvil/gossip"
-	"github.com/daltonhahn/anvil/catalog"
-	"github.com/daltonhahn/anvil/raft"
-	"github.com/daltonhahn/anvil/security"
+	//"github.com/daltonhahn/anvil/catalog"
+	//"github.com/daltonhahn/anvil/raft"
+	//"github.com/daltonhahn/anvil/security"
 	"github.com/daltonhahn/anvil/service"
+	"github.com/daltonhahn/anvil/logging"
 )
 
 var rotFlag bool
-
 var NodeType string
 
-func readEnvoyConfig() (*struct{Services []service.Service}, error) {
-        yamlFile, err := ioutil.ReadFile("/home/anvil/Desktop/anvil/config/services/sample-svc.yaml")
+var ConfigDir string
+var DataDir string
+
+func Cleanup() {
+    logging.InfoLogger.Println("Caught Ctrl+C, cleaning up and ending")
+}
+
+func readServiceConfig() (*struct{Services []service.Service}, error) {
+	yamlFile, err := ioutil.ReadFile(ConfigDir + "/service.yaml")
         if err != nil {
                 log.Printf("Read file error #%v", err)
         }
@@ -44,16 +53,33 @@ func readEnvoyConfig() (*struct{Services []service.Service}, error) {
 }
 
 func SetServiceList() ([]service.Service) {
-        S_list, err := readEnvoyConfig()
+        S_list, err := readServiceConfig()
         if err != nil {
                 log.Fatal(err)
         }
         return S_list.Services
 }
 
-func AnvilInit(nodeType string) {
+func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir string) {
+	c := make(chan os.Signal)
+    signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+    go func() {
+        <-c
+        Cleanup()
+        os.Exit(1)
+    }()
+
+	logging.InfoLogger.Println("Config Dir is: ", configDir)
+	logging.InfoLogger.Println("Data Dir is: ", dataDir)
+	logging.InfoLogger.Println("Security is enabled: ", securityFlag)
+	logging.InfoLogger.Println("Node is configured as: ", nodeType)
+
+	network.CheckTables()
+
+
+	/*
 	network.CleanTables()
-        network.MakeIpTables()
+	network.MakeIpTables()
 	security.ReadSecConfig()
 
 	hname, err := os.Hostname()
@@ -114,6 +140,7 @@ func AnvilInit(nodeType string) {
 	}()
 
 	wg.Wait()
+	*/
 }
 
 func registerUDP() {

@@ -7,7 +7,24 @@ import (
 	"log"
 	"net"
 	"fmt"
+
+	"github.com/coreos/go-iptables/iptables"
 )
+
+func CheckTables() {
+	ipt, err := iptables.New()
+	if err != nil {
+		log.Fatalln("IPTables not available, try running as root, or install the iptables utility")
+	}
+	originalChainList, err := ipt.ListChains("nat")
+	if err != nil {
+		fmt.Println("Initial chains failed")
+	}
+	fmt.Printf("%v\n", originalChainList)
+}
+
+
+
 
 func MakeIpTables() {
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-N", "PROXY_INIT_REDIRECT").Output()
