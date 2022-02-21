@@ -52,8 +52,7 @@ func SaveIpTables() {
 	}
 	obj_ref := reflect.ValueOf(*ipt)
 	cmd_path := obj_ref.FieldByName("path")
-	logging.InfoLogger.Printf("%v-save\n", cmd_path.String())
-	//exec.Command(cmd_path.String() +"-save", ">", ".tables-rules").Output()
+	exec.Command(cmd_path.String() +"-save", ">", ".tables-rules").Output()
 	logging.InfoLogger.Printf(logging.Spacer())
 }
 
@@ -71,7 +70,11 @@ func RestoreIpTables() {
 		log.Fatalln("Issue deleting current IPTables chains and rules")
 	}
 	logging.InfoLogger.Printf("Restoring previous IPTables rules from saved rules file at: .iptables-rules\n")
-	exec.Command("")
+
+	obj_ref := reflect.ValueOf(*ipt)
+	cmd_path := obj_ref.FieldByName("path")
+	exec.Command(cmd_path.String() +"-restore", "<", ".tables-rules").Output()
+	logging.InfoLogger.Printf(logging.Spacer())
 }
 
 
