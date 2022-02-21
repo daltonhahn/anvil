@@ -83,6 +83,16 @@ func RestoreIpTables() {
 	if err != nil {
 		log.Fatalln("Issue deleting current IPTables chains and rules")
 	}
+	chains, err := ipt.ListChains("nat")
+	if err != nil {
+		logging.InfoLogger.Println("NAT table does not exist in iptables")
+	}
+	for _,c := range chains {
+		err = ipt.ClearAndDeleteChain("nat", c)
+		if err != nil {
+			logging.InfoLogger.Printf("Unable to clear chain: %v\n", c)
+		}
+	}
 	logging.InfoLogger.Printf("Restoring previous IPTables rules from saved rules file at: .iptables-rules\n")
 
 	/*
