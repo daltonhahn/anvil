@@ -1,6 +1,7 @@
 package network
 
 import (
+	"os"
 	"os/exec"
 	"io/ioutil"
 	"strings"
@@ -52,7 +53,20 @@ func SaveIpTables() {
 	}
 	obj_ref := reflect.ValueOf(*ipt)
 	cmd_path := obj_ref.FieldByName("path")
-	exec.Command(cmd_path.String() +"-save", ">", "./.tables-rules").Output()
+
+    // open the out file for writing
+    outfile, err := os.Create("./.tables-rules")
+    if err != nil {
+        panic(err)
+    }
+    defer outfile.Close()
+	cmd := exec.Command(cmd_path.String() +"-save")
+    cmd.Stdout = outfile
+    err = cmd.Start(); if err != nil {
+        log.Fatalln(err)
+    }
+    cmd.Wait()
+
 	logging.InfoLogger.Printf(logging.Spacer())
 }
 
@@ -71,9 +85,11 @@ func RestoreIpTables() {
 	}
 	logging.InfoLogger.Printf("Restoring previous IPTables rules from saved rules file at: .iptables-rules\n")
 
+	/*
 	obj_ref := reflect.ValueOf(*ipt)
 	cmd_path := obj_ref.FieldByName("path")
 	exec.Command(cmd_path.String() +"-restore", "<", "./.tables-rules").Output()
+	*/
 	logging.InfoLogger.Printf(logging.Spacer())
 }
 
