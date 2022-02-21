@@ -7,12 +7,11 @@ import (
 	"log"
 	"net"
 	"fmt"
+	"reflect"
 
 	"github.com/coreos/go-iptables/iptables"
 	"github.com/daltonhahn/anvil/logging"
 )
-
-var SavedRules []string
 
 func CheckTables() bool {
 	ipt, err := iptables.New()
@@ -49,9 +48,12 @@ func SaveIpTables() {
 			for _, rule := range rules {
 				logging.InfoLogger.Printf("\t%v\n", rule)
 			}
-			SavedRules = rules
 		}
 	}
+	obj_ref := reflect.ValueOf(*ipt)
+	cmd_path := obj_ref.FieldByName("path")
+	logging.InfoLogger.Printf("%v-save\n", cmd_path.String())
+	//exec.Command(cmd_path.String() +"-save", ">", ".tables-rules").Output()
 	logging.InfoLogger.Printf(logging.Spacer())
 }
 
@@ -60,7 +62,16 @@ func RestoreIpTables() {
 	if err != nil {
 		log.Fatalln("IPTables not available, try running as root, or install the iptables utility")
 	}
-	logging.InfoLogger.Printf("%v\n", ipt)
+	err = ipt.ClearAll()
+	if err != nil {
+		log.Fatalln("Issue clearing current IPTables chains and rules")
+	}
+	err = ipt.DeleteAll()
+	if err != nil {
+		log.Fatalln("Issue deleting current IPTables chains and rules")
+	}
+	logging.InfoLogger.Printf("Restoring previous IPTables rules from saved rules file at: .iptables-rules\n")
+	exec.Command("")
 }
 
 
