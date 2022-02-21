@@ -1,29 +1,33 @@
 package anvil
 
 import (
+	"log"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
-	"log"
-	"net"
+
 	//"net/http"
-	"github.com/gorilla/mux"
 	"io/ioutil"
+
+	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v2"
+
 	//"sync"
 	//"context"
 	//"time"
 
 	_ "net/http/pprof"
 
+	"github.com/daltonhahn/anvil/anvil/gossip"
 	"github.com/daltonhahn/anvil/network"
 	"github.com/daltonhahn/anvil/router"
-	"github.com/daltonhahn/anvil/anvil/gossip"
+
 	//"github.com/daltonhahn/anvil/catalog"
 	//"github.com/daltonhahn/anvil/raft"
 	//"github.com/daltonhahn/anvil/security"
-	"github.com/daltonhahn/anvil/service"
 	"github.com/daltonhahn/anvil/logging"
+	"github.com/daltonhahn/anvil/service"
 )
 
 var rotFlag bool
@@ -74,7 +78,14 @@ func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir str
 	logging.InfoLogger.Println("Security is enabled: ", securityFlag)
 	logging.InfoLogger.Println("Node is configured as: ", nodeType)
 
-	network.CheckTables()
+	if network.CheckTables() {
+		network.SaveIpTables()
+		// check for errors
+		//network.CleanIpTables()
+		//check for errors
+		//network.MakeIpTables()
+		// check for errors
+	}
 
 
 	/*

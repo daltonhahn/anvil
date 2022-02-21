@@ -9,18 +9,45 @@ import (
 	"fmt"
 
 	"github.com/coreos/go-iptables/iptables"
+	"github.com/daltonhahn/anvil/logging"
 )
 
-func CheckTables() {
+func CheckTables() bool {
 	ipt, err := iptables.New()
 	if err != nil {
 		log.Fatalln("IPTables not available, try running as root, or install the iptables utility")
+		return false
 	}
 	originalChainList, err := ipt.ListChains("nat")
 	if err != nil {
-		fmt.Println("Initial chains failed")
+		logging.InfoLogger.Println("NAT chain does not exist in iptables")
 	}
-	fmt.Printf("%v\n", originalChainList)
+	logging.InfoLogger.Println("Available iptables chains: %v", originalChainList)
+	return true
+}
+
+func SaveIpTables() {
+	tables, err := iptables.New()
+	if err != nil {
+		log.Fatalln("IPTables not available, try running as root, or install the iptables utility")
+	}
+	chains, err := tables.ListChains("nat")
+	if err != nil {
+		logging.InfoLogger.Println("NAT chain does not exist in iptables")
+	}
+	logging.InfoLogger.Println("Available iptables chains: %v", chains)
+
+	for _, c := range chains {
+		rules, err := tables.List("nat", c)
+		if err != nil {
+			logging.InfoLogger.Println("Unable to get rules from chain")
+			break
+		} else {
+			for _, rule := range rules {
+				logging.InfoLogger.Println("\t%v", rule)
+			}
+		}
+	}
 }
 
 
