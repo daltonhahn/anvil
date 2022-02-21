@@ -66,6 +66,7 @@ func SetServiceList() ([]service.Service) {
 }
 
 func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir string) {
+	logging.InfoLogger.Println("Starting the Anvil binary. . .")
 	c := make(chan os.Signal)
     signal.Notify(c, os.Interrupt, syscall.SIGTERM)
     go func() {

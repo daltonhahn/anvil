@@ -52,7 +52,7 @@ func SaveIpTables() {
 	}
 	obj_ref := reflect.ValueOf(*ipt)
 	cmd_path := obj_ref.FieldByName("path")
-	exec.Command(cmd_path.String() +"-save", ">", ".tables-rules").Output()
+	exec.Command(cmd_path.String() +"-save", ">", "./.tables-rules").Output()
 	logging.InfoLogger.Printf(logging.Spacer())
 }
 
@@ -73,7 +73,7 @@ func RestoreIpTables() {
 
 	obj_ref := reflect.ValueOf(*ipt)
 	cmd_path := obj_ref.FieldByName("path")
-	exec.Command(cmd_path.String() +"-restore", "<", ".tables-rules").Output()
+	exec.Command(cmd_path.String() +"-restore", "<", "./.tables-rules").Output()
 	logging.InfoLogger.Printf(logging.Spacer())
 }
 
