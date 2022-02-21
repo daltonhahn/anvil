@@ -74,18 +74,24 @@ func QuorumLogInit() {
 }
 
 func ClearDefaultLogs() {
-	err := os.Remove(DefPath+"/main.log")
-	if err != nil {
-        log.Fatal(err)
-    }
+	if _, err := os.Stat(DefPath+"/main.log"); errors.Is(err, os.ErrExist) {
+		err := os.Remove(DefPath+"/main.log")
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 
-	err = os.Remove(DefPath+"/catalog.log")
-	if err != nil {
-        log.Fatal(err)
-    }
+	if _, err := os.Stat(DefPath+"/catalog.log"); errors.Is(err, os.ErrExist) {
+		err := os.Remove(DefPath+"/catalog.log")
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 
-	err = os.Remove(DefPath+"/quorum.log")
-	if err != nil {
-        log.Fatal(err)
-    }
+	if _, err := os.Stat(DefPath+"/quorum.log"); errors.Is(err, os.ErrExist) {
+		err := os.Remove(DefPath+"/quorum.log")
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 }
