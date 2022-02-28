@@ -55,6 +55,7 @@ func SaveIpTables() {
 	cmd_path := obj_ref.FieldByName("path")
 
     // open the out file for writing
+	// In the future, transition this to be within the data-dir
     outfile, err := os.Create("./.tables-rules")
     if err != nil {
         panic(err)
@@ -95,11 +96,10 @@ func RestoreIpTables() {
 	}
 	logging.InfoLogger.Printf("Restoring previous IPTables rules from saved rules file at: .iptables-rules\n")
 
-	/*
 	obj_ref := reflect.ValueOf(*ipt)
 	cmd_path := obj_ref.FieldByName("path")
 	exec.Command(cmd_path.String() +"-restore", "<", "./.tables-rules").Output()
-	*/
+
 	logging.InfoLogger.Printf(logging.Spacer())
 }
 
