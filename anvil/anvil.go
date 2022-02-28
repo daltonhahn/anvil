@@ -13,7 +13,7 @@ import (
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v2"
 
-	//"sync"
+	"sync"
 	//"context"
 	//"time"
 
@@ -67,11 +67,16 @@ func SetServiceList() ([]service.Service) {
 
 func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir string) {
 	logging.InfoLogger.Println("Starting the Anvil binary. . .")
+
+
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
 	c := make(chan os.Signal)
     signal.Notify(c, os.Interrupt, syscall.SIGTERM)
     go func() {
         <-c
         Cleanup()
+		wg.Done()
         os.Exit(1)
     }()
 
@@ -89,7 +94,7 @@ func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir str
 		//network.MakeIpTables()
 		// check for errors
 	}
-
+	wg.Wait()
 
 	/*
 	network.CleanTables()
