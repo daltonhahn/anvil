@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	//"net/http"
+	"net/http"
 	"io/ioutil"
 
 	"github.com/gorilla/mux"
@@ -23,8 +23,8 @@ import (
 	"github.com/daltonhahn/anvil/network"
 	"github.com/daltonhahn/anvil/router"
 
-	//"github.com/daltonhahn/anvil/catalog"
-	//"github.com/daltonhahn/anvil/raft"
+	"github.com/daltonhahn/anvil/catalog"
+	"github.com/daltonhahn/anvil/raft"
 	"github.com/daltonhahn/anvil/security"
 	"github.com/daltonhahn/anvil/logging"
 	"github.com/daltonhahn/anvil/service"
@@ -32,7 +32,6 @@ import (
 
 var rotFlag bool
 var NodeType string
-
 var ConfigDir string
 var DataDir string
 
@@ -65,7 +64,17 @@ func SetServiceList() ([]service.Service) {
         return S_list.Services
 }
 
-func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir string) {
+func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir string, profiling bool) {
+	DataDir = dataDir
+	ConfigDir = configDir
+	logging.InitLog(DataDir)
+	if nodeType == "server" {
+		logging.QuorumLogInit()
+	}
+	logging.CatalogLogInit()
+
+	NodeType = nodeType
+
 	logging.InfoLogger.Println("Starting the Anvil binary. . .")
 
 	wg := new(sync.WaitGroup)
@@ -104,23 +113,37 @@ func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir str
 	network.SetHosts(hname)
 	wg.Wait()
 
-	/*
 	serviceMap := SetServiceList()
 	catalog.Register(hname, serviceMap, nodeType)
-	NodeType = nodeType
 
 	if nodeType == "server" {
 		_ = raft.NewConsensusModule(hname, []string{""})
 	}
 
-	wg := new(sync.WaitGroup)
+	wg = new(sync.WaitGroup)
 	wg.Add(2)
-        anv_router := mux.NewRouter()
-        svc_router := mux.NewRouter()
+	anv_router := mux.NewRouter()
+	svc_router := mux.NewRouter()
 	registerRoutes(anv_router)
 	registerSvcRoutes(svc_router)
 	registerUDP()
 
+	go func() {
+		log.Fatal(http.ListenAndServe(":444", svc_router))
+		wg.Done()
+	}()
+
+	if profiling {
+		wg.Add(1)
+		go func() {
+			log.Println(http.ListenAndServe(":6666", nil))
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
+
+	/*
 	cw, err := New()
         if err != nil {
                 log.Println(err)
@@ -148,16 +171,6 @@ func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir str
                 wg.Done()
         }()
         go cw.startNewServer(anv_router)
-
-	go func() {
-		log.Fatal(http.ListenAndServe(":444", svc_router))
-		wg.Done()
-	}()
-	go func() {
-	    log.Println(http.ListenAndServe(":6666", nil))
-	}()
-
-	wg.Wait()
 	*/
 }
 
@@ -169,7 +182,7 @@ func registerUDP() {
 	}
 	ser, err := net.ListenUDP("udp", &addr)
 	if err != nil {
-		log.Fatalln("Some error %v\n", err)
+		log.Fatalf("Some error %v\n", err)
 	}
 	go gossip.HandleUDP(p, ser)
 	go gossip.CheckHealth(ser)

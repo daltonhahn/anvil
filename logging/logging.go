@@ -6,17 +6,18 @@ import (
 	"log"
 )
 
-var DefPath = "run_out"
+var DefPath string
 
 var (
-    WarningLogger *log.Logger
-    InfoLogger    *log.Logger
-    ErrorLogger   *log.Logger
-	CatalogLogger *log.Logger
-	QuorumLogger *log.Logger
+    WarningLogger	*log.Logger
+    InfoLogger		*log.Logger
+    ErrorLogger		*log.Logger
+	CatalogLogger	*log.Logger
+	QuorumLogger	*log.Logger
 )
 
-func InitLog() {
+func InitLog(log_path string) {
+	DefPath = log_path
 	// Add a parameter for a user-defined path, otherwise, make the greedy log location in run_out next to current running term
 	if _, err := os.Stat(DefPath); errors.Is(err, os.ErrNotExist) {
 		err := os.Mkdir(DefPath, os.ModePerm)

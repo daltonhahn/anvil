@@ -184,7 +184,6 @@ func MakeIpTables() bool {
 	return true
 }
 
-
 func SetHosts(hostName string) {
 	input, err := os.Open("/etc/hosts")
 	if err != nil {

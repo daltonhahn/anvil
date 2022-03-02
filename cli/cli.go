@@ -30,18 +30,18 @@ func CLI() {
 		AddFlag("security", "Enables/disables use of cryptography and security on this Anvil node", commando.Bool, nil).
 		AddFlag("config-dir", "Specifies the directory where configuration files are stored", commando.String, "config/").
 		AddFlag("data-dir", "Specifies the directory where runtime data is stored", commando.String, "data/").
+		AddFlag("profile", "Specifies whether profiling data should be enabled", commando.Bool, nil).
 		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
 			servFlag, _ := flags["server"].GetBool()
 			secFlag, _ := flags["security"].GetBool()
 			configDir, _ := flags["config-dir"].GetString()
 			dataDir, _ := flags["data-dir"].GetString()
+			profile, _ := flags["profile"].GetBool()
 			if servFlag {
-				anvil.AnvilInit("server", secFlag, configDir, dataDir)
-				logging.QuorumLogInit()
-				logging.CatalogLogInit()
+				anvil.AnvilInit("server", secFlag, configDir, dataDir, profile)
+
 			} else {
-				anvil.AnvilInit("client", secFlag, configDir, dataDir)
-				logging.CatalogLogInit()
+				anvil.AnvilInit("client", secFlag, configDir, dataDir, profile)
 			}
 		})
 
