@@ -159,6 +159,7 @@ func MakeIpTables() bool {
 		fmt.Printf("Append failed: %v", err)
 	}
 	for _,i := range net_int {
+		fmt.Println(i.Flags)
 		iface_addrs, _ := net.InterfaceAddrs()
 		for _,addr := range iface_addrs {
 			if !net.ParseIP(strings.Split(addr.String(), "/")[0]).IsLoopback() {
