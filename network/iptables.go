@@ -27,7 +27,7 @@ func CheckTables() bool {
 	return true
 }
 
-func SaveIpTables() {
+func SaveIpTables() bool {
 	ipt, err := iptables.New()
 	if err != nil {
 		log.Fatalln("IPTables not available, try running as root, or install the iptables utility")
@@ -69,9 +69,10 @@ func SaveIpTables() {
     cmd.Wait()
 
 	logging.InfoLogger.Printf(logging.Spacer())
+	return true
 }
 
-func RestoreIpTables() {
+func clearTables() {
 	ipt, err := iptables.New()
 	if err != nil {
 		log.Fatalln("IPTables not available, try running as root, or install the iptables utility")
@@ -94,8 +95,16 @@ func RestoreIpTables() {
 			logging.InfoLogger.Printf("Unable to clear chain: %v\n", c)
 		}
 	}
+}
+
+func RestoreIpTables() {
+	clearTables()
 	logging.InfoLogger.Printf("Restoring previous IPTables rules from saved rules file at: .iptables-rules\n")
 
+	ipt, err := iptables.New()
+	if err != nil {
+		log.Fatalln("IPTables not available, try running as root, or install the iptables utility")
+	}
 	obj_ref := reflect.ValueOf(*ipt)
 	cmd_path := obj_ref.FieldByName("path")
 	exec.Command(cmd_path.String() +"-restore", "<", "./.tables-rules").Output()
@@ -106,7 +115,25 @@ func RestoreIpTables() {
 
 
 
-func MakeIpTables() {
+func MakeIpTables() bool {
+	clearTables()
+
+	ipt, err := iptables.New()
+	if err != nil {
+		log.Fatalln("IPTables not available, try running as root, or install the iptables utility")
+	}
+
+	// chain now exists
+	err = ipt.ClearChain("nat", "PROXY_INIT_REDIRECT")
+	if err != nil {
+		fmt.Printf("ClearChain (of empty) failed: %v", err)
+	}
+
+	err = ipt.Append("nat", "PROXY_INIT_REDIRECT", "-p", "tcp", "--dport", "1:21", "-j", "REDIRECT", "--to-port", "443")
+	if err != nil {
+		fmt.Printf("Append failed: %v", err)
+	}
+	/*
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-N", "PROXY_INIT_REDIRECT").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "PROXY_INIT_REDIRECT", "-p", "tcp", "--dport", "1:21", "-j",
 		"REDIRECT", "--to-port", "443").Output()
@@ -124,8 +151,11 @@ func MakeIpTables() {
 		"80", "-j", "REDIRECT", "--to-port", "444").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-A", "OUTPUT", "-p", "tcp", "-o", "ens192", "--dport",
 		"80", "-j", "PROXY_INIT_REDIRECT").Output()
+	*/
+	return true
 }
 
+/*
 func CleanTables() {
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-F", "PREROUTING").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "-F", "PROXY_INIT_REDIRECT").Output()
@@ -137,6 +167,7 @@ func CleanTables() {
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "--delete-chain", "PROXY_INIT_REDIRECT").Output()
 	exec.Command("/usr/sbin/iptables", "-t", "nat", "--delete-chain", "PROXY_INIT_OUTPUT").Output()
 }
+*/
 
 func SetHosts(hostName string) {
         input, err := ioutil.ReadFile("/etc/hosts")

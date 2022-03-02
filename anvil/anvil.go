@@ -87,11 +87,8 @@ func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir str
 
 	if network.CheckTables() {
 		network.SaveIpTables()
-		Cleanup()
 		// check for errors
-		//network.CleanIpTables()
-		//check for errors
-		//network.MakeIpTables()
+		network.MakeIpTables()
 		// check for errors
 	}
 	wg.Wait()
