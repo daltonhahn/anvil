@@ -9,6 +9,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/daltonhahn/anvil/service"
+	"github.com/daltonhahn/anvil/logging"
 )
 
 type ACLEntry struct {
@@ -36,6 +37,10 @@ type SecConfig struct {
 
 
 func ReadSecConfig() {
+	logging.Spacer()
+	logging.InfoLogger.Printf("Reading Security config from /home/anvil/Desktop/anvil/config/test_config.yaml")
+	logging.Spacer()
+	
 	yamlFile, err := ioutil.ReadFile("/home/anvil/Desktop/anvil/config/test_config.yaml")
         if err != nil {
                 log.Printf("Read file error #%v", err)

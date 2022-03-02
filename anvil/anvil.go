@@ -25,7 +25,7 @@ import (
 
 	//"github.com/daltonhahn/anvil/catalog"
 	//"github.com/daltonhahn/anvil/raft"
-	//"github.com/daltonhahn/anvil/security"
+	"github.com/daltonhahn/anvil/security"
 	"github.com/daltonhahn/anvil/logging"
 	"github.com/daltonhahn/anvil/service"
 )
@@ -87,24 +87,25 @@ func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir str
 
 	if network.CheckTables() {
 		network.SaveIpTables()
-		// check for errors
 		if !network.MakeIpTables() {
 			Cleanup()
+			wg.Done()
+			os.Exit(1)
 		}
-		// check for errors
 	}
-	wg.Wait()
-
-	/*
-	network.CleanTables()
-	network.MakeIpTables()
-	security.ReadSecConfig()
+	
+	if securityFlag {
+		security.ReadSecConfig()
+	}
 
 	hname, err := os.Hostname()
 	if err != nil {
 		log.Fatalln("Unable to get hostname")
 	}
 	network.SetHosts(hname)
+	wg.Wait()
+
+	/*
 	serviceMap := SetServiceList()
 	catalog.Register(hname, serviceMap, nodeType)
 	NodeType = nodeType
