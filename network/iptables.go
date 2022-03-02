@@ -2,13 +2,10 @@ package network
 
 import (
 	"os"
-	"io"
 	"os/exec"
-	"io/ioutil"
 	"strings"
 	"log"
 	"net"
-	"fmt"
 	"reflect"
 	"bufio"
 
@@ -192,51 +189,56 @@ func SetHosts(hostName string) {
 	if err != nil {
 		logging.InfoLogger.Printf("Could not get interfaces")
 	}
-
-	//var outboundIFace string
 	var extAddr string
 	for _,i := range net_int {
 		if (len(i.Flags.String()) > 1 && !strings.Contains(i.Flags.String(), "loopback")) {
 			addrs, _ := i.Addrs()
 			extAddr = strings.Split(addrs[0].String(), "/")[0]
-			fmt.Printf("%v\n", addrs)
 		}
 	}
-
 	input, err := os.Open("/etc/hosts")
 	if err != nil {
 			log.Fatalln(err)
 	}
-
     var lines []string
     scanner := bufio.NewScanner(input)
     for scanner.Scan() {
         lines = append(lines, scanner.Text())
     }
-
-	fileCopy, err := os.Create("/etc/hosts.orig")
+	fileCopy, err := os.OpenFile("/etc/hosts.orig", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		logging.InfoLogger.Printf("-- Can't open /etc/hosts.orig for writing -- %v\n", err)
 		log.Fatalln(err)
 	}
 	defer fileCopy.Close()
-	_, err = io.Copy(fileCopy, input)
-	if err != nil {
-		log.Fatalln("Unable to copy original contents")
+	copyWriter := bufio.NewWriter(fileCopy)
+	for _, l := range lines {
+		_,_ = copyWriter.WriteString(l + "\n")
 	}
+	copyWriter.Flush()
+	fileCopy.Close()
 
+
+	fileMod, err := os.OpenFile("/etc/hosts.temp", os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		logging.InfoLogger.Printf("-- Can't open /etc/hosts.temp for writing -- %v\n", err)
+		log.Fatalln(err)
+	}
+	defer fileMod.Close()
+	modifiedWriter := bufio.NewWriter(fileMod)
 	for i, line := range lines {
 		if strings.Contains(line, "127.0.0.1") {
-			lines[i] = "127.0.0.1\tlocalhost " + hostName
+			lines[i] = "127.0.0.1\tlocalhost " + hostName + "\n"
 		}
 		if strings.Contains(line, "127.0.1.1") {
-			lines[i] = extAddr + "\t" + hostName
+			lines[i] = extAddr + "\t" + hostName + "\n"
 		}
 	}
-	output := strings.Join(lines, "\n")
-	err = ioutil.WriteFile("/etc/hosts.temp", []byte(output), 0644)
-	if err != nil {
-			log.Fatalln(err)
+	for _,l := range lines {
+		_,_ = modifiedWriter.WriteString(l + "\n")
 	}
+	modifiedWriter.Flush()
+	fileMod.Close()
+
 	exec.Command("/bin/cp", "-f", "/etc/hosts.temp", "/etc/hosts").Output()
 }
