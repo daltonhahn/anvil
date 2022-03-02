@@ -158,6 +158,10 @@ func MakeIpTables() bool {
 	if err != nil {
 		fmt.Printf("Append failed: %v", err)
 	}
+	for _,i := range net_int {
+		public_addr, _ := i.Addrs()
+		fmt.Printf("%v -- %v -- %v\n", i.Index, i.Name, public_addr)
+	}
 	fmt.Printf("%v\n", net_int)
 
 	// err = ipt.Append("nat", "OUTPUT", "-p", "tcp", "-o", <NET INTERFACE>, "--dport", "80", "-j", "REDIRECT", "--to-port", "444")
