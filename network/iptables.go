@@ -23,6 +23,7 @@ func CheckTables() bool {
 	_, err = ipt.ListChains("nat")
 	if err != nil {
 		logging.InfoLogger.Println("NAT chain does not exist in iptables")
+		return false
 	}
 	return true
 }
@@ -31,11 +32,13 @@ func SaveIpTables() bool {
 	ipt, err := iptables.New()
 	if err != nil {
 		log.Fatalln("IPTables not available, try running as root, or install the iptables utility")
+		return false
 	}
 
 	chains, err := ipt.ListChains("nat")
 	if err != nil {
 		logging.InfoLogger.Println("NAT chain does not exist in iptables")
+		return false
 	}
 	logging.InfoLogger.Printf(logging.Spacer())
 	logging.InfoLogger.Printf("Available iptables chains: %v\n", chains)
@@ -58,13 +61,15 @@ func SaveIpTables() bool {
 	// In the future, transition this to be within the data-dir
     outfile, err := os.Create("./.tables-rules")
     if err != nil {
-        panic(err)
+        log.Fatalln(err)
+		return false
     }
     defer outfile.Close()
 	cmd := exec.Command(cmd_path.String() +"-save")
     cmd.Stdout = outfile
     err = cmd.Start(); if err != nil {
         log.Fatalln(err)
+		return false
     }
     cmd.Wait()
 
@@ -112,93 +117,76 @@ func RestoreIpTables() {
 	logging.InfoLogger.Printf(logging.Spacer())
 }
 
-
-
-
 func MakeIpTables() bool {
 	clearTables()
 
 	ipt, err := iptables.New()
 	if err != nil {
 		log.Fatalln("IPTables not available, try running as root, or install the iptables utility")
+		return false
 	}
-
-	//make chains
 	err = ipt.ClearChain("nat", "PROXY_INIT_REDIRECT")
 	if err != nil {
-		fmt.Printf("ClearChain (of empty) failed: %v", err)
+		logging.InfoLogger.Printf("ClearChain (of empty) failed: %v", err)
+		return false
 	}
 	err = ipt.ClearChain("nat", "PROXY_INIT_OUTPUT")
 	if err != nil {
-		fmt.Printf("ClearChain (of empty) failed: %v", err)
+		logging.InfoLogger.Printf("Append failed: %v", err)
+		return false
 	}
-
 	err = ipt.Append("nat", "PROXY_INIT_REDIRECT", "-p", "tcp", "--dport", "1:21", "-j", "REDIRECT", "--to-port", "443")
 	if err != nil {
-		fmt.Printf("Append failed: %v", err)
+		logging.InfoLogger.Printf("Append failed: %v", err)
+		return false
 	}
 	err = ipt.Append("nat", "PROXY_INIT_REDIRECT", "-p", "tcp", "--dport", "445:8079", "-j", "REDIRECT", "--to-port", "443")
 	if err != nil {
-		fmt.Printf("Append failed: %v", err)
+		logging.InfoLogger.Printf("Append failed: %v", err)
+		return false
 	}
 	err = ipt.Append("nat", "PROXY_INIT_REDIRECT", "-p", "tcp", "--dport", "8081:65389", "-j", "REDIRECT", "--to-port", "443")
 	if err != nil {
-		fmt.Printf("Append failed: %v", err)
+		logging.InfoLogger.Printf("Append failed: %v", err)
+		return false
 	}
 	err = ipt.Append("nat", "PROXY_INIT_REDIRECT", "-p", "udp", "-j", "REDIRECT", "--to-port", "443")
 	if err != nil {
-		fmt.Printf("Append failed: %v", err)
+		logging.InfoLogger.Printf("Append failed: %v", err)
+		return false
 	}
 	err = ipt.Append("nat", "PREROUTING", "-j", "PROXY_INIT_REDIRECT")
 	if err != nil {
-		fmt.Printf("Append failed: %v", err)
+		logging.InfoLogger.Printf("Append failed: %v", err)
+		return false
 	}
 
 	net_int, err := net.Interfaces()
 	if err != nil {
-		fmt.Printf("Append failed: %v", err)
+		logging.InfoLogger.Printf("Could not get interfaces")
+		return false
 	}
+
+	var outboundIFace string
 	for _,i := range net_int {
-		fmt.Println(i.Flags)
 		if (len(i.Flags.String()) > 1 && !strings.Contains(i.Flags.String(), "loopback")) {
-			fmt.Printf("%v\n", i.Name)
-			// iface_addrs, _ := net.InterfaceAddrs()
-			// for _,addr := range iface_addrs {
-			// 	if !net.ParseIP(strings.Split(addr.String(), "/")[0]).IsLoopback() {
-			// 		fmt.Printf("%v -- %v -- %v\n", i.Index, i.Name, addr)
-			// 	}
-			// }
+			outboundIFace = i.Name
 		}
 
 	}
-	//fmt.Printf("%v\n", net_int)
-
-	// err = ipt.Append("nat", "OUTPUT", "-p", "tcp", "-o", <NET INTERFACE>, "--dport", "80", "-j", "REDIRECT", "--to-port", "444")
-	// if err != nil {
-	// 	fmt.Printf("Append failed: %v", err)
-	// }
-
-	// err = ipt.Append("nat", "OUTPUT", "-p", "tcp", "-o", <NET INTERFACE>, "--dport", "80", "-j", "PROXY_INIT_REDIRECT")
-	// if err != nil {
-	// 	fmt.Printf("Append failed: %v", err)
-	// }
-	
+	err = ipt.Append("nat", "OUTPUT", "-p", "tcp", "-o", outboundIFace, "--dport", "80", "-j", "REDIRECT", "--to-port", "444")
+	if err != nil {
+		logging.InfoLogger.Printf("Append failed: %v", err)
+		return false
+	}
+	err = ipt.Append("nat", "OUTPUT", "-p", "tcp", "-o", outboundIFace, "--dport", "80", "-j", "PROXY_INIT_REDIRECT")
+	if err != nil {
+		logging.InfoLogger.Printf("Append failed: %v", err)
+		return false
+	}
 	return true
 }
 
-/*
-func CleanTables() {
-	exec.Command("/usr/sbin/iptables", "-t", "nat", "-F", "PREROUTING").Output()
-	exec.Command("/usr/sbin/iptables", "-t", "nat", "-F", "PROXY_INIT_REDIRECT").Output()
-	exec.Command("/usr/sbin/iptables", "-t", "nat", "-F", "PROXY_INIT_REDIRECT_OUTBOUND").Output()
-	exec.Command("/usr/sbin/iptables", "-t", "nat", "-F", "PROXY_INIT_OUTPUT").Output()
-	exec.Command("/usr/sbin/iptables", "-t", "nat", "-D", "OUTPUT", "3").Output()
-	exec.Command("/usr/sbin/iptables", "-t", "nat", "-D", "OUTPUT", "2").Output()
-	exec.Command("/usr/sbin/iptables", "-t", "nat", "-D", "OUTPUT", "1").Output()
-	exec.Command("/usr/sbin/iptables", "-t", "nat", "--delete-chain", "PROXY_INIT_REDIRECT").Output()
-	exec.Command("/usr/sbin/iptables", "-t", "nat", "--delete-chain", "PROXY_INIT_OUTPUT").Output()
-}
-*/
 
 func SetHosts(hostName string) {
         input, err := ioutil.ReadFile("/etc/hosts")
