@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-var DefPath string
+var DefPath = "data/"
 
 var (
     WarningLogger	*log.Logger
