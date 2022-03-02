@@ -4,7 +4,7 @@ import (
 	"os"
 	"io"
 	"os/exec"
-	//"io/ioutil"
+	"io/ioutil"
 	"strings"
 	"log"
 	"net"
@@ -194,9 +194,11 @@ func SetHosts(hostName string) {
 	}
 
 	//var outboundIFace string
+	var extAddr string
 	for _,i := range net_int {
 		if (len(i.Flags.String()) > 1 && !strings.Contains(i.Flags.String(), "loopback")) {
 			addrs, _ := i.Addrs()
+			extAddr = strings.Split(addrs[0].String(), "/")[0]
 			fmt.Printf("%v\n", addrs)
 		}
 	}
@@ -222,16 +224,13 @@ func SetHosts(hostName string) {
 	if err != nil {
 		log.Fatalln("Unable to copy original contents")
 	}
-}
 
-	/*
 	for i, line := range lines {
 		if strings.Contains(line, "127.0.0.1") {
-				lines[i] = "127.0.0.1\tlocalhost " + hostName
+			lines[i] = "127.0.0.1\tlocalhost " + hostName
 		}
 		if strings.Contains(line, "127.0.1.1") {
-			fmt.Println("FOUND MY LINE")
-			lines[i] = GetOutboundIP().String() + "\t" + hostName
+			lines[i] = extAddr + "\t" + hostName
 		}
 	}
 	output := strings.Join(lines, "\n")
@@ -241,16 +240,3 @@ func SetHosts(hostName string) {
 	}
 	exec.Command("/bin/cp", "-f", "/etc/hosts.temp", "/etc/hosts").Output()
 }
-
-func GetOutboundIP() net.IP {
-    conn, err := net.Dial("udp", "8.8.8.8:80")
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer conn.Close()
-
-    localAddr := conn.LocalAddr().(*net.UDPAddr)
-
-    return localAddr.IP
-}
-*/
