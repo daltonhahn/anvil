@@ -2,13 +2,15 @@ package network
 
 import (
 	"os"
+	"io"
 	"os/exec"
-	"io/ioutil"
+	//"io/ioutil"
 	"strings"
 	"log"
 	"net"
 	"fmt"
 	"reflect"
+	"bufio"
 
 	"github.com/coreos/go-iptables/iptables"
 	"github.com/daltonhahn/anvil/logging"
@@ -186,27 +188,57 @@ func MakeIpTables() bool {
 
 
 func SetHosts(hostName string) {
-        input, err := ioutil.ReadFile("/etc/hosts")
-        if err != nil {
-                log.Fatalln(err)
-        }
+	net_int, err := net.Interfaces()
+	if err != nil {
+		logging.InfoLogger.Printf("Could not get interfaces")
+	}
 
-        lines := strings.Split(string(input), "\n")
+	//var outboundIFace string
+	for _,i := range net_int {
+		if (len(i.Flags.String()) > 1 && !strings.Contains(i.Flags.String(), "loopback")) {
+			addrs, _ := i.Addrs()
+			fmt.Printf("%v\n", addrs)
+		}
+	}
 
-        for i, line := range lines {
-                if strings.Contains(line, "127.0.0.1") {
-                        lines[i] = "127.0.0.1\tlocalhost " + hostName
-                }
+	input, err := os.Open("/etc/hosts")
+	if err != nil {
+			log.Fatalln(err)
+	}
+
+    var lines []string
+    scanner := bufio.NewScanner(input)
+    for scanner.Scan() {
+        lines = append(lines, scanner.Text())
+    }
+
+	fileCopy, err := os.Create("/etc/hosts.orig")
+	if err != nil {
+		logging.InfoLogger.Printf("-- Can't open /etc/hosts.orig for writing -- %v\n", err)
+		log.Fatalln(err)
+	}
+	defer fileCopy.Close()
+	_, err = io.Copy(fileCopy, input)
+	if err != nil {
+		log.Fatalln("Unable to copy original contents")
+	}
+}
+
+	/*
+	for i, line := range lines {
+		if strings.Contains(line, "127.0.0.1") {
+				lines[i] = "127.0.0.1\tlocalhost " + hostName
+		}
 		if strings.Contains(line, "127.0.1.1") {
 			fmt.Println("FOUND MY LINE")
 			lines[i] = GetOutboundIP().String() + "\t" + hostName
 		}
-        }
-        output := strings.Join(lines, "\n")
-        err = ioutil.WriteFile("/etc/hosts.temp", []byte(output), 0644)
-        if err != nil {
-                log.Fatalln(err)
-        }
+	}
+	output := strings.Join(lines, "\n")
+	err = ioutil.WriteFile("/etc/hosts.temp", []byte(output), 0644)
+	if err != nil {
+			log.Fatalln(err)
+	}
 	exec.Command("/bin/cp", "-f", "/etc/hosts.temp", "/etc/hosts").Output()
 }
 
@@ -221,3 +253,4 @@ func GetOutboundIP() net.IP {
 
     return localAddr.IP
 }
+*/
