@@ -8,6 +8,7 @@ import (
 	"net"
 	"reflect"
 	"bufio"
+	"errors"
 
 	"github.com/coreos/go-iptables/iptables"
 	"github.com/daltonhahn/anvil/logging"
@@ -194,20 +195,22 @@ func SetHosts(hostName string) {
     for scanner.Scan() {
         lines = append(lines, scanner.Text())
     }
-	fileCopy, err := os.OpenFile("/etc/hosts.orig", os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		logging.InfoLogger.Printf("-- Can't open /etc/hosts.orig for writing -- %v\n", err)
-		log.Fatalln(err)
-	}
-	defer fileCopy.Close()
-	copyWriter := bufio.NewWriter(fileCopy)
-	for _, l := range lines {
-		_,_ = copyWriter.WriteString(l + "\n")
-	}
-	copyWriter.Flush()
-	fileCopy.Close()
 
-
+	if _, err := os.Stat("/etc/hosts.orig"); errors.Is(err, os.ErrNotExist) {
+		fileCopy, err := os.OpenFile("/etc/hosts.orig", os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			logging.InfoLogger.Printf("-- Can't open /etc/hosts.orig for writing -- %v\n", err)
+			log.Fatalln(err)
+		}
+		defer fileCopy.Close()
+		copyWriter := bufio.NewWriter(fileCopy)
+		for _, l := range lines {
+			_,_ = copyWriter.WriteString(l + "\n")
+		}
+		copyWriter.Flush()
+		fileCopy.Close()
+	}
+	
 	fileMod, err := os.OpenFile("/etc/hosts.temp", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		logging.InfoLogger.Printf("-- Can't open /etc/hosts.temp for writing -- %v\n", err)
