@@ -96,3 +96,12 @@ func ClearDefaultLogs() {
 		}
 	}
 }
+
+func LogStartMessage(confDir string, dataDir string, securityFlag bool, nodeType string, profilingFlag bool, rotationFlag bool) {
+	InfoLogger.Println("Config Dir is: ", confDir)
+	InfoLogger.Println("Data Dir is: ", dataDir)
+	InfoLogger.Println("Security is enabled: ", securityFlag)
+	InfoLogger.Println("Profiling is enabled: ", profilingFlag)
+	InfoLogger.Println("Rotation is enabled: ", rotationFlag)
+	InfoLogger.Println("Node is configured as: ", nodeType)
+}

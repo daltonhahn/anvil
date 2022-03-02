@@ -6,23 +6,18 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-
 	"net/http"
 	"io/ioutil"
-
+	"sync"
+	"context"
+	"time"
+	_ "net/http/pprof"
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v2"
-
-	"sync"
-	//"context"
-	//"time"
-
-	_ "net/http/pprof"
 
 	"github.com/daltonhahn/anvil/anvil/gossip"
 	"github.com/daltonhahn/anvil/network"
 	"github.com/daltonhahn/anvil/router"
-
 	"github.com/daltonhahn/anvil/catalog"
 	"github.com/daltonhahn/anvil/raft"
 	"github.com/daltonhahn/anvil/security"
@@ -30,10 +25,12 @@ import (
 	"github.com/daltonhahn/anvil/service"
 )
 
-var rotFlag bool
+var RotationFlag bool
 var NodeType string
 var ConfigDir string
 var DataDir string
+
+var rotationTrigger bool
 
 func Cleanup() {
     logging.InfoLogger.Println("Caught Ctrl+C, cleaning up and ending")
@@ -64,17 +61,17 @@ func SetServiceList() ([]service.Service) {
         return S_list.Services
 }
 
-func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir string, profiling bool) {
+func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir string, profiling bool, rotationFlag bool) {
 	DataDir = dataDir
 	ConfigDir = configDir
+	NodeType = nodeType
+	RotationFlag = rotationFlag
+
 	logging.InitLog(DataDir)
-	if nodeType == "server" {
+	if NodeType == "server" {
 		logging.QuorumLogInit()
 	}
 	logging.CatalogLogInit()
-
-	NodeType = nodeType
-
 	logging.InfoLogger.Println("Starting the Anvil binary. . .")
 
 	wg := new(sync.WaitGroup)
@@ -87,11 +84,7 @@ func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir str
 		wg.Done()
         os.Exit(1)
     }()
-
-	logging.InfoLogger.Println("Config Dir is: ", configDir)
-	logging.InfoLogger.Println("Data Dir is: ", dataDir)
-	logging.InfoLogger.Println("Security is enabled: ", securityFlag)
-	logging.InfoLogger.Println("Node is configured as: ", nodeType)
+	logging.LogStartMessage(ConfigDir, DataDir, securityFlag, nodeType, profiling, RotationFlag)
 
 	if network.CheckTables() {
 		network.SaveIpTables(DataDir)
@@ -126,7 +119,39 @@ func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir str
 	svc_router := mux.NewRouter()
 	registerRoutes(anv_router)
 	registerSvcRoutes(svc_router)
+
+	// Separate Server starts into different function eventually
+
 	registerUDP()
+
+
+	cw, err := New()
+	if err != nil {
+			log.Println(err)
+	}
+	if err := cw.Watch(); err != nil {
+			log.Println(err)
+	}
+	rotationTrigger = true
+	go func() {
+		for {
+			<-sigHandle
+			if rotationTrigger == true {
+				rotationTrigger = false
+				ctxShutDown, cancel := context.WithTimeout(context.Background(), (5*time.Second))
+				defer func() {
+					cancel()
+				}()
+
+				if err := server.Shutdown(ctxShutDown); err != nil {
+					log.Printf("server Shutdown Failed:%+s", err)
+				}
+				go cw.startNewServer(anv_router)
+			}
+		}
+		wg.Done()
+	}()
+	go cw.startNewServer(anv_router)
 
 	go func() {
 		log.Fatal(http.ListenAndServe(":444", svc_router))
@@ -142,45 +167,12 @@ func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir str
 	}
 
 	wg.Wait()
-
-	/*
-	cw, err := New()
-        if err != nil {
-                log.Println(err)
-        }
-        if err := cw.Watch(); err != nil {
-                log.Println(err)
-        }
-	rotFlag = true
-        go func() {
-                for {
-                        <-sigHandle
-			if rotFlag == true {
-				rotFlag = false
-				ctxShutDown, cancel := context.WithTimeout(context.Background(), (5*time.Second))
-				defer func() {
-					cancel()
-				}()
-
-				if err := server.Shutdown(ctxShutDown); err != nil {
-					log.Printf("server Shutdown Failed:%+s", err)
-				}
-				go cw.startNewServer(anv_router)
-			}
-                }
-                wg.Done()
-        }()
-        go cw.startNewServer(anv_router)
-	*/
 }
 
 func registerUDP() {
+	// Add some logging
 	p := make([]byte, 4096)
-	addr := net.UDPAddr{
-		Port: 443,
-		IP: net.ParseIP("0.0.0.0"),
-	}
-	ser, err := net.ListenUDP("udp", &addr)
+	ser, err := net.ListenUDP("udp", &net.UDPAddr{Port: 443, IP: net.IP([]byte("0.0.0.0"))})
 	if err != nil {
 		log.Fatalf("Some error %v\n", err)
 	}
