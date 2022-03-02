@@ -95,10 +95,7 @@ func clearTables() {
 		logging.InfoLogger.Println("NAT table does not exist in iptables")
 	}
 	for _,c := range chains {
-		err = ipt.ClearAndDeleteChain("nat", c)
-		if err != nil {
-			logging.InfoLogger.Printf("Unable to clear/delete chain: %v\n", c)
-		}
+		_ = ipt.ClearAndDeleteChain("nat", c)
 	}
 }
 
