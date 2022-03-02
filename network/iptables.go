@@ -160,10 +160,11 @@ func MakeIpTables() bool {
 	}
 	for _,i := range net_int {
 		iface_addrs, _ := net.InterfaceAddrs()
-		// if len(public_addr) > 0 && !public_addr[0].IsLoopback() {
-
-		// }
-		fmt.Printf("%v -- %v -- %v\n", i.Index, i.Name, iface_addrs)
+		for _,addr := range iface_addrs {
+			if !net.ParseIP(addr.String()).IsLoopback() {
+				fmt.Printf("%v -- %v -- %v\n", i.Index, i.Name, iface_addrs)
+			}
+		}
 	}
 	//fmt.Printf("%v\n", net_int)
 
