@@ -37,7 +37,7 @@ var DataDir string
 
 func Cleanup() {
     logging.InfoLogger.Println("Caught Ctrl+C, cleaning up and ending")
-	network.RestoreIpTables()
+	network.RestoreIpTables(DataDir)
 }
 
 func readServiceConfig() (*struct{Services []service.Service}, error) {
@@ -94,7 +94,7 @@ func AnvilInit(nodeType string, securityFlag bool, configDir string, dataDir str
 	logging.InfoLogger.Println("Node is configured as: ", nodeType)
 
 	if network.CheckTables() {
-		network.SaveIpTables()
+		network.SaveIpTables(DataDir)
 		if !network.MakeIpTables() {
 			Cleanup()
 			wg.Done()

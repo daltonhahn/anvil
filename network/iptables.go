@@ -28,7 +28,7 @@ func CheckTables() bool {
 	return true
 }
 
-func SaveIpTables() bool {
+func SaveIpTables(dataDir string) bool {
 	ipt, err := iptables.New()
 	if err != nil {
 		log.Fatalln("IPTables not available, try running as root, or install the iptables utility")
@@ -59,7 +59,7 @@ func SaveIpTables() bool {
 
     // open the out file for writing
 	// In the future, transition this to be within the data-dir
-    outfile, err := os.Create("./.tables-rules")
+    outfile, err := os.Create(dataDir + ".tables-rules")
     if err != nil {
         log.Fatalln(err)
 		return false
@@ -99,7 +99,7 @@ func clearTables() {
 	}
 }
 
-func RestoreIpTables() {
+func RestoreIpTables(dataDir string) {
 	clearTables()
 	logging.InfoLogger.Printf("Restoring previous IPTables rules from saved rules file at: .iptables-rules\n")
 
@@ -109,7 +109,7 @@ func RestoreIpTables() {
 	}
 	obj_ref := reflect.ValueOf(*ipt)
 	cmd_path := obj_ref.FieldByName("path")
-	exec.Command(cmd_path.String() +"-restore", "<", "./.tables-rules").Output()
+	exec.Command(cmd_path.String() +"-restore", "<", dataDir+".tables-rules").Output()
 
 	logging.InfoLogger.Printf(logging.Spacer())
 }
