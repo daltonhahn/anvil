@@ -185,17 +185,6 @@ func MakeIpTables() bool {
 
 
 func SetHosts(hostName string) {
-	net_int, err := net.Interfaces()
-	if err != nil {
-		logging.InfoLogger.Printf("Could not get interfaces")
-	}
-	var extAddr string
-	for _,i := range net_int {
-		if (len(i.Flags.String()) > 1 && !strings.Contains(i.Flags.String(), "loopback")) {
-			addrs, _ := i.Addrs()
-			extAddr = strings.Split(addrs[0].String(), "/")[0]
-		}
-	}
 	input, err := os.Open("/etc/hosts")
 	if err != nil {
 			log.Fatalln(err)
@@ -228,10 +217,10 @@ func SetHosts(hostName string) {
 	modifiedWriter := bufio.NewWriter(fileMod)
 	for i, line := range lines {
 		if strings.Contains(line, "127.0.0.1") {
-			lines[i] = "127.0.0.1\tlocalhost " + hostName + "\n"
+			lines[i] = "127.0.0.1\tlocalhost " + hostName
 		}
 		if strings.Contains(line, "127.0.1.1") {
-			lines[i] = extAddr + "\t" + hostName + "\n"
+			lines[i] = "127.0.1.1\tlocalhost " + hostName
 		}
 	}
 	for _,l := range lines {
