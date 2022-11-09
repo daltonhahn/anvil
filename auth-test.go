@@ -22,7 +22,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Println("Making request to DB service")
 
-	caCertPaths := []string{"/root/anvil/config/certs/0/server2.crt", "/root/anvil/config/certs/server1.crt", "/root/anvil/config/certs/server3.crt"}
+	caCertPaths := []string{"/home/anvil/anvil/config/certs/0/server2.crt", "/home/anvil/anvil/config/certs/server1.crt", "/home/anvil/anvil/config/certs/server3.crt"}
         caCertPool := x509.NewCertPool()
         for _, fp := range caCertPaths {
                 caCert, err := ioutil.ReadFile(fp)
@@ -31,7 +31,7 @@ func Index(w http.ResponseWriter, req *http.Request) {
                 }
                 caCertPool.AppendCertsFromPEM(caCert)
         }
-        cert,err := tls.LoadX509KeyPair("/root/anvil/config/certs/0/server2.crt", "/root/anvil/config/certs/0/server2.key")
+        cert,err := tls.LoadX509KeyPair("/home/anvil/anvil/config/certs/0/server2.crt", "/home/anvil/anvil/config/certs/0/server2.key")
         if err != nil {
 		log.Fatalln(err)
         }

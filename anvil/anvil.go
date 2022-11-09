@@ -28,7 +28,7 @@ var rotFlag bool
 var NodeType string
 
 func readEnvoyConfig() (*struct{Services []service.Service}, error) {
-        yamlFile, err := ioutil.ReadFile("/root/anvil/config/services/sample-svc.yaml")
+        yamlFile, err := ioutil.ReadFile("/home/anvil/anvil/config/services/sample-svc.yaml")
         if err != nil {
                 log.Printf("Read file error #%v", err)
         }
